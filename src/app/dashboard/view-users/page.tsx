@@ -23,7 +23,9 @@ const columns = [
 
 const fetchUsers = async () => {
   const token = localStorage.getItem('token');
-  return await callApi('get', 'http://127.0.0.1:5000/users', null, {
+  // return await callApi('get', 'http://127.0.0.1:5000/users', null, {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  return await callApi('get', `${baseUrl}/users`, null, {
     Authorization: `Bearer ${token}`,
   });
 };
@@ -44,7 +46,9 @@ export default function ViewUsersPage() {
 
   const handleView = async (userId: string) => {
     try {
-      const data = await callApi('get', `http://127.0.0.1:5000/users/${userId}`, null, {
+      // const data = await callApi('get', `http://127.0.0.1:5000/users/${userId}`, null, {
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const data = await callApi('get', `${baseUrl}/users/${userId}`, null, {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       });
       setViewUser(data);
@@ -56,9 +60,11 @@ export default function ViewUsersPage() {
 
   const handleUpdateSubmit = async (values: any) => {
     try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       await callApi(
         'put',
-        `http://127.0.0.1:5000/users/${updateUser.id}?email=${encodeURIComponent(values.email)}`,
+        // `http://127.0.0.1:5000/users/${updateUser.id}?email=${encodeURIComponent(values.email)}`,
+          `${baseUrl}/users/${updateUser.id}?email=${encodeURIComponent(values.email)}`,
         { user_id: updateUser.id },
         {
           'Content-Type': 'application/json',
@@ -86,7 +92,11 @@ export default function ViewUsersPage() {
 
     if (confirm.isConfirmed) {
       try {
-        await callApi('delete', `http://127.0.0.1:5000/users/${userId}`, { user_id: userId }, {
+              const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        // await callApi('delete', `http://127.0.0.1:5000/users/${userId}`, { user_id: userId }, {
+          await callApi('delete', `${baseUrl}/users/${userId}`, { user_id: userId }, {
+
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         });
@@ -117,6 +127,8 @@ export default function ViewUsersPage() {
               onDelete={() => handleDelete(user.id)}
             />
           )}
+            itemsPerPage={10}
+
         />
 
         {/* View Modal */}

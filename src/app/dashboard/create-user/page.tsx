@@ -9,20 +9,34 @@ import callApi from '@/utils/callApi';
 const MySwal = withReactContent(Swal);
 
 export default function CreateUserPage() {
-  const [formKey, setFormKey] = useState(0); // This will force UserForm to re-render with fresh state
+  const [formKey, setFormKey] = useState(0); // Force re-render of UserForm
 
   const handleSubmit = async (values: any) => {
     try {
-      await callApi('post', 'http://127.0.0.1:5000/users', values, {
+      // Show loading popup
+      MySwal.fire({
+        title: 'Creating user...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      // Make API call
+      // await callApi('post', 'http://127.0.0.1:5000/users', values, {
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+       await callApi('post', `${baseUrl}/users`, values, {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       });
 
-      MySwal.fire('Success', 'User created successfully!', 'success');
+      Swal.close(); // Close loader
 
-      // Reset form by changing key
-      setFormKey(prev => prev + 1);
+      // Show success popup
+      MySwal.fire('Success', 'User created successfully!', 'success');
+      setFormKey(prev => prev + 1); // Reset form
     } catch (err: any) {
+      Swal.close();
       MySwal.fire('Error', err?.response?.data?.detail || 'Failed to create user', 'error');
     }
   };
@@ -31,7 +45,7 @@ export default function CreateUserPage() {
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded shadow">
       <h2 className="text-2xl font-bold mb-4">Create New User</h2>
       <UserForm
-        key={formKey} // changing key forces fresh form
+        key={formKey}
         isUpdate={false}
         initialValues={{
           first_name: '',
@@ -42,7 +56,7 @@ export default function CreateUserPage() {
           department_name: '',
         }}
         onCancel={() => {
-          // Optionally hide or reset form
+          // Optional reset or redirect
         }}
         onSubmit={handleSubmit}
       />
