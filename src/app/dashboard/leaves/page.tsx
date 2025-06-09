@@ -70,7 +70,10 @@ export default function LeavesPage() {
   const { data: leaves = [], isLoading } = useQuery<Leave[]>({
     queryKey: ['leaves'],
     queryFn: async () => {
-      const data = await callApi('get', 'http://127.0.0.1:5000/leaves', null, {
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      // const data = await callApi('get', 'http://127.0.0.1:5000/leaves', null, {
+      const data = await callApi('get', `${baseUrl}/leaves`, null, {
+      
         Authorization: `Bearer ${token}`,
       });
       return Array.isArray(data) ? data : [];
@@ -80,9 +83,12 @@ export default function LeavesPage() {
   // ✅ Create or Update Leave
   const leaveMutation = useMutation({
     mutationFn: async (values: Leave) => {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
       const url = editId
-        ? `http://127.0.0.1:5000/leaves/${editId}`
-        : 'http://127.0.0.1:5000/leaves';
+          // ? `http://127.0.0.1:5000/leaves/${editId}`
+        ? `${baseUrl}/leaves/${editId}`
+        : `${baseUrl}/leaves`;
       const method = editId ? 'put' : 'post';
 
       return await callApi(method, url, values, {
@@ -110,7 +116,8 @@ export default function LeavesPage() {
   // ✅ Delete Leave
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await callApi('delete', `http://127.0.0.1:5000/leaves/${id}`, null, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      return await callApi('delete', `${baseUrl}/leaves/${id}`, null, {
         Authorization: `Bearer ${token}`,
       });
     },
@@ -274,6 +281,8 @@ export default function LeavesPage() {
       onDelete={() => handleDelete(leave.id)}
     />
   )}
+    itemsPerPage={10}
+
 />
     </div>
     </div>

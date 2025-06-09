@@ -26,7 +26,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       {showView && (
         <button
           onClick={onView}
-          className="relative bg-gray-200 p-2 rounded hover:bg-gray-300 text-sm group"
+          className="relative bg-gray-200 p-2 rounded hover:bg-gray-300 text-sm group cursor-pointer"
         >
           <FaEye />
           <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 z-10">
@@ -37,7 +37,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       {showUpdate && (
         <button
           onClick={onUpdate}
-          className="relative bg-yellow-400 p-2 rounded hover:bg-yellow-500 text-white text-sm group"
+          className="relative bg-yellow-400 p-2 rounded hover:bg-yellow-500 text-white text-sm group cursor-pointer"
         >
           <FaEdit />
           <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 z-10">
@@ -48,10 +48,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       {showDelete && (
         <button
           onClick={onDelete}
-          className="relative bg-red-600 p-2 rounded hover:bg-red-700 text-white text-sm group"
+          className="relative bg-red-600 p-2 rounded hover:bg-red-700 text-white text-sm group cursor-pointer"
         >
           <FaTrash />
-          <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 z-10">
+          <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 z-10 ">
             Delete
           </span>
         </button>
