@@ -51,9 +51,13 @@ export default function AuthModal({ onClose }: Props) {
     onSubmit: async (values) => {
       setLoading(true);
       try {
+               const baseUrl = process.env.NEXT_PUBLIC_API_URL;
         const data = await callApi(
+          
           'post',
-          'http://127.0.0.1:5000/login',
+          // 'http://127.0.0.1:5000/login',
+            `${baseUrl}/login`,
+
           {
             email: values.email,
             password: values.password,
@@ -188,14 +192,6 @@ export default function AuthModal({ onClose }: Props) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
 
 
 
