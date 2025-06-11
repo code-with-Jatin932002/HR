@@ -116,6 +116,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit }
               className="absolute top-11 right-3 cursor-pointer text-gray-600"
               onClick={() => setShowPassword(prev => !prev)}
             >
+
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </div>
             {formik.touched.password && formik.errors.password && (
