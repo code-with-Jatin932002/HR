@@ -12,18 +12,18 @@ import Table from '@/components/Table';
 import ActionButtons from '@/components/ActionButtons';
 import UserForm from '@/components/UserForm';
 
+import { useAuth } from '@/context/AuthContext'; // Import useAuth to get logged-in user's role
+
 const MySwal = withReactContent(Swal);
 
 const columns = [
-  { label: 'First Name', key: 'first_name' },
-  { label: 'Last Name', key: 'last_name' },
+  { label: 'Name', key: 'full_name' },
   { label: 'Email', key: 'email' },
-  { label: 'Role ID', key: 'role_id' },
+  //  { label: 'Role ID', key: 'role_id' }, // Added Role Type to table for visibility
 ];
 
 const fetchUsers = async () => {
   const token = localStorage.getItem('token');
-  // return await callApi('get', 'http://127.0.0.1:5000/users', null, {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   return await callApi('get', `${baseUrl}/users`, null, {
     Authorization: `Bearer ${token}`,
@@ -33,11 +33,19 @@ const fetchUsers = async () => {
 export default function ViewUsersPage() {
   useAuthRedirect();
   useProtectRoute();
+  const { loading, user } = useAuth(); // Get user object from AuthContext
+  if (loading) return null;
 
   const { data: users = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers,
   });
+
+  // Transform user data to include 'full_name'
+  const transformedUsers = users.map((user: any) => ({
+    ...user,
+    full_name: `${user.first_name} ${user.last_name}`,
+  }));
 
   const [viewUser, setViewUser] = useState<any>(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -46,8 +54,7 @@ export default function ViewUsersPage() {
 
   const handleView = async (userId: string) => {
     try {
-      // const data = await callApi('get', `http://127.0.0.1:5000/users/${userId}`, null, {
-       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const data = await callApi('get', `${baseUrl}/users/${userId}`, null, {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       });
@@ -60,12 +67,20 @@ export default function ViewUsersPage() {
 
   const handleUpdateSubmit = async (values: any) => {
     try {
+      // You may need to adapt this part based on how your API handles role_type updates.
+      // The current API call only sends first_name and last_name.
+      // If role_type also needs to be sent, include it in the payload.
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       await callApi(
         'put',
-        // `http://127.0.0.1:5000/users/${updateUser.id}?email=${encodeURIComponent(values.email)}`,
-          `${baseUrl}/users/${updateUser.id}?email=${encodeURIComponent(values.email)}`,
-        { user_id: updateUser.id },
+        `${baseUrl}/users/${updateUser.id}?email=${encodeURIComponent(values.email)}`,
+        {
+          user_id: updateUser.id,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          role_type: values.role_type, // IMPORTANT: Include role_type here if your API supports it
+          department_name: values.department_name, // IMPORTANT: Include department_name if your API supports it
+        },
         {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -92,11 +107,8 @@ export default function ViewUsersPage() {
 
     if (confirm.isConfirmed) {
       try {
-              const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-        // await callApi('delete', `http://127.0.0.1:5000/users/${userId}`, { user_id: userId }, {
-          await callApi('delete', `${baseUrl}/users/${userId}`, { user_id: userId }, {
-
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        await callApi('delete', `${baseUrl}/users/${userId}`, { user_id: userId }, {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         });
@@ -119,7 +131,7 @@ export default function ViewUsersPage() {
 
         <Table
           columns={columns}
-          data={users}
+          data={transformedUsers}
           actions={(user) => (
             <ActionButtons
               onView={() => handleView(user.id)}
@@ -127,8 +139,7 @@ export default function ViewUsersPage() {
               onDelete={() => handleDelete(user.id)}
             />
           )}
-            itemsPerPage={10}
-
+          itemsPerPage={10}
         />
 
         {/* View Modal */}
@@ -136,10 +147,11 @@ export default function ViewUsersPage() {
           <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative space-y-3">
               <h3 className="text-xl font-semibold mb-4">👤 User Details</h3>
-              <div className="flex"><span className="font-bold w-28">First Name:</span><span>{viewUser.first_name}</span></div>
-              <div className="flex"><span className="font-bold w-28">Last Name:</span><span>{viewUser.last_name}</span></div>
+              <div className="flex"><span className="font-bold w-28">Name:</span><span>{`${viewUser.first_name} ${viewUser.last_name}`}</span></div>
               <div className="flex"><span className="font-bold w-28">Email:</span><span>{viewUser.email}</span></div>
-              <div className="flex"><span className="font-bold w-28">Role:</span><span>{viewUser.role_id}</span></div>
+              {/* <div className="flex"><span className="font-bold w-28">Role:</span><span>{viewUser.role_type}</span></div> 
+              <div className="flex"><span className="font-bold w-28">Department:</span><span>{viewUser.department_name}</span></div> Display department */}
+
 
               <button
                 onClick={() => setShowViewModal(false)}
@@ -162,12 +174,13 @@ export default function ViewUsersPage() {
                   first_name: updateUser.first_name,
                   last_name: updateUser.last_name,
                   email: updateUser.email,
-                  password: '',
-                  role_type: updateUser.role_type || 'Admin',
-                  department_name: updateUser.department_name || '', 
+                  password: '', // Password field is not shown/updated in 'isUpdate' mode
+                  role_type: updateUser.role_type || '', // Use existing role_type for initial value
+                  department_name: updateUser.department_name || '', // Use existing department_name
                 }}
                 onCancel={() => setUpdateUser(null)}
                 onSubmit={handleUpdateSubmit}
+                currentUserRole={user?.role_type || ''} // <--- FIX: Pass the logged-in user's role here
               />
             </div>
           </div>
