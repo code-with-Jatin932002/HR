@@ -1,6 +1,8 @@
 
 // utils/sidebarRoutes.ts
 
+// utils/sidebarRoutes.ts
+
 export const getSidebarRoutes = (role: string) => {
   const commonRoutes = [
     {
@@ -23,8 +25,16 @@ export const getSidebarRoutes = (role: string) => {
 
   switch (role) {
     case 'super_Admin':
+      // Filter out Payroll, Jobs, and Candidates
+      const filteredRoutes = commonRoutes.filter(
+        (route) =>
+          route.name !== 'Payroll' &&
+          route.name !== 'Jobs' &&
+          route.name !== 'Candidates' &&
+          route.name !== 'Leaves'
+      );
       return [
-        ...commonRoutes,
+        ...filteredRoutes,
         { name: 'Organizations', path: '/dashboard/organization' },
       ];
 

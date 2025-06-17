@@ -1,25 +1,26 @@
 
 'use client';
-import useAuthRedirect from '../../hooks/useAuthRedirect';
-
-import { useEffect, useState } from 'react';
-
- import { useRouter, usePathname } from 'next/navigation';
+// Assuming useAuthRedirect is now useProtectRoute as per your structure
+// import useProtectRoute from '../../hooks/useProtectRoute'; 
+import useProtectRoute from '@/hooks/useProtectRoute';
+import { useAuth } from '@/context/AuthContext';
 
 
 export default function DashboardPage() {
-     const router = useRouter();
-  useAuthRedirect(); // 🔐 protect page
+  // const router = useRouter(); // No longer directly used in this component due to hook
+  useProtectRoute(); // 🔐 protect page
 
+    const { loading } = useAuth();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    // const email = localStorage.getItem('email');
+  if (loading) return null;
 
-    // if (!token) {
-    //   router.replace('/'); // redirect to login if no token
-    // }
-   }, []);
+  // Removed redundant useEffect, as useProtectRoute handles authentication checks
+  // useEffect(() => {
+  //   const token = localStorage.getItem('token');
+  //   if (!token) {
+  //     router.replace('/'); // redirect to login if no token
+  //   }
+  // }, []);
 
 
 

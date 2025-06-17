@@ -180,7 +180,7 @@ export default function OrganizationPage() {
           <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative space-y-3">
               <h3 className="text-xl font-semibold mb-4">🏢 Organization Details</h3>
-              {Object.entries(viewOrg).map(([key, value]) => (
+              {Object.entries(viewOrg).filter(([key]) => key !== 'id' && key !== 'is_active').map(([key, value]) => (
                 <div key={key} className="flex text-sm">
                   <span className="font-bold capitalize w-32">{key.replace(/_/g, ' ')}:</span>
                   <span>{String(value)}</span>
