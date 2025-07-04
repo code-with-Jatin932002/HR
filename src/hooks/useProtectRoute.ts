@@ -72,7 +72,9 @@ export default function useProtectRoute() {
   // after a logout, even if React state updates are slightly delayed.
   useEffect(() => {
     const handlePopState = () => {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
+
       const currentPath = window.location.pathname;
       if (!token && currentPath.startsWith('/dashboard')) {
         router.replace('/');

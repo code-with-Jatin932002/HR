@@ -1,4 +1,3 @@
-
 'use client';
 import { useQuery, useQueryClient, QueryFunction } from '@tanstack/react-query';
 import { useState, useMemo, useCallback } from 'react';
@@ -11,22 +10,22 @@ import { FiSearch, FiX } from 'react-icons/fi'; // Import search icons
 import callApi from '@/utils/callApi';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
 import useProtectRoute from '@/hooks/useProtectRoute';
-import Table from '@/components/Table';
+import Table from '@/components/Table'; // Ensure Table.tsx is updated as well
 import ActionButtons from '@/components/ActionButtons';
 import Loader from '@/components/Loader';
 import Button from '@/components/Button';
-import Pagination from '@/components/Pagination'; // Import the new Pagination component
+import Pagination from '@/components/Pagination';
 
 const MySwal = withReactContent(Swal);
 
-// Define interfaces for type safety
-interface Department {
+interface OrganizationType {
   id: string;
-  department_name: string;
+  org_type: string;
 }
 
+// Ensure this interface exactly matches what your API endpoint returns
 interface ApiResponse {
-  departments: Department[];
+  organization_types: OrganizationType[];
   totalItems: number;
   totalPages: number;
   currentPage: number;
@@ -42,26 +41,29 @@ interface ApiResponseError {
 }
 
 const columns = [
-  { label: 'Department Name', key: 'department_name' },
+  { label: 'Organization Type Name', key: 'org_type' },
 ];
 
-// fetchDepartments will now explicitly take page, limit, and search query
-const fetchDepartments: QueryFunction<
+type HttpMethod = 'get' | 'post' | 'put' | 'delete';
+
+// Explicitly type fetchOrganizationTypes as a QueryFunction.
+const fetchOrganizationTypes: QueryFunction<
   ApiResponse, // TQueryFnData: The type of data this function returns
-  ['departments', number, number, string] // TQueryKey: The exact shape of the queryKey, now including search
+  ['organizationTypes', number, number, string] // TQueryKey: The exact shape of the queryKey, now including search
 > = async ({ queryKey }) => {
   const [_key, currentPage, itemsPerPage, searchQuery] = queryKey;
   const token = sessionStorage.getItem('token');
 
   if (!token) {
-    throw new Error('No authentication token found.');
+    throw new Error('Authentication token not found.');
   }
+
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   // This normalization adds a trailing slash if not present, for consistent base URL.
   const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
-  // Construct the URL with pagination and search parameters
-  let url = `${normalizedBaseUrl}department?page=${currentPage}&limit=${itemsPerPage}`;
+  let url = `${normalizedBaseUrl}organization-types?page=${currentPage}&limit=${itemsPerPage}`;
+
   if (searchQuery) {
     url += `&search=${encodeURIComponent(searchQuery)}`;
   }
@@ -70,64 +72,68 @@ const fetchDepartments: QueryFunction<
     const response = await callApi('get', url, null, {
       Authorization: `Bearer ${token}`,
     });
-    // Return the full response object, which should contain departments array AND pagination metadata
-    return response as ApiResponse; // Cast to ApiResponse for type safety
+    return response as ApiResponse;
   } catch (error) {
-    console.error('Error fetching departments:', error);
+    console.error('Error fetching organization types:', error);
     throw error;
   }
 };
 
-export default function DepartmentsPage() {
+export default function OrganizationTypePage() {
   useAuthRedirect();
   useProtectRoute();
 
   const queryClient = useQueryClient();
 
-  // State to manage current page, items per page, and search query
+  const [formOpen, setFormOpen] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [selectedOrgTypeId, setSelectedOrgTypeId] = useState<string>('');
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewOrg, setViewOrg] = useState<OrganizationType | null>(null);
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
+  const [deletingOrgTypeId, setDeletingOrgTypeId] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Matches your backend's default limit
+  const [itemsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState(''); // New state for search query
 
-  // useQuery will automatically refetch when currentPage, itemsPerPage, or searchQuery changes
-  const { data, isLoading, isError, refetch } = useQuery<ApiResponse, Error, ApiResponse, ['departments', number, number, string]>({
-    queryKey: ['departments', currentPage, itemsPerPage, searchQuery], // Dependencies for refetching
-    queryFn: fetchDepartments,
-    placeholderData: (previousData) => previousData, // Keep previous data displayed
+  const {
+    data: orgTypeData,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<ApiResponse, Error, ApiResponse, ['organizationTypes', number, number, string]>({
+    queryKey: ['organizationTypes', currentPage, itemsPerPage, searchQuery], // Include searchQuery in the queryKey
+    queryFn: fetchOrganizationTypes,
+    placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false, // Prevents automatic refetch on window focus
     staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
   });
 
-  // Extract the departments array and pagination metadata from the fetched data
-  const departments = data?.departments || [];
-  const totalItems = data?.totalItems || 0;
-  const totalPages = data?.totalPages || 1; // Default to 1 page if not provided
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [isUpdate, setIsUpdate] = useState(false);
-  const [selectedDeptId, setSelectedDeptId] = useState('');
-  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
-  // Changed isDeleting to hold the ID of the department being deleted for specific loaders
-  const [deletingDeptId, setDeletingDeptId] = useState<string | null>(null);
-
+  const organizationTypes = orgTypeData?.organization_types ?? [];
+  const totalItems = orgTypeData?.totalItems || 0;
+  const totalPages = orgTypeData?.totalPages || 1;
 
   const validationSchema = useMemo(() => {
     return Yup.object({
-      department_name: Yup.string().required('Department name is required'),
+      org_type: Yup.string().required('Organization type name is required'),
     });
   }, []);
 
   const formik = useFormik({
     initialValues: {
-      department_name: '',
+      org_type: '',
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       setIsSubmittingForm(true);
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-      const url = isUpdate ? `${normalizedBaseUrl}department/${selectedDeptId}` : `${normalizedBaseUrl}department`;
-      const method = isUpdate ? 'put' : 'post';
+      const url = isUpdate
+        ? `${normalizedBaseUrl}organization-types/${selectedOrgTypeId}`
+        : `${normalizedBaseUrl}organization-types/`;
+      const method: HttpMethod = isUpdate ? 'put' : 'post';
 
       try {
         await callApi(method, url, values, {
@@ -137,18 +143,17 @@ export default function DepartmentsPage() {
 
         await MySwal.fire({
           icon: 'success',
-          title: `Department ${isUpdate ? 'updated' : 'created'} successfully!`,
+          title: `Organization type ${isUpdate ? 'updated' : 'created'} successfully!`,
           timer: 1500,
           showConfirmButton: false,
         });
 
-        // Invalidate and refetch queries to update the list immediately
-        queryClient.invalidateQueries({ queryKey: ['departments'] });
-        setCurrentPage(1); // Reset to first page after create/update to ensure new/updated item is visible
+        queryClient.invalidateQueries({ queryKey: ['organizationTypes'] }); // Invalidate specific query
+        setCurrentPage(1); // Reset to first page after create/update to see the new/updated item
 
         setFormOpen(false);
         setIsUpdate(false);
-        setSelectedDeptId('');
+        setSelectedOrgTypeId('');
         resetForm();
       } catch (error: unknown) {
         const apiError = error as ApiResponseError;
@@ -159,19 +164,17 @@ export default function DepartmentsPage() {
     },
   });
 
-  const handleUpdate = (dept: Department) => {
-    setSelectedDeptId(dept.id);
+  const handleUpdate = (orgType: OrganizationType) => {
+    setSelectedOrgTypeId(orgType.id);
     setIsUpdate(true);
-    formik.setValues({
-      department_name: dept.department_name,
-    });
+    formik.setValues({ org_type: orgType.org_type });
     setFormOpen(true);
   };
 
-  const handleDelete = async (deptId: string) => {
+  const handleDelete = async (orgTypeId: string) => {
     const confirmResult = await MySwal.fire({
       title: 'Are you sure?',
-      text: 'This will delete the department!',
+      text: 'This will delete the organization type!',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -180,31 +183,37 @@ export default function DepartmentsPage() {
     });
 
     if (confirmResult.isConfirmed) {
-      setDeletingDeptId(deptId); // Set the ID of the department being deleted
+      setDeletingOrgTypeId(orgTypeId);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL;
         const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-        await callApi('delete', `${normalizedBaseUrl}department/${deptId}`, null, {
+        await callApi('delete', `${normalizedBaseUrl}organization-types/${orgTypeId}`, null, {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         });
 
-        MySwal.fire('Deleted!', 'Department has been deleted.', 'success');
-        queryClient.invalidateQueries({ queryKey: ['departments'] }); // Invalidate specific query
+        MySwal.fire('Deleted!', 'Organization type has been deleted.', 'success');
+        queryClient.invalidateQueries({ queryKey: ['organizationTypes'] });
 
         // Adjust currentPage if the last item on a page was deleted and it's not page 1
-        if (departments.length === 1 && currentPage > 1) {
+        // This is simplified; a more robust solution might fetch count before and after delete.
+        // For now, if the current page becomes empty, go to the previous one.
+        if (organizationTypes.length === 1 && currentPage > 1) {
           setCurrentPage(prev => prev - 1);
         }
       } catch (error: unknown) {
         const apiError = error as ApiResponseError;
-        MySwal.fire('Error', apiError?.response?.data?.detail || 'Failed to delete department', 'error');
+        MySwal.fire('Error', apiError?.response?.data?.detail || 'Failed to delete organization type', 'error');
       } finally {
-        setDeletingDeptId(null); // Clear the ID, hiding the specific loader
+        setDeletingOrgTypeId(null);
       }
     }
   };
 
-  // Callback to update the current page, triggering a new API call
+  const handleView = (orgType: OrganizationType) => {
+    setViewOrg(orgType);
+    setShowViewModal(true);
+  };
+
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
   }, []);
@@ -226,6 +235,7 @@ export default function DepartmentsPage() {
     setCurrentPage(1); // Reset to first page when clearing search
   };
 
+  // Only show full-page loader for initial data loading
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -237,7 +247,7 @@ export default function DepartmentsPage() {
   if (isError) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-red-500">
-        <p>Failed to load departments. Please try again.</p>
+        <p>Failed to load organization types. Please try again.</p>
         <Button onClick={() => refetch()} label="Retry" variant="primary" className="mt-4" />
       </div>
     );
@@ -245,15 +255,15 @@ export default function DepartmentsPage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-4xl rounded bg-white p-6 shadow">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Department Management</h2>
+      <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Organization Types</h2>
           <Button
-            label="Create Department"
+            label="Create Organization Type"
             onClick={() => {
               setFormOpen(true);
               setIsUpdate(false);
-              setSelectedDeptId('');
+              setSelectedOrgTypeId('');
               formik.resetForm();
             }}
             variant="primary"
@@ -261,7 +271,7 @@ export default function DepartmentsPage() {
           />
         </div>
 
-        {/* Search Box for Departments */}
+        {/* Search Box for Organization Types */}
         <div className="w-full px-4 py-3">
           <div className="relative w-full">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -269,7 +279,7 @@ export default function DepartmentsPage() {
             </span>
             <input
               type="text"
-              placeholder="Search by department name..."
+              placeholder="Search by organization type name..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -285,50 +295,49 @@ export default function DepartmentsPage() {
           </div>
         </div>
 
+        {/* Form Modal */}
         {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+          <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl relative">
               {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
                   <Loader />
                 </div>
               )}
-              <h3 className="mb-4 text-xl font-semibold">
-                {isUpdate ? 'Update Department' : 'Create Department'}
+              <h3 className="text-xl font-semibold mb-4">
+                {isUpdate ? 'Update Organization Type' : 'Create Organization Type'}
               </h3>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="department_name" className="mb-1 block">Department Name</label>
+                  <label htmlFor="org_type" className="block text-sm font-medium mb-1">Organization Type Name</label>
                   <input
+                    id="org_type"
+                    name="org_type"
                     type="text"
-                    id="department_name"
-                    name="department_name"
-                    value={formik.values.department_name}
+                    value={formik.values.org_type}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full border rounded px-3 py-2"
                     disabled={isSubmittingForm}
                   />
-                  {formik.touched.department_name && formik.errors.department_name && (
-                    <span className="text-sm text-red-500">{formik.errors.department_name}</span>
+                  {formik.touched.org_type && formik.errors.org_type && (
+                    <p className="text-sm text-red-500 mt-1">{formik.errors.org_type}</p>
                   )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-end gap-3">
                   <Button
-                    label="Cancel"
                     type="button"
+                    label="Cancel"
                     onClick={() => {
                       setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedDeptId('');
                       formik.resetForm();
                     }}
                     variant="secondary"
                     disabled={isSubmittingForm}
                   />
                   <Button
-                    label={isUpdate ? 'Update' : 'Create'}
                     type="submit"
+                    label={isUpdate ? 'Update' : 'Create'}
                     variant="primary"
                     disabled={isSubmittingForm}
                   />
@@ -338,21 +347,44 @@ export default function DepartmentsPage() {
           </div>
         )}
 
+        {/* View Modal */}
+        {showViewModal && viewOrg && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl relative">
+              <h3 className="text-xl font-semibold mb-4">🏢 Organization Type Details</h3>
+              {Object.entries(viewOrg).filter(([key]) => key !== 'id').map(([key, value]) => (
+                <div key={key} className="flex text-sm mb-1">
+                  <span className="font-semibold w-36 capitalize">{key.replace(/_/g, ' ')}:</span>
+                  <span>{String(value)}</span>
+                </div>
+              ))}
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl p-2"
+              >
+                ✖
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Table */}
         <div>
-          <h3 className="mb-4 text-xl font-semibold">All Departments</h3>
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">All Organization Types</h3>
           <Table
             columns={columns}
-            data={departments} // Table now receives only the current page's data
+            data={organizationTypes}
             currentPage={currentPage} // ADDED: Pass currentPage
             itemsPerPage={itemsPerPage} // ADDED: Pass itemsPerPage
-            actions={(dept: Department) => ( // Explicitly type 'dept'
-              <div className="relative"> {/* Add a relative container for positioning the loader */}
+            actions={(orgType: OrganizationType) => (
+              <div className="relative">
                 <ActionButtons
-                  onUpdate={() => handleUpdate(dept)}
-                  onDelete={() => handleDelete(dept.id)}
-                  showView={false} // Assuming you don't need a view action for departments
+                  onView={() => handleView(orgType)}
+                  onUpdate={() => handleUpdate(orgType)}
+                  onDelete={() => handleDelete(orgType.id)}
+                  showView
                 />
-                {deletingDeptId === dept.id && (
+                {deletingOrgTypeId === orgType.id && (
                   <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 rounded-md">
                     <Loader />
                   </div>
@@ -360,20 +392,20 @@ export default function DepartmentsPage() {
               </div>
             )}
           />
+        </div>
 
-          {/* Pagination Controls driven by backend data using the Pagination component */}
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">{totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
-              <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{' '}
-              <span className="font-medium">{totalItems}</span> results
-            </p>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
+        {/* Pagination Controls */}
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-gray-700">
+            Showing <span className="font-medium">{totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
+            <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{' '}
+            <span className="font-medium">{totalItems}</span> results
+          </p>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
       </div>
     </div>
