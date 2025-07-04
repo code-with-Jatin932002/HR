@@ -14,16 +14,6 @@ export default function DashboardPage() {
 
   if (loading) return null;
 
-  // Removed redundant useEffect, as useProtectRoute handles authentication checks
-  // useEffect(() => {
-  //   const token = localStorage.getItem('token');
-  //   if (!token) {
-  //     router.replace('/'); // redirect to login if no token
-  //   }
-  // }, []);
-
-
-
   return (
       <div className="w-full px-4 sm:px-6 lg:px-8">
     <div className="p-6 min-h-screen bg-gray-100">
