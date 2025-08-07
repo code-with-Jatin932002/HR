@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState } from 'react';
-import Swal from 'sweetalert2';
+import toast from 'react-hot-toast'; // Changed from Swal to toast
 import { FaShieldAlt } from 'react-icons/fa';
 import Button from './Button'; // Assuming Button component is in the same directory
 import callApi from '@/utils/callApi'; // Assuming callApi utility is available
@@ -17,10 +18,6 @@ interface OtpVerificationFormProps {
   onCancel: () => void;
 }
 
-/**
- * OtpVerificationForm component handles the input and verification of a One-Time Password (OTP).
- * It prompts the user to enter the OTP sent to their email and calls the backend API to verify it.
- */
 export default function OtpVerificationForm({
   email,
   onVerificationSuccess,
@@ -29,13 +26,10 @@ export default function OtpVerificationForm({
   const [otp, setOtp] = useState<string>('');
   const [isVerifying, setIsVerifying] = useState<boolean>(false); // State for loading indicator
 
-  /**
-   * Handles the OTP verification process when the user submits the OTP.
-   * Calls the backend's /organization/verify-otp endpoint.
-   */
+  
   const handleOtpVerification = async () => {
     if (!otp) {
-      Swal.fire('Error ❌', 'Please enter the OTP.', 'error');
+      toast.error('Please enter the OTP.', { position: 'top-center' }); // Changed from Swal to toast
       return;
     }
 
@@ -53,7 +47,7 @@ export default function OtpVerificationForm({
       });
 
       if (response && response.detail === 'OTP verified successfully') {
-        Swal.fire('Success ✅', 'Account verified successfully! You can now sign in.', 'success');
+        toast.success('Account verified successfully! You can now sign in.', { position: 'top-center' }); // Changed from Swal to toast
         setOtp(''); // Clear OTP field
         onVerificationSuccess(); // Trigger the success callback (e.g., redirect to sign-in)
       } else {
@@ -61,7 +55,7 @@ export default function OtpVerificationForm({
         if (response && response.detail) {
           errorMessage = response.detail;
         }
-        Swal.fire('Error ❌', errorMessage, 'error');
+        toast.error(errorMessage, { position: 'top-center' }); // Changed from Swal to toast
       }
     } catch (err: any) {
       let errorMessage = 'An error occurred during OTP verification.';
@@ -70,7 +64,7 @@ export default function OtpVerificationForm({
       } else if (err?.detail) {
         errorMessage = err.detail;
       }
-      Swal.fire('Error ❌', errorMessage, 'error');
+      toast.error(errorMessage, { position: 'top-center' }); // Changed from Swal to toast
     } finally {
       setIsVerifying(false); // End loading
     }
@@ -117,10 +111,6 @@ export default function OtpVerificationForm({
         disabled={isVerifying} // Disable cancel while verifying
       />
 
-      {/* Optional: Add a "Resend OTP" button - You would add logic here to trigger a resend API call */}
-      {/* <button className="w-full mt-2 text-blue-600 hover:text-blue-800 font-semibold cursor-pointer text-sm">
-        Resend OTP
-      </button> */}
     </div>
   );
 }

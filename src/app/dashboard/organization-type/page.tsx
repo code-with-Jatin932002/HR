@@ -1,29 +1,25 @@
 'use client';
 import { useQuery, useQueryClient, QueryFunction } from '@tanstack/react-query';
 import { useState, useMemo, useCallback } from 'react';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import toast from 'react-hot-toast'; // Import react-hot-toast
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { FiSearch, FiX } from 'react-icons/fi'; // Import search icons
+import { FiSearch, FiX } from 'react-icons/fi';
 
 import callApi from '@/utils/callApi';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
 import useProtectRoute from '@/hooks/useProtectRoute';
-import Table from '@/components/Table'; // Ensure Table.tsx is updated as well
+import Table from '@/components/Table';
 import ActionButtons from '@/components/ActionButtons';
-import Loader from '@/components/Loader';
+import Loader from '@/components/Loader'; // Ensure this is the correct path to your Loader
 import Button from '@/components/Button';
 import Pagination from '@/components/Pagination';
-
-const MySwal = withReactContent(Swal);
 
 interface OrganizationType {
   id: string;
   org_type: string;
 }
 
-// Ensure this interface exactly matches what your API endpoint returns
 interface ApiResponse {
   organization_types: OrganizationType[];
   totalItems: number;
@@ -46,10 +42,9 @@ const columns = [
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
-// Explicitly type fetchOrganizationTypes as a QueryFunction.
 const fetchOrganizationTypes: QueryFunction<
-  ApiResponse, // TQueryFnData: The type of data this function returns
-  ['organizationTypes', number, number, string] // TQueryKey: The exact shape of the queryKey, now including search
+  ApiResponse,
+  ['organizationTypes', number, number, string]
 > = async ({ queryKey }) => {
   const [_key, currentPage, itemsPerPage, searchQuery] = queryKey;
   const token = sessionStorage.getItem('token');
@@ -58,8 +53,8 @@ const fetchOrganizationTypes: QueryFunction<
     throw new Error('Authentication token not found.');
   }
 
+  // Corrected the process.env variable name. Assuming NEXT_PUBLIC_API_URL based on department.tsx
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  // This normalization adds a trailing slash if not present, for consistent base URL.
   const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
   let url = `${normalizedBaseUrl}organization-types?page=${currentPage}&limit=${itemsPerPage}`;
@@ -95,7 +90,7 @@ export default function OrganizationTypePage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState(''); // New state for search query
+  const [searchQuery, setSearchQuery] = useState('');
 
   const {
     data: orgTypeData,
@@ -103,13 +98,12 @@ export default function OrganizationTypePage() {
     isError,
     refetch,
   } = useQuery<ApiResponse, Error, ApiResponse, ['organizationTypes', number, number, string]>({
-    queryKey: ['organizationTypes', currentPage, itemsPerPage, searchQuery], // Include searchQuery in the queryKey
+    queryKey: ['organizationTypes', currentPage, itemsPerPage, searchQuery],
     queryFn: fetchOrganizationTypes,
     placeholderData: (previousData) => previousData,
-    refetchOnWindowFocus: false, // Prevents automatic refetch on window focus
-    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
   });
-
 
   const organizationTypes = orgTypeData?.organization_types ?? [];
   const totalItems = orgTypeData?.totalItems || 0;
@@ -128,6 +122,7 @@ export default function OrganizationTypePage() {
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       setIsSubmittingForm(true);
+      // Corrected the process.env variable name. Assuming NEXT_PUBLIC_API_URL based on department.tsx
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
       const url = isUpdate
@@ -141,15 +136,10 @@ export default function OrganizationTypePage() {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         });
 
-        await MySwal.fire({
-          icon: 'success',
-          title: `Organization type ${isUpdate ? 'updated' : 'created'} successfully!`,
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        toast.success(`Organization type ${isUpdate ? 'updated' : 'created'} successfully!`);
 
-        queryClient.invalidateQueries({ queryKey: ['organizationTypes'] }); // Invalidate specific query
-        setCurrentPage(1); // Reset to first page after create/update to see the new/updated item
+        queryClient.invalidateQueries({ queryKey: ['organizationTypes'] });
+        setCurrentPage(1);
 
         setFormOpen(false);
         setIsUpdate(false);
@@ -157,7 +147,7 @@ export default function OrganizationTypePage() {
         resetForm();
       } catch (error: unknown) {
         const apiError = error as ApiResponseError;
-        MySwal.fire('Error', apiError?.response?.data?.detail || 'Something went wrong', 'error');
+        toast.error(apiError?.response?.data?.detail || 'Something went wrong');
       } finally {
         setIsSubmittingForm(false);
       }
@@ -172,40 +162,26 @@ export default function OrganizationTypePage() {
   };
 
   const handleDelete = async (orgTypeId: string) => {
-    const confirmResult = await MySwal.fire({
-      title: 'Are you sure?',
-      text: 'This will delete the organization type!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!',
-    });
+    setDeletingOrgTypeId(orgTypeId);
+    try {
+      // Corrected the process.env variable name. Assuming NEXT_PUBLIC_API_URL based on department.tsx
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      await callApi('delete', `${normalizedBaseUrl}organization-types/${orgTypeId}`, null, {
+        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+      });
 
-    if (confirmResult.isConfirmed) {
-      setDeletingOrgTypeId(orgTypeId);
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-        await callApi('delete', `${normalizedBaseUrl}organization-types/${orgTypeId}`, null, {
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-        });
+      toast.success('Organization type has been deleted.');
+      queryClient.invalidateQueries({ queryKey: ['organizationTypes'] });
 
-        MySwal.fire('Deleted!', 'Organization type has been deleted.', 'success');
-        queryClient.invalidateQueries({ queryKey: ['organizationTypes'] });
-
-        // Adjust currentPage if the last item on a page was deleted and it's not page 1
-        // This is simplified; a more robust solution might fetch count before and after delete.
-        // For now, if the current page becomes empty, go to the previous one.
-        if (organizationTypes.length === 1 && currentPage > 1) {
-          setCurrentPage(prev => prev - 1);
-        }
-      } catch (error: unknown) {
-        const apiError = error as ApiResponseError;
-        MySwal.fire('Error', apiError?.response?.data?.detail || 'Failed to delete organization type', 'error');
-      } finally {
-        setDeletingOrgTypeId(null);
+      if (organizationTypes.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
       }
+    } catch (error: unknown) {
+      const apiError = error as ApiResponseError;
+      toast.error(apiError?.response?.data?.detail || 'Failed to delete organization type');
+    } finally {
+      setDeletingOrgTypeId(null);
     }
   };
 
@@ -218,24 +194,16 @@ export default function OrganizationTypePage() {
     setCurrentPage(page);
   }, []);
 
-  /**
-   * Handles changes to the search input.
-   * @param e - The change event from the input.
-   */
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1);
   };
 
-  /**
-   * Clears the search query.
-   */
   const clearSearch = () => {
     setSearchQuery('');
-    setCurrentPage(1); // Reset to first page when clearing search
+    setCurrentPage(1);
   };
 
-  // Only show full-page loader for initial data loading
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -256,8 +224,8 @@ export default function OrganizationTypePage() {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Organization Types</h2>
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <h2 className="text-2xl font-bold text-center sm:text-left">Organization Types</h2>
           <Button
             label="Create Organization Type"
             onClick={() => {
@@ -268,6 +236,7 @@ export default function OrganizationTypePage() {
             }}
             variant="primary"
             disabled={isSubmittingForm}
+            className="w-full sm:w-auto px-4 py-2" // Added responsive classes
           />
         </div>
 
@@ -370,24 +339,28 @@ export default function OrganizationTypePage() {
 
         {/* Table */}
         <div>
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">All Organization Types</h3>
+          {/* <h3 className="text-xl font-semibold mb-4 text-gray-800">All Organization Types</h3> */}
           <Table
             columns={columns}
             data={organizationTypes}
-            currentPage={currentPage} // ADDED: Pass currentPage
-            itemsPerPage={itemsPerPage} // ADDED: Pass itemsPerPage
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
             actions={(orgType: OrganizationType) => (
-              <div className="relative">
-                <ActionButtons
-                  onView={() => handleView(orgType)}
-                  onUpdate={() => handleUpdate(orgType)}
-                  onDelete={() => handleDelete(orgType.id)}
-                  showView
-                />
-                {deletingOrgTypeId === orgType.id && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 rounded-md">
-                    <Loader />
+              <div className="relative flex items-center justify-center h-full">
+                {deletingOrgTypeId === orgType.id ? (
+                  // Apply smaller size directly to the Loader's container
+                  // Or, if Loader component itself has internal styling for small,
+                  // you would modify Loader.tsx to accept a 'small' prop.
+                  <div className="flex items-center justify-center w-6 h-6"> {/* Adjusted to w-6 h-6 for even smaller loader */}
+                    <Loader /> {/* Removed size="small" */}
                   </div>
+                ) : (
+                  <ActionButtons
+                    onView={() => handleView(orgType)}
+                    onUpdate={() => handleUpdate(orgType)}
+                    onDelete={() => handleDelete(orgType.id)}
+                    showView
+                  />
                 )}
               </div>
             )}

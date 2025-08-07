@@ -1,79 +1,4 @@
-
-// export const getSidebarRoutes = (role: string) => {
-//   const commonRoutes = [
-//     {
-//       name: 'User Management',
-//       children: [
-//         { name: 'Create User', path: '/dashboard/create-user' },
-//         { name: 'View Users', path: '/dashboard/view-users' },
-//       ],
-//     },
-//     // { name: 'HR Details', path: '/dashboard/hr-details' },
-//     // { name: 'Employees', path: '/dashboard/employees' },
-//     { name: 'Departments', path: '/dashboard/departments' },
-//     { name: 'Attendance', path: '/dashboard/attendance' },
-//     { name: 'Payroll', path: '/dashboard/payroll' },
-//     { name: 'Jobs', path: '/dashboard/jobs' },
-//     { name: 'Candidates', path: '/dashboard/candidates' },
-//     { name: 'Leaves', path: '/dashboard/leaves' },
-//     { name: 'Holidays', path: '/dashboard/holidays' },
-//   ];
-
-//   switch (role) {
-//     case 'super_Admin':
-//       // Filter out Payroll, Jobs, and Candidates
-//       const filteredRoutes = commonRoutes.filter(
-//         (route) =>
-//           route.name !== 'Payroll' &&
-//           route.name !== 'Jobs' &&
-//           route.name !== 'Candidates' &&
-//           route.name !== 'Leaves'
-//       );
-//       return [
-//         ...filteredRoutes,
-//         { name: 'Organizations', path: '/dashboard/organization' },
-//          { name: 'Organizations Type', path: '/dashboard/organization-type' },
-
-//       ];
-
-//     case 'Admin':
-//       return commonRoutes;
-
-//     case 'Hr':
-//       return [
-//         {
-//           name: 'User Management',
-//           children: [
-//             { name: 'Create User', path: '/dashboard/create-user' },
-//             { name: 'View Users', path: '/dashboard/view-users' },
-//           ],
-//         },
-//         { name: 'HR Details', path: '/dashboard/hr-details' },
-//         { name: 'Employees', path: '/dashboard/employees' },
-//         { name: 'Attendance', path: '/dashboard/attendance' },
-//         { name: 'Jobs', path: '/dashboard/jobs' },
-//         { name: 'Candidates', path: '/dashboard/candidates' },
-//         { name: 'Leaves', path: '/dashboard/leaves' },
-//       ];
-
-//     case 'Employee':
-//       return [
-//         // { name: 'Candidates', path: '/dashboard/candidates' },
-//         { name: 'Leaves', path: '/dashboard/leaves' },
-//         { name: 'Holidays', path: '/dashboard/holidays' },
-//         { name: 'Attendance', path: '/dashboard/attendance' },
-//       ];
-
-//     default:
-//       return [];
-//   }
-// };
-
-
-
-
 // utils/sidebarRoutes.ts
-
 export const getSidebarRoutes = (role: string) => {
   const commonRoutes = [
     {
@@ -84,59 +9,79 @@ export const getSidebarRoutes = (role: string) => {
       ],
     },
     { name: 'Departments', path: '/dashboard/departments' },
-    { name: 'Attendance', path: '/dashboard/attendance' },
+    // { name: 'Attendance', path: '/dashboard/attendance' },
     { name: 'Payroll', path: '/dashboard/payroll' },
     { name: 'Jobs', path: '/dashboard/jobs' },
     { name: 'Candidates', path: '/dashboard/candidates' },
-    { name: 'Leaves', path: '/dashboard/leaves' },
+    {
+      name: 'Leaves',
+      children: [
+        { name: 'Create Leave', path: '/dashboard/leaves/pending' },
+        { name: 'Accepted', path: '/dashboard/leaves/accepted' },
+        { name: 'Rejected', path: '/dashboard/leaves/rejected' },
+      ],
+    },
     { name: 'Holidays', path: '/dashboard/holidays' },
+    // Add Time Tracker here
+    { name: 'Time Tracker', path: '/dashboard/time-tracker' }, // <-- NEW
   ];
 
   switch (role) {
     case 'super_Admin':
-      // Filter out Payroll, Jobs, Candidates, and Leaves
-      const filteredRoutes = commonRoutes.filter(
+      const filteredRoutesForAdmin = commonRoutes.filter(
         (route) =>
           route.name !== 'Payroll' &&
           route.name !== 'Jobs' &&
           route.name !== 'Candidates' &&
-          route.name !== 'Leaves'
+          route.name !== 'Leaves' &&
+          route.name !== 'Time Tracker' // <-- Ensure Super Admin doesn't see it
       );
       return [
-        ...filteredRoutes,
+        ...filteredRoutesForAdmin,
         { name: 'Organizations', path: '/dashboard/organization' },
         { name: 'Organizations Type', path: '/dashboard/organization-type' },
       ];
 
-    case 'Admin':
-      return commonRoutes;
-
     case 'Hr':
-    case 'Manager': // Manager gets the same access as Hr
-      return [
-        {
-          name: 'User Management',
-          children: [
-            { name: 'Create User', path: '/dashboard/create-user' },
-            { name: 'View Users', path: '/dashboard/view-users' },
-          ],
-        },
-        { name: 'HR Details', path: '/dashboard/hr-details' },
-        // { name: 'Employees', path: '/dashboard/employees' },
-        { name: 'Attendance', path: '/dashboard/attendance' },
-        { name: 'Jobs', path: '/dashboard/jobs' },
-        { name: 'Candidates', path: '/dashboard/candidates' },
-        { name: 'Leaves', path: '/dashboard/leaves' },
-      ];
+    case 'Manager':
+      return commonRoutes;
 
     case 'Employee':
       return [
-        { name: 'Leaves', path: '/dashboard/leaves' },
+        {
+          name: 'Leaves',
+          children: [
+            { name: 'Create Leave', path: '/dashboard/leaves/pending' },
+            { name: 'Accepted', path: '/dashboard/leaves/accepted' },
+            { name: 'Rejected', path: '/dashboard/leaves/rejected' },
+          ],
+        },
         { name: 'Holidays', path: '/dashboard/holidays' },
-        { name: 'Attendance', path: '/dashboard/attendance' },
+        // { name: 'Attendance', path: '/dashboard/attendance' },
+        { name: 'Time Tracker', path: '/dashboard/time-tracker' }, // <-- NEW for Employee
       ];
 
     default:
-      return [];
+      return commonRoutes;
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
