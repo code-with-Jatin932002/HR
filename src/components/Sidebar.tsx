@@ -5,56 +5,71 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { getSidebarRoutes } from '@/utils/sidebarRoutes';
-
 import {
-  FaUserPlus,
-  FaUsers,
-  FaIdCard,
-  FaBuilding,
-  FaSitemap,
-  FaClock,
-  FaMoneyBill,
-  FaBriefcase,
-  FaUserFriends,
-  FaPlane,
-  FaCalendarAlt,
-  FaChevronDown,
-  FaChevronUp,
+  FaUserPlus, FaUsers, FaIdCard, FaBuilding, FaSitemap, FaClock,
+  FaMoneyBill, FaBriefcase, FaUserFriends, FaPlane, FaCalendarAlt,
+  FaChevronDown, FaChevronUp, FaPlusCircle, FaCheckCircle, FaTimesCircle,
+  FaHourglassHalf,FaTachometerAlt // Import the new icon for Time Tracker
 } from 'react-icons/fa';
 
+interface ChildRoute {
+  name: string;
+  path: string;
+}
+
+interface ParentRoute {
+  name: string;
+  children: ChildRoute[];
+}
+
+type SidebarRoute = ChildRoute | ParentRoute;
+
 const iconMap: Record<string, React.ReactNode> = {
-  'Create User': <FaUserPlus className="text-lg md:text-xl" />,
-  'View Users': <FaUsers className="text-lg md:text-xl" />,
-  'User Management': <FaUsers className="text-lg md:text-xl" />,
-  'HR Details': <FaIdCard className="text-lg md:text-xl" />,
-  Employees: <FaBuilding className="text-lg md:text-xl" />,
-  Departments: <FaSitemap className="text-lg md:text-xl" />,
-  Attendance: <FaClock className="text-lg md:text-xl" />,
-  Payroll: <FaMoneyBill className="text-lg md:text-xl" />,
-  Jobs: <FaBriefcase className="text-lg md:text-xl" />,
-  Candidates: <FaUserFriends className="text-lg md:text-xl" />,
-  Leaves: <FaPlane className="text-lg md:text-xl" />,
-  Holidays: <FaCalendarAlt className="text-lg md:text-xl" />,
+  'Create User': <FaUserPlus className="text-xl" />,
+  'View Users': <FaUsers className="text-xl" />,
+  'User Management': <FaUsers className="text-xl" />,
+  'HR Details': <FaIdCard className="text-xl" />,
+  Employees: <FaBuilding className="text-xl" />,
+  Departments: <FaSitemap className="text-xl" />,
+  Attendance: <FaClock className="text-xl" />,
+  Payroll: <FaMoneyBill className="text-xl" />,
+  Jobs: <FaBriefcase className="text-xl" />,
+  Candidates: <FaUserFriends className="text-xl" />,
+  Leaves: <FaPlane className="text-xl" />,
+  'Create Leave': <FaPlusCircle className="text-xl" />,
+  Accepted: <FaCheckCircle className="text-xl" />,
+  Rejected: <FaTimesCircle className="text-xl" />,
+  Holidays: <FaCalendarAlt className="text-xl" />,
+  Organizations: <FaBuilding className="text-xl" />,
+  'Organizations Type': <FaSitemap className="text-xl" />,
+  Dashboard: <FaTachometerAlt className="text-xl" />, // Placeholder icon for Dashboard
+  'Time Tracker': <FaHourglassHalf className="text-xl" />, // Added icon for Time Tracker
 };
 
 const Sidebar = () => {
   const pathname = usePathname();
   const [role, setRole] = useState('');
-  const [routes, setRoutes] = useState<any[]>([]);
+  const [routes, setRoutes] = useState<SidebarRoute[]>([]);
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // const storedRole = localStorage.getItem('role_type') || '';
     const storedRole = sessionStorage.getItem('role_type') || '';
-
     setRole(storedRole);
-    setRoutes(getSidebarRoutes(storedRole));
-  }, []);
+    const availableRoutes = getSidebarRoutes(storedRole);
+    setRoutes(availableRoutes);
 
-  const isActive = (path: string) =>
-    pathname === path
-      ? 'bg-blue-600 text-white'
-      : 'bg-gray-100 text-gray-800 hover:bg-blue-100';
+    const initialOpenMenus: Record<string, boolean> = {};
+    availableRoutes.forEach((route) => {
+      if ('children' in route && route.children) {
+        if (route.children.some((sub: ChildRoute) => pathname.startsWith(sub.path))) {
+          initialOpenMenus[route.name] = true;
+        }
+      }
+    });
+    setOpenMenus(initialOpenMenus);
+  }, [pathname]);
+
+  const isActive = (path: string) => pathname === path;
 
   const toggleMenu = (name: string) => {
     setOpenMenus((prev) => ({
@@ -64,51 +79,61 @@ const Sidebar = () => {
   };
 
   return (
-    // The sidebar itself will be h-full (filling available height) and have its own scrollbar
-    <aside className="h-full overflow-y-auto bg-white border-r shadow-sm w-16 md:w-64 transition-all duration-300">
-      <div className="p-4">
-        <h2 className="text-xl font-bold text-blue-600 mb-6 text-center hidden md:block">
-          Dashboard
-        </h2>
+    <aside className="h-full overflow-y-auto bg-white border-r w-20 md:w-64 transition-all duration-300 shadow-sm">
+      <div className="p-4 pt-6">
+        {/* Top - Dashboard Item */}
+        <div className="mb-2.5"> {/* 10px margin-bottom */}
+          <Link
+            href="/dashboard"
+            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-base font-semibold transition-all duration-200 justify-center md:justify-start
+              ${pathname === '/dashboard'
+                ? 'bg-[#EEF4FF] text-blue-600 border-l-4 border-blue-600'
+                : 'text-gray-600 hover:bg-blue-100'
+              }`}
+          >
+            {iconMap['Dashboard']}
+            <span className="hidden md:inline">Dashboard</span>
+          </Link>
+        </div>
 
-        <ul className="space-y-2">
+        {/* Sidebar Items */}
+        <ul className="flex flex-col gap-2.5">
           {routes.map((route) => {
             const isOpen = openMenus[route.name] || false;
 
-            if ('children' in route) {
+            if ('children' in route && route.children) {
               return (
                 <li key={route.name}>
                   <div
                     onClick={() => toggleMenu(route.name)}
-                    className={`flex items-center justify-between px-3 py-3 rounded-lg font-medium text-base cursor-pointer transition-all duration-200 w-full ${
-                      isOpen ? 'bg-blue-100' : 'bg-gray-100'
-                    } hover:bg-blue-200`}
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-200 w-full text-base
+                      ${isOpen
+                        ? 'bg-[#EEF4FF] text-blue-600 font-semibold border-l-4 border-blue-600'
+                        : 'text-gray-800 hover:bg-blue-100'
+                      }`}
                   >
                     <div className="flex items-center gap-4 w-full justify-center md:justify-start">
-                      <span className="text-lg md:text-xl">
-                        {iconMap[route.name] || <FaUsers className="text-lg md:text-xl" />}
-                      </span>
+                      {iconMap[route.name]}
                       <span className="hidden md:inline truncate">{route.name}</span>
                     </div>
-                    {/* Hide toggle icon on small screens */}
-                    <span className="hidden md:block text-lg md:text-xl">
+                    <span className="hidden md:block">
                       {isOpen ? <FaChevronUp /> : <FaChevronDown />}
                     </span>
                   </div>
 
                   {isOpen && (
-                    <ul className="ml-0 md:ml-6 mt-2 space-y-1">
-                      {route.children.map((sub: any) => (
+                    <ul className="flex flex-col gap-2.5 mt-2 ml-0 md:ml-6">
+                      {route.children.map((sub: ChildRoute) => (
                         <li key={sub.path}>
                           <Link
                             href={sub.path}
-                            className={`flex items-center gap-4 px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm md:text-base justify-center md:justify-start ${isActive(
-                              sub.path
-                            )}`}
+                            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm justify-center md:justify-start
+                              ${isActive(sub.path)
+                                ? 'bg-[#EEF4FF] text-blue-600 font-medium border-l-4 border-blue-600'
+                                : 'text-gray-700 hover:bg-blue-100'
+                              }`}
                           >
-                            <span className="text-lg md:text-xl">
-                              {iconMap[sub.name] || <FaUsers className="text-lg md:text-xl" />}
-                            </span>
+                            {iconMap[sub.name]}
                             <span className="hidden md:inline truncate">{sub.name}</span>
                           </Link>
                         </li>
@@ -120,14 +145,16 @@ const Sidebar = () => {
             }
 
             return (
-              <li key={route.path}>
+              <li key={route.name}>
                 <Link
-                  href={route.path}
-                  className={`flex items-center gap-4 px-3 py-3 rounded-lg transition-all duration-200 cursor-pointer font-medium text-base justify-center md:justify-start ${isActive(
-                    route.path
-                  )}`}
+                  href={(route as ChildRoute).path}
+                  className={`flex items-center gap-4 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer text-base justify-center md:justify-start
+                    ${isActive((route as ChildRoute).path)
+                      ? 'bg-[#EEF4FF] text-blue-600 font-semibold border-l-4 border-blue-600'
+                      : 'text-gray-800 hover:bg-blue-100'
+                    }`}
                 >
-                  <span className="text-lg md:text-xl">{iconMap[route.name] || <FaUsers className="text-lg md:text-xl" />}</span>
+                  {iconMap[route.name]}
                   <span className="hidden md:inline truncate">{route.name}</span>
                 </Link>
               </li>

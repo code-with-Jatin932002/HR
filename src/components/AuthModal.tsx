@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -9,6 +8,8 @@ import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Button from './Button';
+import toast from 'react-hot-toast';
+import AuthSvg from './AuthSvg';
 
 interface Props {
   onClose: () => void;
@@ -37,8 +38,6 @@ const emailValidation = Yup.string()
 
 export default function AuthModal({ onClose }: Props) {
   const { login } = useAuth();
-  const [success, setSuccess] = useState(false);
-  const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -54,8 +53,6 @@ export default function AuthModal({ onClose }: Props) {
     }),
     onSubmit: async (values) => {
       setLoading(true);
-      setMessage('');
-      setSuccess(false);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL;
         const data = await callApi(
@@ -71,32 +68,66 @@ export default function AuthModal({ onClose }: Props) {
         );
 
         if (data.access_token && data.role_type) {
-          setMessage('✅ Login successful! Redirecting...');
-          setSuccess(true);
-          setLoading(false);
-          setTimeout(() => {
-            login(data.access_token, values.email, data.role_type, data.organization_id);
-            onClose();
-            router.replace('/dashboard');
-          }, 1000);
+          toast.success('Login successful! Redirecting...', {
+            position: 'top-center',
+          });
+
+          sessionStorage.setItem('token', data.access_token);
+          sessionStorage.setItem('refresh_token', data.refresh_token);
+          sessionStorage.setItem('email', values.email);
+          sessionStorage.setItem('role_type', data.role_type);
+
+          if (data.organization?.id) {
+            sessionStorage.setItem('organization_id', data.organization.id);
+            sessionStorage.setItem('organization_org_name', data.organization.org_name);
+            sessionStorage.setItem('organization_address', data.organization.address);
+            sessionStorage.setItem('organization_phone_number', data.organization.phone_number);
+            sessionStorage.setItem('organization_description', data.organization.description);
+            sessionStorage.setItem('organization_website', data.organization.website);
+            sessionStorage.setItem('organization_gst_number', data.organization.gst_number);
+          }
+
+          login(data.access_token, values.email, data.role_type, data.organization?.id);
+
+          router.replace('/dashboard');
+          
+          onClose();
+
         } else {
-          formik.setErrors({ password: 'Login failed: Missing authentication data.' });
-          setMessage('Login failed. Please try again.');
-          setSuccess(false);
+          const errorMsg = 'Login failed: Missing authentication data.';
+          formik.setErrors({ password: errorMsg });
+          toast.error(errorMsg, {
+            position: 'top-center',
+          });
           setLoading(false);
         }
       } catch (error: any) {
-        let errorMsg = 'Invalid Email and Password!';
-        if (error?.response?.data?.detail) {
-          if (Array.isArray(error.response.data.detail)) {
-            errorMsg = error.response.data.detail.map((d: any) => d.msg).join(', ');
-          } else {
+        let errorMsg = 'An unexpected error occurred. Please try again.';
+
+        if (error.response) {
+          if (error.response.status === 401 && error.response.data?.detail) {
             errorMsg = error.response.data.detail;
+          } else if (error.response.data?.detail) {
+            if (Array.isArray(error.response.data.detail)) {
+              errorMsg = error.response.data.detail.map((d: any) => d.msg).join(', ');
+            } else {
+              errorMsg = error.response.data.detail;
+            }
+          } else if (error.response.status === 404) {
+            errorMsg = 'Endpoint not found. Please check the API URL.';
+          } else {
+            errorMsg = `Error: ${error.response.status} - ${error.response.statusText || 'Something went wrong!'}`;
           }
+        } else if (error.request) {
+          errorMsg = 'No response from server. Please check your internet connection.';
+        } else {
+          errorMsg = error.message || 'An unknown error occurred.';
         }
+
         formik.setErrors({ password: errorMsg });
-        setMessage(errorMsg);
-        setSuccess(false);
+        toast.error(errorMsg, {
+          position: 'top-center',
+        });
         setLoading(false);
       }
     },
@@ -106,18 +137,12 @@ export default function AuthModal({ onClose }: Props) {
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
       <div className="flex min-h-screen items-start md:items-center justify-center p-4">
         <div className="w-full max-w-2xl rounded-lg bg-white shadow-lg md:flex md:overflow-hidden animate-slide-down mt-10 md:mt-0">
-          {/* Left Side Image - Desktop only */}
-          <div className="hidden md:flex md:w-1/2 flex-col items-center justify-center bg-blue-100 p-6">
-            <img src="/hr1.png" alt="Login" className="mb-4 h-[320px] w-auto object-contain" />
-            <p className="text-center text-sm text-gray-600">Welcome! Please sign in to continue.</p>
+          <div className="hidden md:flex md:w-1/2 flex-col items-center justify-center bg-blue-100 p-0 relative min-h-[400px]">
+            <AuthSvg />
           </div>
-
-          {/* Right Side - Form */}
-          <div className="w-full md:w-1/2 p-6 md:p-10 max-h-screen overflow-y-auto">
+          <div className="w-full md:w-1/2 p-6 md:p-10 max-h-screen overflow-y-auto flex flex-col justify-center">
             <h2 className="mb-6 text-center text-2xl font-bold text-black">Sign In</h2>
-
             <form onSubmit={formik.handleSubmit}>
-              {/* Email */}
               <div className="mb-4">
                 <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700">Email</label>
                 <div className="relative">
@@ -137,8 +162,6 @@ export default function AuthModal({ onClose }: Props) {
                   <span className="mt-1 block text-sm text-red-500">{formik.errors.email}</span>
                 )}
               </div>
-
-              {/* Password */}
               <div className="mb-6">
                 <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">Password</label>
                 <div className="relative">
@@ -166,8 +189,6 @@ export default function AuthModal({ onClose }: Props) {
                   <span className="mt-1 block text-sm text-red-500">{formik.errors.password}</span>
                 )}
               </div>
-
-              {/* Buttons */}
               <div className="flex gap-4">
                 <Button
                   label="Cancel"
@@ -185,31 +206,6 @@ export default function AuthModal({ onClose }: Props) {
                 />
               </div>
             </form>
-
-            {/* Message */}
-            {/* {message && (
-              <div
-                className={`mt-4 rounded-lg px-4 py-2 text-center text-sm shadow-md ${
-                  success
-                    ? 'bg-green-100 text-green-700 border border-green-400'
-                    : 'bg-red-100 text-red-700 border border-red-400'
-                }`}
-              >
-                {message}
-              </div> */}
-               {message && (
-            <div
-              className={`fixed left-1/2 top-[calc(100vh/16)] z-[60] w-[80%] max-w-xl -translate-x-1/2 transform
-                ${
-                  success
-                    ? 'border border-green-400 bg-green-100 text-green-700'
-                    : 'border border-red-400 bg-red-100 text-red-700'
-                }
-                rounded-lg px-6 py-4 text-center text-lg shadow-lg`}
-            >
-              {message}
-            </div>
-            )}
           </div>
         </div>
       </div>

@@ -1,13 +1,13 @@
-
+// pending.tsx
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useProtectRoute from '@/hooks/useProtectRoute';
+import toast from 'react-hot-toast'; // Import react-hot-toast
+ import Swal from 'sweetalert2';
 
 import callApi from '@/utils/callApi';
 import ActionButtons from '@/components/ActionButtons';
@@ -16,7 +16,7 @@ import Loader from '@/components/Loader';
 import Button from "@/components/Button";
 import Pagination from '@/components/Pagination';
 
-const MySwal = withReactContent(Swal);
+// Removed MySwal as it's not used
 
 // Custom hook to get user role from localStorage
 const useUserRole = () => {
@@ -36,31 +36,12 @@ function getStatusColor(status: string) {
             return 'bg-green-100 text-green-700';
         case 'REJECTED':
             return 'bg-red-100 text-red-700';
-        default:
+        case 'PENDING':
             return 'bg-yellow-100 text-yellow-700';
+        default:
+            return 'bg-gray-100 text-gray-700';
     }
 }
-
-const columns = [
-    { label: 'Leave Type', key: 'leave_type' },
-    { label: 'Description', key: 'description' },
-    { label: 'From', key: 'start_date' },
-    { label: 'To', key: 'end_date' },
-    {
-        label: 'Status',
-        key: 'status',
-        render: (leave: any) => {
-            const status = leave.status || 'Pending';
-            return (
-                <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
-                >
-                    {status}
-                </span>
-            );
-        },
-    },
-];
 
 interface Leave {
     id?: string;
@@ -79,14 +60,13 @@ interface Leave {
     created_at?: string;
 }
 
-export default function LeavesPage() {
+export default function PendingLeavesPage() {
     useProtectRoute();
     const userRole = useUserRole();
-
     const [showForm, setShowForm] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
     const [isSubmittingForm, setIsSubmittingForm] = useState(false);
-    const [deletingLeaveId, setDeletingLeaveId] = useState<string | null>(null);
+    const [deletingLeaveId, setDeletingLeaveId] = useState<string | null>(null); // State to track deleting leave
 
     const [showViewForm, setShowViewForm] = useState(false);
     const [viewedLeave, setViewedLeave] = useState<Leave | null>(null);
@@ -95,30 +75,28 @@ export default function LeavesPage() {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
-
     const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
 
     const queryClient = useQueryClient();
-
     const fetchLeaves = async ({ queryKey }: { queryKey: any[] }) => {
         const [_key, currentPage, itemsPerPage] = queryKey;
         if (!token) {
             throw new Error('Authentication token not found. Please log in.');
         }
         const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        const responseData = await callApi('get', `${baseUrl}/leaves?page=${currentPage}&limit=${itemsPerPage}`, null, {
+        // Fetch only PENDING leaves
+        const responseData = await callApi('get', `${baseUrl}/leaves?page=${currentPage}&limit=${itemsPerPage}&status=PENDING`, null, {
             Authorization: `Bearer ${token}`,
         });
         return responseData;
     };
 
     const { data, isLoading, isError, refetch } = useQuery({
-        queryKey: ['leaves', currentPage, itemsPerPage],
+        queryKey: ['pendingLeaves', currentPage, itemsPerPage], // Updated query key
         queryFn: fetchLeaves,
         placeholderData: (previousData) => previousData,
         enabled: !!token,
     });
-
     const leaves = data?.leaves || [];
     const totalItems = data?.totalItems || 0;
     const totalPages = data?.totalPages || 1;
@@ -138,43 +116,16 @@ export default function LeavesPage() {
         },
         onSuccess: async () => {
             await refetch();
-            MySwal.fire({
-                icon: 'success',
-                title: editId ? 'Leave updated successfully' : 'Leave submitted successfully',
-                timer: 1500,
-                showConfirmButton: false,
-            });
+            toast.success(editId ? 'Leave updated successfully' : 'Leave submitted successfully');
             setShowForm(false);
             setEditId(null);
             formik.resetForm();
         },
         onError: (error: any) => {
-            MySwal.fire('Error', error?.response?.data?.detail || 'Failed to submit leave', 'error');
+            toast.error(error?.response?.data?.detail || 'Failed to submit leave');
         },
         onSettled: () => {
             setIsSubmittingForm(false);
-        },
-    });
-
-    const deleteMutation = useMutation({
-        mutationFn: async (id: string) => {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-            return await callApi('delete', `${baseUrl}/leaves/${id}`, null, {
-                Authorization: `Bearer ${token}`,
-            });
-        },
-        onMutate: (id) => {
-            setDeletingLeaveId(id);
-        },
-        onSuccess: async () => {
-            await refetch();
-            MySwal.fire('Deleted!', 'Leave has been deleted.', 'success');
-        },
-        onError: (error: any) => {
-            MySwal.fire('Error', error?.response?.data?.detail || 'Failed to delete leave', 'error');
-        },
-        onSettled: () => {
-            setDeletingLeaveId(null);
         },
     });
 
@@ -191,22 +142,44 @@ export default function LeavesPage() {
         },
         onSuccess: async (data, variables) => {
             await refetch();
-            MySwal.fire({
-                icon: 'success',
-                title: `Leave ${variables.status.toLowerCase()} successfully`,
-                timer: 1500,
-                showConfirmButton: false,
-            });
+            toast.success(`Leave ${variables.status.toLowerCase()} successfully`);
             setShowViewForm(false); // Close the view form after status update
             setViewedLeave(null);
         },
         onError: (error: any) => {
-            MySwal.fire('Error', error?.response?.data?.detail || 'Failed to update leave status', 'error');
+            toast.error(error?.response?.data?.detail || 'Failed to update leave status');
         },
         onSettled: () => {
             setIsSubmittingStatus(false);
         },
     });
+
+    // --- Delete Mutation ---
+    const deleteMutation = useMutation({
+        mutationFn: async (leaveId: string) => {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+            return await callApi('delete', `${baseUrl}/leaves/${leaveId}`, null, {
+                Authorization: `Bearer ${token}`,
+            });
+        },
+        onMutate: (leaveId) => {
+            setDeletingLeaveId(leaveId); // Set the ID of the leave being deleted
+            toast.loading('Deleting leave...'); // Show loading toast
+        },
+        onSuccess: async () => {
+            await refetch();
+            toast.dismiss(); // Dismiss the loading toast
+            toast.success('Leave deleted successfully'); // Show success toast
+        },
+        onError: (error: any) => {
+            toast.dismiss(); // Dismiss the loading toast
+            toast.error(error?.response?.data?.detail || 'Failed to delete leave'); // Show error toast
+        },
+        onSettled: () => {
+            setDeletingLeaveId(null); // Clear the deleting state
+        },
+    });
+    // --- End Delete Mutation ---
 
     const formik = useFormik({
         initialValues: {
@@ -251,22 +224,6 @@ export default function LeavesPage() {
         },
     });
 
-    const handleDelete = async (id: string) => {
-        const confirm = await MySwal.fire({
-            title: 'Are you sure?',
-            text: 'You are about to delete this leave record!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
-        });
-
-        if (confirm.isConfirmed) {
-            deleteMutation.mutate(id);
-        }
-    };
-
     const handleEdit = (leave: Leave) => {
         setEditId(leave.id || null);
         formik.setValues({
@@ -283,11 +240,18 @@ export default function LeavesPage() {
         setShowViewForm(true);
     };
 
+    // --- Removed handleConfirmDelete function ---
+    // The onDelete will now directly call deleteMutation.mutate
+
     const handleStatusButtonClick = async (status: 'ACCEPTED' | 'REJECTED') => {
         if (viewedLeave?.id) {
             let reason = '';
             if (status === 'REJECTED') {
-                const { value: responseReason } = await MySwal.fire({
+                // If you still want a reason input for rejection, you'll need SweetAlert2 or a custom modal here.
+                // For now, I'm assuming you still want a reason if rejecting.
+                // If you remove SweetAlert2 completely, you'd need to replace this with your own input modal.
+                // Keeping the SweetAlert2 part for rejection reason for now, as it's common.
+                const { value: responseReason } = await Swal.fire({ // Changed back to Swal directly if not using MySwal
                     title: 'Reason for rejection',
                     input: 'textarea',
                     inputPlaceholder: 'Type your reason here...',
@@ -302,7 +266,6 @@ export default function LeavesPage() {
                         return null;
                     },
                 });
-
                 if (responseReason === undefined) { // User clicked cancel
                     return;
                 }
@@ -332,7 +295,7 @@ export default function LeavesPage() {
     if (isError) {
         return (
             <div className="flex h-full flex-col items-center justify-center text-red-500">
-                <p>Failed to load leave records. Please try again.</p>
+                <p>Failed to load pending leave records. Please try again.</p>
                 <Button onClick={() => refetch()} label="Retry" variant="primary" className="mt-4" />
             </div>
         );
@@ -341,10 +304,59 @@ export default function LeavesPage() {
     // Determine if the current user role can update leave statuses
     const canUpdateStatus = userRole === 'Hr' || userRole === 'Manager';
 
+    const columns = [
+        { label: 'Leave Type', key: 'leave_type' },
+        { label: 'Description', key: 'description' },
+        { label: 'From', key: 'start_date' },
+        { label: 'To', key: 'end_date' },
+        {
+            label: 'Overall Status', // Changed label for clarity
+            key: 'status',
+            render: (leave: any) => {
+                const status = leave.status || 'Pending';
+                return (
+                    <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
+                    >
+                        {status}
+                    </span>
+                );
+            },
+        },
+        { // New column for HR Status
+            label: 'HR Status',
+            key: 'hr_status',
+            render: (leave: any) => {
+                const status = leave.hr_status || 'N/A'; // Display 'N/A' if not set
+                return (
+                    <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
+                    >
+                        {status}
+                    </span>
+                );
+            },
+        },
+        { // New column for Manager Status
+            label: 'Manager Status',
+            key: 'manager_status',
+            render: (leave: any) => {
+                const status = leave.manager_status || 'N/A'; // Display 'N/A' if not set
+                return (
+                    <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
+                    >
+                        {status}
+                    </span>
+                );
+            },
+        },
+    ];
+
     return (
         <div className="min-h-screen p-6 bg-gray-100">
             <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-3xl font-bold">Leave Records</h1>
+                <h2 className="text-3xl font-bold">Pending Leave Records</h2>
                 <Button
                     label="Create Leave"
                     onClick={() => {
@@ -360,7 +372,6 @@ export default function LeavesPage() {
             {/* Form Modal for Create/Update Leave */}
             {showForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                    {/* Added overflow-y-auto and max-h-[90vh] for scrolling */}
                     <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg overflow-y-auto max-h-[90vh]">
                         {isSubmittingForm && (
                             <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
@@ -459,7 +470,6 @@ export default function LeavesPage() {
             {/* View Leave Modal (Updated) */}
             {showViewForm && viewedLeave && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                    {/* Added overflow-y-auto and max-h-[90vh] for scrolling */}
                     <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg overflow-y-auto max-h-[90vh]">
                         {isSubmittingStatus && (
                             <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
@@ -557,7 +567,7 @@ export default function LeavesPage() {
 
             {/* Leave Table */}
             <div>
-                <h3 className="mb-4 text-xl font-semibold">Leave Table</h3>
+                <h3 className="mb-4 text-xl font-semibold">Pending Leave Table</h3>
                 <Table
                     columns={columns}
                     data={leaves}
@@ -569,16 +579,13 @@ export default function LeavesPage() {
                                 <ActionButtons
                                     showView={true}
                                     onView={() => handleView(leave)}
+                                    showUpdate={true}
                                     onUpdate={() => handleEdit(leave)}
-                                    onDelete={() => handleDelete(leave.id!)}
-                                    // Show status update actions if the user is HR or Manager
+                                    showDelete={true}
+                                    onDelete={() => leave.id && deleteMutation.mutate(leave.id)} // Directly call mutate
+                                    isDeleting={deletingLeaveId === leave.id}
                                     showStatusUpdate={canUpdateStatus}
                                 />
-                                {deletingLeaveId === leave.id && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 rounded-md">
-                                        <Loader />
-                                    </div>
-                                )}
                             </div>
                         );
                     }}

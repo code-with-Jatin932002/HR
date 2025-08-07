@@ -31,16 +31,6 @@ export default function EmployeesPage() {
     slackId: '',
     githubId: ''
   });
-
-  // const handleNextStep = () => {
-  //   setCurrentStep(currentStep + 1);
-  // };
-
-  // const handlePreviousStep = () => {
-  //   setCurrentStep(currentStep - 1);
-  // };
-
-    // Previous and Next Step Handlers
   const handlePreviousStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };

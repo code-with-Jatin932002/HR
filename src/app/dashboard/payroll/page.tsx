@@ -1,78 +1,686 @@
-
 'use client';
+import { useQuery, useQueryClient, QueryFunction } from '@tanstack/react-query';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { FiSearch, FiX, FiEye } from 'react-icons/fi';
 
-export default function PayrollPage() {
-  const payrollData = [
-    {
-      id: 1,
-      name: "Anjali Singh",
-      ctc: "₹9,00,000",
-      salaryPerMonth: "₹75,000",
-      deduction: "₹5,000",
-      status: "Paid",
-    },
-    {
-      id: 2,
-      name: "Ravi Kumar",
-      ctc: "₹6,00,000",
-      salaryPerMonth: "₹50,000",
-      deduction: "₹2,000",
-      status: "Pending",
-    },
-    {
-      id: 3,
-      name: "Sonal Verma",
-      ctc: "₹10,00,000",
-      salaryPerMonth: "₹83,333",
-      deduction: "₹3,500",
-      status: "On Hold",
-    },
-  ];
+import callApi from '@/utils/callApi';
+import useAuthRedirect from '@/hooks/useAuthRedirect';
+import useProtectRoute from '@/hooks/useProtectRoute';
+import Table from '@/components/Table';
+import ActionButtons from '@/components/ActionButtons';
+import Loader from '@/components/Loader';
+import Button from '@/components/Button';
+import Pagination from '@/components/Pagination';
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Paid":
-        return "bg-green-200 text-green-700 dark:bg-green-700 dark:text-white";
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-white";
-      case "On Hold":
-        return "bg-red-100 text-red-700 dark:bg-red-700 dark:text-white";
-      default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-white";
+// Define interfaces for type safety
+interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  full_name?: string; // Derived for UI display
+  email: string; // Added from your API response
+  role_type: string; // Added from your API response
+  department_name: string | null; // Added from your API response
+}
+
+interface Payroll {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  employee_name: string; // This is returned by the API
+  ctc: string;
+  salary_per_month: string;
+  deduction: string;
+  status: 'Pending' | 'Completed';
+  created_at: string;
+  updated_at: string;
+}
+
+interface PayrollApiResponse {
+  payrolls: Payroll[];
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+}
+
+interface UserApiResponse {
+  users: User[];
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+}
+
+interface ApiResponseError {
+  response?: {
+    data?: {
+      detail?: string | object; // Detail can be a string or an object (e.g., validation errors)
+      message?: string; // Sometimes APIs use 'message' instead of 'detail'
+      error?: string; // Another common error field
+    };
+  };
+}
+
+const payrollColumns = [
+  { label: 'Employee Name', key: 'employee_name' },
+  { label: 'CTC', key: 'ctc' },
+  { label: 'Salary Per Month', key: 'salary_per_month' },
+  { label: 'Deduction', key: 'deduction' },
+  { label: 'Status', key: 'status' },
+];
+
+const payrollStatusOptions = ['Pending', 'Completed'];
+
+const fetchPayrolls: QueryFunction<
+  PayrollApiResponse,
+  ['payrolls', number, number, string, string, string]
+> = async ({ queryKey }) => {
+  const [_key, currentPage, itemsPerPage, searchQuery, status, userId] = queryKey;
+  const token = sessionStorage.getItem('token');
+
+  if (!token) {
+    throw new Error('No authentication token found.');
+  }
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
+
+  let url = `${normalizedBaseUrl}payrolls?page=${currentPage}&limit=${itemsPerPage}`;
+  if (searchQuery) {
+    url += `&search=${encodeURIComponent(searchQuery)}`;
+  }
+  if (status) {
+    url += `&status=${encodeURIComponent(status)}`;
+  }
+  if (userId) {
+    url += `&user_id=${encodeURIComponent(userId)}`;
+  }
+
+  try {
+    const response = await callApi('get', url, null, {
+      Authorization: `Bearer ${token}`,
+    });
+    return response as PayrollApiResponse;
+  } catch (error) {
+    console.error('Error fetching payrolls:', error);
+    throw error;
+  }
+};
+
+const fetchUsers: QueryFunction<
+  UserApiResponse,
+  ['users']
+> = async ({ queryKey }) => {
+  const token = sessionStorage.getItem('token');
+
+  if (!token) {
+    throw new Error('No authentication token found.');
+  }
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
+
+  try {
+    // Using limit=100 as a reasonable default for dropdown. Adjust if needed.
+    const response = await callApi('get', `${normalizedBaseUrl}users?page=1&limit=100`, null, {
+      Authorization: `Bearer ${token}`,
+    });
+    return response as UserApiResponse;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
+const fetchPayrollById: QueryFunction<
+  Payroll,
+  ['payroll', string]
+> = async ({ queryKey }) => {
+  const [_key, payrollId] = queryKey;
+  const token = sessionStorage.getItem('token');
+
+  if (!token) {
+    throw new Error('No authentication token found.');
+  }
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
+
+  try {
+    const response = await callApi('get', `${normalizedBaseUrl}payrolls/${payrollId}`, null, {
+      Authorization: `Bearer ${token}`,
+    });
+    return response as Payroll;
+  } catch (error) {
+    console.error(`Error fetching payroll with ID ${payrollId}:`, error);
+    throw error;
+  }
+};
+
+export default function PayrollsPage() {
+  useAuthRedirect();
+  useProtectRoute();
+
+  const queryClient = useQueryClient();
+
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  // State to hold the employee name for the POST request if required by backend
+  const [selectedEmployeeName, setSelectedEmployeeName] = useState<string>('');
+
+  useEffect(() => {
+    const role = sessionStorage.getItem('role_type')?.toLowerCase();
+    setUserRole(role || null);
+  }, []);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterUserId, setFilterUserId] = useState('');
+
+  const {
+    data: payrollsData,
+    isLoading: isLoadingPayrolls,
+    isError: isErrorPayrolls,
+    refetch: refetchPayrolls,
+  } = useQuery<PayrollApiResponse, Error, PayrollApiResponse, ['payrolls', number, number, string, string, string]>({
+    queryKey: ['payrolls', currentPage, itemsPerPage, searchQuery, filterStatus, filterUserId],
+    queryFn: fetchPayrolls,
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const {
+    data: usersData,
+    isLoading: isLoadingUsers,
+    isError: isErrorUsers,
+  } = useQuery<UserApiResponse, Error, UserApiResponse, ['users']>({
+    queryKey: ['users'],
+    queryFn: fetchUsers,
+    refetchOnWindowFocus: false,
+    staleTime: 15 * 60 * 1000,
+  });
+
+  const payrolls = payrollsData?.payrolls || [];
+  const totalItems = payrollsData?.totalItems || 0;
+  const totalPages = payrollsData?.totalPages || 1;
+
+  const usersForDropdown = useMemo(() => {
+    return (usersData?.users || []).map(user => ({
+      ...user,
+      full_name: `${user.first_name} ${user.last_name}`.trim(),
+    }));
+  }, [usersData]);
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [selectedPayrollId, setSelectedPayrollId] = useState('');
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
+  const [deletingPayrollId, setDeletingPayrollId] = useState<string | null>(null);
+  const [viewingPayrollId, setViewingPayrollId] = useState<string | null>(null);
+
+  const {
+    data: viewingPayrollDetails,
+    isLoading: isLoadingViewingPayroll,
+    isError: isErrorViewingPayroll,
+  } = useQuery<Payroll, Error, Payroll, ['payroll', string]>({
+    queryKey: ['payroll', viewingPayrollId!],
+    queryFn: fetchPayrollById,
+    enabled: !!viewingPayrollId,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+  });
+
+  const validationSchema = useMemo(() => {
+    return Yup.object({
+      user_id: Yup.string().required('Employee is required'),
+      ctc: Yup.number().required('CTC is required').min(0, 'CTC cannot be negative'),
+      salary_per_month: Yup.number().required('Salary per month is required').min(0, 'Salary cannot be negative'),
+      deduction: Yup.number().required('Deduction is required').min(0, 'Deduction cannot be negative'),
+      status: Yup.string().oneOf(payrollStatusOptions, 'Invalid status').optional(),
+    });
+  }, []);
+
+  const formik = useFormik({
+    initialValues: {
+      user_id: '',
+      ctc: 0,
+      salary_per_month: 0,
+      deduction: 0,
+      status: 'Pending',
+    },
+    validationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      setIsSubmittingForm(true);
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      const url = isUpdate ? `${normalizedBaseUrl}payrolls/${selectedPayrollId}` : `${normalizedBaseUrl}payrolls`;
+      const method = isUpdate ? 'put' : 'post';
+
+      let payload: any;
+
+      if (isUpdate) {
+        payload = {
+          ctc: values.ctc,
+          salary_per_month: values.salary_per_month,
+          deduction: values.deduction,
+          status: values.status,
+        };
+      } else {
+        // For creation, include employee_name if your backend truly requires it
+        payload = {
+          user_id: values.user_id,
+          ctc: values.ctc,
+          salary_per_month: values.salary_per_month,
+          deduction: values.deduction,
+          employee_name: selectedEmployeeName, // Add employee_name here if backend POST requires it
+        };
+      }
+
+      try {
+        await callApi(method, url, payload, {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+        });
+
+        toast.success(`Payroll ${isUpdate ? 'updated' : 'created'} successfully!`);
+
+        queryClient.invalidateQueries({ queryKey: ['payrolls'] });
+        setCurrentPage(1);
+
+        setFormOpen(false);
+        setIsUpdate(false);
+        setSelectedPayrollId('');
+        resetForm();
+        setSelectedEmployeeName(''); // Reset selected employee name
+      } catch (error: unknown) {
+        const apiError = error as ApiResponseError;
+        let errorMessage = 'Something went wrong';
+
+        // Enhanced error handling for toast
+        if (apiError?.response?.data?.detail) {
+          if (typeof apiError.response.data.detail === 'string') {
+            errorMessage = apiError.response.data.detail;
+          } else if (typeof apiError.response.data.detail === 'object') {
+            // If 'detail' is an object, try to stringify or get a specific message
+            // This is where the "Objects are not valid as a React child" error usually comes from.
+            // You might need to adjust this based on the exact structure of your backend's validation errors.
+            try {
+              errorMessage = JSON.stringify(apiError.response.data.detail);
+            } catch (e) {
+              errorMessage = "Validation error: Could not parse details.";
+            }
+          }
+        } else if (apiError?.response?.data?.message) {
+            errorMessage = apiError.response.data.message;
+        } else if (apiError?.response?.data?.error) {
+            errorMessage = apiError.response.data.error;
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
+        toast.error(errorMessage);
+      } finally {
+        setIsSubmittingForm(false);
+      }
+    },
+  });
+
+  const handleUpdate = (payroll: Payroll) => {
+    setSelectedPayrollId(payroll.id);
+    setIsUpdate(true);
+    formik.setValues({
+      user_id: payroll.user_id, // Pre-fill, but disabled in form if isUpdate
+      ctc: parseFloat(payroll.ctc),
+      salary_per_month: parseFloat(payroll.salary_per_month),
+      deduction: parseFloat(payroll.deduction),
+      status: payroll.status,
+    });
+    // For update, employee_name is already in payroll object for display
+    setSelectedEmployeeName(payroll.employee_name);
+    setFormOpen(true);
+  };
+
+  const handleDelete = async (payrollId: string) => {
+    setDeletingPayrollId(payrollId);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      await callApi('delete', `${normalizedBaseUrl}payrolls/${payrollId}`, null, {
+        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+      });
+
+      toast.success('Payroll has been deleted.');
+      queryClient.invalidateQueries({ queryKey: ['payrolls'] });
+
+      if (payrolls.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      }
+    } catch (error: unknown) {
+      const apiError = error as ApiResponseError;
+      toast.error(apiError?.response?.data?.detail?.toString() || 'Failed to delete payroll');
+    } finally {
+      setDeletingPayrollId(null);
     }
   };
 
-  return (
-    <div className="p-6 bg-gray-100 dark:bg-gray-950 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">Payroll Records</h1>
+  const handleView = (payrollId: string) => {
+    setViewingPayrollId(payrollId);
+  };
 
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-x-auto">
-        <table className="min-w-full text-sm text-left text-gray-900 dark:text-gray-100">
-          <thead className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 uppercase text-xs">
-            <tr>
-              <th className="px-6 py-4">Employee Name</th>
-              <th className="px-6 py-4">CTC</th>
-              <th className="px-6 py-4">Salary / Month</th>
-              <th className="px-6 py-4">Deduction</th>
-              <th className="px-6 py-4">Status</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-700 dark:text-gray-200">
-            {payrollData.map((payroll) => (
-              <tr key={payroll.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <td className="px-6 py-4 font-medium">{payroll.name}</td>
-                <td className="px-6 py-4">{payroll.ctc}</td>
-                <td className="px-6 py-4">{payroll.salaryPerMonth}</td>
-                <td className="px-6 py-4">{payroll.deduction}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(payroll.status)}`}>
-                    {payroll.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  const handleCloseView = () => {
+    setViewingPayrollId(null);
+    queryClient.removeQueries({ queryKey: ['payroll', viewingPayrollId!] });
+  };
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
+
+  const handleEmployeeSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const userId = e.target.value;
+    formik.setFieldValue('user_id', userId);
+
+    // Find the selected user's full_name
+    const selectedUser = usersForDropdown.find(user => user.id === userId);
+    if (selectedUser) {
+      setSelectedEmployeeName(selectedUser.full_name || '');
+    } else {
+      setSelectedEmployeeName('');
+    }
+  };
+
+  if (isLoadingPayrolls || isLoadingUsers) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (isErrorPayrolls) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center text-red-500">
+        <p>Failed to load payrolls. Please try again.</p>
+        <Button onClick={() => refetchPayrolls()} label="Retry" variant="primary" className="mt-4" />
+      </div>
+    );
+  }
+
+  const allowedRolesForAddPayroll = ['super_admin', 'admin', 'hr', 'manager'];
+  const canAddPayroll = userRole ? allowedRolesForAddPayroll.includes(userRole) : false;
+
+  return (
+    <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
+        <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <h2 className="text-center text-2xl font-bold sm:text-left">Payroll Management</h2>
+          {canAddPayroll && (
+            <Button
+              label="Add Payroll"
+              onClick={() => {
+                setFormOpen(true);
+                setIsUpdate(false);
+                setSelectedPayrollId('');
+                formik.resetForm();
+                formik.setFieldValue('status', 'Pending');
+                setSelectedEmployeeName(''); // Clear previous employee name
+              }}
+              variant="primary"
+              disabled={isSubmittingForm}
+              className="w-full px-4 py-2 sm:w-auto"
+            />
+          )}
+        </div>
+
+        {/* Search Box Only */}
+        <div className="mb-4 w-full px-4 py-3">
+          <div className="relative w-full">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+              <FiSearch />
+            </span>
+            <input
+              type="text"
+              placeholder="Search by employee name..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full rounded-md border px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-500"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Payroll Form Modal */}
+        {formOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+              {isSubmittingForm && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+                  <Loader />
+                </div>
+              )}
+              <h3 className="mb-4 text-xl font-semibold">
+                {isUpdate ? 'Update Payroll' : 'Create Payroll'}
+              </h3>
+              <form onSubmit={formik.handleSubmit} className="space-y-4">
+                {!isUpdate && ( // Only show user selection for new payrolls
+                  <div>
+                    <label htmlFor="user_id" className="mb-1 block text-sm font-medium text-gray-700">Employee</label>
+                    <select
+                      id="user_id"
+                      name="user_id"
+                      value={formik.values.user_id}
+                      onChange={handleEmployeeSelectChange} // Use new handler
+                      onBlur={formik.handleBlur}
+                      className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6"
+                      disabled={isSubmittingForm || isLoadingUsers}
+                    >
+                      <option value="">Select an employee</option>
+                      {usersForDropdown.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.full_name}
+                        </option>
+                      ))}
+                    </select>
+                    {formik.touched.user_id && formik.errors.user_id && (
+                      <span className="text-sm text-red-500">{formik.errors.user_id}</span>
+                    )}
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="ctc" className="mb-1 block text-sm font-medium text-gray-700">CTC</label>
+                  <input
+                    type="number"
+                    id="ctc"
+                    name="ctc"
+                    value={formik.values.ctc}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.ctc && formik.errors.ctc && (
+                    <span className="text-sm text-red-500">{formik.errors.ctc}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="salary_per_month" className="mb-1 block text-sm font-medium text-gray-700">Salary Per Month</label>
+                  <input
+                    type="number"
+                    id="salary_per_month"
+                    name="salary_per_month"
+                    value={formik.values.salary_per_month}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.salary_per_month && formik.errors.salary_per_month && (
+                    <span className="text-sm text-red-500">{formik.errors.salary_per_month}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="deduction" className="mb-1 block text-sm font-medium text-gray-700">Deduction</label>
+                  <input
+                    type="number"
+                    id="deduction"
+                    name="deduction"
+                    value={formik.values.deduction}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.deduction && formik.errors.deduction && (
+                    <span className="text-sm text-red-500">{formik.errors.deduction}</span>
+                  )}
+                </div>
+                {isUpdate && ( // Only show status for updates
+                  <div>
+                    <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">Status</label>
+                    <select
+                      id="status"
+                      name="status"
+                      value={formik.values.status}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6"
+                      disabled={isSubmittingForm}
+                    >
+                      {payrollStatusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                    {formik.touched.status && formik.errors.status && (
+                      <span className="text-sm text-red-500">{formik.errors.status}</span>
+                    )}
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <Button
+                    label="Cancel"
+                    type="button"
+                    onClick={() => {
+                      setFormOpen(false);
+                      setIsUpdate(false);
+                      setSelectedPayrollId('');
+                      formik.resetForm();
+                      setSelectedEmployeeName(''); // Clear on cancel
+                    }}
+                    variant="secondary"
+                    disabled={isSubmittingForm}
+                  />
+                  <Button
+                    label={isUpdate ? 'Update' : 'Create'}
+                    type="submit"
+                    variant="primary"
+                    disabled={isSubmittingForm}
+                  />
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* View Payroll Details Modal */}
+        {viewingPayrollId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+              <button
+                onClick={handleCloseView}
+                className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+              >
+                <FiX size={24} />
+              </button>
+              {isLoadingViewingPayroll ? (
+                <div className="flex h-32 items-center justify-center">
+                  <Loader />
+                </div>
+              ) : isErrorViewingPayroll ? (
+                <div className="text-center text-red-500">Failed to load payroll details.</div>
+              ) : viewingPayrollDetails ? (
+                <>
+                  <h3 className="mb-4 text-xl font-semibold">Payroll Details</h3>
+                  <div className="space-y-2">
+                    <p><strong>Employee Name:</strong> {viewingPayrollDetails.employee_name}</p>
+                    <p><strong>CTC:</strong> {viewingPayrollDetails.ctc}</p>
+                    <p><strong>Salary Per Month:</strong> {viewingPayrollDetails.salary_per_month}</p>
+                    <p><strong>Deduction:</strong> {viewingPayrollDetails.deduction}</p>
+                    <p><strong>Status:</strong> {viewingPayrollDetails.status}</p>
+                    <p className="text-sm text-gray-500"><strong>Created At:</strong> {new Date(viewingPayrollDetails.created_at).toLocaleString()}</p>
+                    <p className="text-sm text-gray-500"><strong>Updated At:</strong> {new Date(viewingPayrollDetails.updated_at).toLocaleString()}</p>
+                  </div>
+                </>
+              ) : null}
+            </div>
+          </div>
+        )}
+
+        {/* Payrolls Table */}
+        <div>
+          <Table
+            columns={payrollColumns}
+            data={payrolls}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            actions={(payroll: Payroll) => (
+              <div className="relative flex space-x-2">
+                <button
+                  onClick={() => handleView(payroll.id)}
+                  className="text-blue-600 hover:text-blue-900"
+                  title="View Details"
+                >
+                  <FiEye size={18} />
+                </button>
+                <ActionButtons
+                  onUpdate={() => handleUpdate(payroll)}
+                  onDelete={() => handleDelete(payroll.id)}
+                  showView={false}
+                />
+                {deletingPayrollId === payroll.id && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-md bg-white bg-opacity-70">
+                    <Loader />
+                  </div>
+                )}
+              </div>
+            )}
+          />
+
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-gray-700">
+              Showing <span className="font-medium">{totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
+              <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{' '}
+              <span className="font-medium">{totalItems}</span> results
+            </p>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

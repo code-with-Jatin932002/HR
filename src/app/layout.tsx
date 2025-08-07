@@ -6,7 +6,9 @@ import { usePathname } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { AuthProvider } from '../context/AuthContext';
+import { TimeTrackerProvider } from '../context/TimeTrackerContext'; // Import the new provider
 import Providers from './providers';
+import { Toaster } from 'react-hot-toast';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,18 +16,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      {/* The body itself is the flex container for the entire app layout */}
-      <body className="h-screen flex flex-col"> {/* No overflow-hidden here, as main will handle it */}
+      <body className="h-screen flex flex-col">
         <Providers>
           <AuthProvider>
-            <Navbar /> {/* Navbar is fixed at the top */}
-            
-            {/* This main element will be the primary scrollable area for ALL content,
-                except for the dashboard where its internal layout will manage its own. */}
-            <main className="flex-grow overflow-y-auto"> {/* This now handles the main scroll */}
-              {children}
-              {!isDashboard && <Footer />}
-            </main>
+            <TimeTrackerProvider>
+              <Navbar />
+              <main className="flex-grow overflow-y-auto">
+                {children}
+                {!isDashboard && <Footer />}
+              </main>
+              <Toaster position="top-center" reverseOrder={false} />
+            </TimeTrackerProvider>
           </AuthProvider>
         </Providers>
       </body>

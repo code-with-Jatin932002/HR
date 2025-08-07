@@ -1,12 +1,10 @@
-
 'use client';
 import { useQuery, useQueryClient, QueryFunction } from '@tanstack/react-query';
-import { useState, useMemo, useCallback } from 'react';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { FiSearch, FiX } from 'react-icons/fi'; // Import search icons
+import { FiSearch, FiX } from 'react-icons/fi';
 
 import callApi from '@/utils/callApi';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
@@ -15,9 +13,7 @@ import Table from '@/components/Table';
 import ActionButtons from '@/components/ActionButtons';
 import Loader from '@/components/Loader';
 import Button from '@/components/Button';
-import Pagination from '@/components/Pagination'; // Import the new Pagination component
-
-const MySwal = withReactContent(Swal);
+import Pagination from '@/components/Pagination';
 
 // Define interfaces for type safety
 interface Department {
@@ -47,8 +43,8 @@ const columns = [
 
 // fetchDepartments will now explicitly take page, limit, and search query
 const fetchDepartments: QueryFunction<
-  ApiResponse, // TQueryFnData: The type of data this function returns
-  ['departments', number, number, string] // TQueryKey: The exact shape of the queryKey, now including search
+  ApiResponse,
+  ['departments', number, number, string]
 > = async ({ queryKey }) => {
   const [_key, currentPage, itemsPerPage, searchQuery] = queryKey;
   const token = sessionStorage.getItem('token');
@@ -57,10 +53,8 @@ const fetchDepartments: QueryFunction<
     throw new Error('No authentication token found.');
   }
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  // This normalization adds a trailing slash if not present, for consistent base URL.
   const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
-  // Construct the URL with pagination and search parameters
   let url = `${normalizedBaseUrl}department?page=${currentPage}&limit=${itemsPerPage}`;
   if (searchQuery) {
     url += `&search=${encodeURIComponent(searchQuery)}`;
@@ -70,8 +64,7 @@ const fetchDepartments: QueryFunction<
     const response = await callApi('get', url, null, {
       Authorization: `Bearer ${token}`,
     });
-    // Return the full response object, which should contain departments array AND pagination metadata
-    return response as ApiResponse; // Cast to ApiResponse for type safety
+    return response as ApiResponse;
   } catch (error) {
     console.error('Error fetching departments:', error);
     throw error;
@@ -84,32 +77,36 @@ export default function DepartmentsPage() {
 
   const queryClient = useQueryClient();
 
-  // State to manage current page, items per page, and search query
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Matches your backend's default limit
-  const [searchQuery, setSearchQuery] = useState(''); // New state for search query
+  const [userRole, setUserRole] = useState<string | null>(null);
 
-  // useQuery will automatically refetch when currentPage, itemsPerPage, or searchQuery changes
+  useEffect(() => {
+    // Retrieve user role from session storage
+    // It's good practice to normalize the case, especially if it might be stored inconsistently.
+    const role = sessionStorage.getItem('role_type')?.toLowerCase() || null;
+    setUserRole(role);
+  }, []);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const { data, isLoading, isError, refetch } = useQuery<ApiResponse, Error, ApiResponse, ['departments', number, number, string]>({
-    queryKey: ['departments', currentPage, itemsPerPage, searchQuery], // Dependencies for refetching
+    queryKey: ['departments', currentPage, itemsPerPage, searchQuery],
     queryFn: fetchDepartments,
-    placeholderData: (previousData) => previousData, // Keep previous data displayed
-    refetchOnWindowFocus: false, // Prevents automatic refetch on window focus
-    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Extract the departments array and pagination metadata from the fetched data
   const departments = data?.departments || [];
   const totalItems = data?.totalItems || 0;
-  const totalPages = data?.totalPages || 1; // Default to 1 page if not provided
+  const totalPages = data?.totalPages || 1;
 
   const [formOpen, setFormOpen] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [selectedDeptId, setSelectedDeptId] = useState('');
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
-  // Changed isDeleting to hold the ID of the department being deleted for specific loaders
   const [deletingDeptId, setDeletingDeptId] = useState<string | null>(null);
-
 
   const validationSchema = useMemo(() => {
     return Yup.object({
@@ -135,16 +132,10 @@ export default function DepartmentsPage() {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         });
 
-        await MySwal.fire({
-          icon: 'success',
-          title: `Department ${isUpdate ? 'updated' : 'created'} successfully!`,
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        toast.success(`Department ${isUpdate ? 'updated' : 'created'} successfully!`);
 
-        // Invalidate and refetch queries to update the list immediately
         queryClient.invalidateQueries({ queryKey: ['departments'] });
-        setCurrentPage(1); // Reset to first page after create/update to ensure new/updated item is visible
+        setCurrentPage(1);
 
         setFormOpen(false);
         setIsUpdate(false);
@@ -152,7 +143,7 @@ export default function DepartmentsPage() {
         resetForm();
       } catch (error: unknown) {
         const apiError = error as ApiResponseError;
-        MySwal.fire('Error', apiError?.response?.data?.detail || 'Something went wrong', 'error');
+        toast.error(apiError?.response?.data?.detail || 'Something went wrong');
       } finally {
         setIsSubmittingForm(false);
       }
@@ -169,61 +160,40 @@ export default function DepartmentsPage() {
   };
 
   const handleDelete = async (deptId: string) => {
-    const confirmResult = await MySwal.fire({
-      title: 'Are you sure?',
-      text: 'This will delete the department!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!',
-    });
+    setDeletingDeptId(deptId);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      await callApi('delete', `${normalizedBaseUrl}department/${deptId}`, null, {
+        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+      });
 
-    if (confirmResult.isConfirmed) {
-      setDeletingDeptId(deptId); // Set the ID of the department being deleted
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-        await callApi('delete', `${normalizedBaseUrl}department/${deptId}`, null, {
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-        });
+      toast.success('Department has been deleted.');
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
 
-        MySwal.fire('Deleted!', 'Department has been deleted.', 'success');
-        queryClient.invalidateQueries({ queryKey: ['departments'] }); // Invalidate specific query
-
-        // Adjust currentPage if the last item on a page was deleted and it's not page 1
-        if (departments.length === 1 && currentPage > 1) {
-          setCurrentPage(prev => prev - 1);
-        }
-      } catch (error: unknown) {
-        const apiError = error as ApiResponseError;
-        MySwal.fire('Error', apiError?.response?.data?.detail || 'Failed to delete department', 'error');
-      } finally {
-        setDeletingDeptId(null); // Clear the ID, hiding the specific loader
+      if (departments.length === 1 && currentPage > 1) {
+        setCurrentPage(prev => prev - 1);
       }
+    } catch (error: unknown) {
+      const apiError = error as ApiResponseError;
+      toast.error(apiError?.response?.data?.detail || 'Failed to delete department');
+    } finally {
+      setDeletingDeptId(null);
     }
   };
 
-  // Callback to update the current page, triggering a new API call
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
   }, []);
 
-  /**
-   * Handles changes to the search input.
-   * @param e - The change event from the input.
-   */
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1);
   };
 
-  /**
-   * Clears the search query.
-   */
   const clearSearch = () => {
     setSearchQuery('');
-    setCurrentPage(1); // Reset to first page when clearing search
+    setCurrentPage(1);
   };
 
   if (isLoading) {
@@ -243,22 +213,28 @@ export default function DepartmentsPage() {
     );
   }
 
+  // Determine if the current user is a super_admin
+  const isSuperAdmin = userRole === 'super_admin';
+
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-4xl rounded bg-white p-6 shadow">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Department Management</h2>
-          <Button
-            label="Create Department"
-            onClick={() => {
-              setFormOpen(true);
-              setIsUpdate(false);
-              setSelectedDeptId('');
-              formik.resetForm();
-            }}
-            variant="primary"
-            disabled={isSubmittingForm}
-          />
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <h2 className="text-2xl font-bold text-center sm:text-left">Department Management</h2>
+          {isSuperAdmin && (
+            <Button
+              label="Create Department"
+              onClick={() => {
+                setFormOpen(true);
+                setIsUpdate(false);
+                setSelectedDeptId('');
+                formik.resetForm();
+              }}
+              variant="primary"
+              disabled={isSubmittingForm}
+              className="w-full sm:w-auto px-4 py-2"
+            />
+          )}
         </div>
 
         {/* Search Box for Departments */}
@@ -339,18 +315,19 @@ export default function DepartmentsPage() {
         )}
 
         <div>
-          <h3 className="mb-4 text-xl font-semibold">All Departments</h3>
+          {/* <h3 className="mb-4 text-xl font-semibold">All Departments</h3> */}
           <Table
             columns={columns}
-            data={departments} // Table now receives only the current page's data
-            currentPage={currentPage} // ADDED: Pass currentPage
-            itemsPerPage={itemsPerPage} // ADDED: Pass itemsPerPage
-            actions={(dept: Department) => ( // Explicitly type 'dept'
-              <div className="relative"> {/* Add a relative container for positioning the loader */}
+            data={departments}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            actions={(dept: Department) => (
+              <div className="relative">
+                {/* ActionButtons are visible for ALL roles now */}
                 <ActionButtons
                   onUpdate={() => handleUpdate(dept)}
                   onDelete={() => handleDelete(dept.id)}
-                  showView={false} // Assuming you don't need a view action for departments
+                  showView={false}
                 />
                 {deletingDeptId === dept.id && (
                   <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 rounded-md">
@@ -361,7 +338,6 @@ export default function DepartmentsPage() {
             )}
           />
 
-          {/* Pagination Controls driven by backend data using the Pagination component */}
           <div className="mt-4 flex items-center justify-between">
             <p className="text-sm text-gray-700">
               Showing <span className="font-medium">{totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
