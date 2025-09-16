@@ -16,6 +16,11 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
+import callApi from '@/utils/callApi';
+import Loader from '@/components/Loader';
+import { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 // Define a type for the Pie chart label props to satisfy TypeScript
 interface PieLabelRenderProps {
@@ -30,20 +35,79 @@ interface PieLabelRenderProps {
   payload?: any;
 }
 
+// Custom hook to get user role from localStorage
+const useUserRole = () => {
+    const [role, setRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        const userRole = sessionStorage.getItem('role_type');
+        setRole(userRole);
+    }, []);
+
+    return role;
+};
+
+// Define the interface for the API response
+interface MetricsResponse {
+  total_employees: number;
+  total_hrs: number;
+  pending_leaves: number;
+  processed_payrolls: number;
+}
+
 export default function DashboardPage() {
   useProtectRoute();
   const { loading } = useAuth();
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
 
-  if (loading) return null;
+  // Function to fetch metrics data from the API
+  const fetchMetrics = async () => {
+    if (!token) {
+      toast.error('Authentication token not found. Please log in.');
+      throw new Error('Authentication token not found. Please log in.');
+    }
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const responseData = await callApi('get', `${baseUrl}/metrics`, null, {
+      Authorization: `Bearer ${token}`,
+    });
+    return responseData;
+  };
 
-  // --- Sample Data for Dashboard ---
+  // Use react-query to manage the API call state
+  const { data, isLoading, isError } = useQuery<MetricsResponse>({
+    queryKey: ['dashboardMetrics'],
+    queryFn: fetchMetrics,
+    enabled: !!token,
+  });
 
-  const summaryCards = [
-    { title: 'Total Employees', value: '340', icon: LuUsers, iconColor: 'text-blue-500' },
-    { title: 'Active HR', value: '12', icon: LuUserCheck, iconColor: 'text-green-500' },
-    { title: 'Pending Leaves', value: '24', icon: LuHourglass, iconColor: 'text-yellow-500' },
-    { title: 'Payroll Processed', value: '₹9.3L', icon: LuDollarSign, iconColor: 'text-purple-500' },
-  ];
+  // Handle loading and error states
+  if (loading || isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center text-red-500 p-6">
+        <p>Failed to load dashboard metrics. Please try again.</p>
+      </div>
+    );
+  }
+
+  // Use the fetched data to create the summary cards
+  const summaryCards = data
+    ? [
+        { title: 'Total Employees', value: data.total_employees, icon: LuUsers, iconColor: 'text-blue-500' },
+        { title: 'Activated HR', value: data.total_hrs, icon: LuUserCheck, iconColor: 'text-green-500' },
+        { title: 'Pending Leaves', value: data.pending_leaves, icon: LuHourglass, iconColor: 'text-yellow-500' },
+        { title: 'Payroll Processed', value: `${data.processed_payrolls}`, icon: LuDollarSign, iconColor: 'text-purple-500' },
+      ]
+    : [];
+
+  // --- Sample Data for Dashboard (remaining static data) ---
 
   const recentLeaveRequests = [
     { name: 'Aman Singh', dept: 'HR', from: '2025-05-12', to: '2025-05-14', status: 'Approved' },
@@ -61,7 +125,6 @@ export default function DashboardPage() {
     { name: 'Pooja', text: 'Onboarding complete for new hires.', time: '30m ago' },
   ];
 
-  // Chart Data
   const employeeDistributionData = [
     { name: 'Development', employees: 120 },
     { name: 'HR', employees: 30 },
@@ -79,7 +142,6 @@ export default function DashboardPage() {
     { month: 'May', approved: 20, pending: 5, rejected: 2 },
   ];
 
-  // Muted Colors for Pie Chart
   const PIE_COLORS = [
     '#60A5FA', // blue-400
     '#34D399', // emerald-400
@@ -90,7 +152,6 @@ export default function DashboardPage() {
     '#9CA3AF'  // gray-400 (if more segments are added)
   ];
 
-  // Attendance Overview Data
   const attendanceData = [
     { id: 'EMP001', name: 'Aman Singh', date: '2025-05-20', status: 'Present', checkIn: '09:00 AM', checkOut: '06:00 PM', hours: '9h' },
     { id: 'EMP002', name: 'Ravi Kumar', date: '2025-05-20', status: 'Present', checkIn: '09:15 AM', checkOut: '06:30 PM', hours: '9h 15m' },
@@ -103,6 +164,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -190,7 +252,7 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm text-left border-collapse">
                 <thead className="bg-gray-100 text-gray-700 uppercase tracking-wider">
-                  <tr>{/* REMOVED WHITESPACE HERE */}
+                  <tr>
                     <th className="px-3 py-3 border-b-2 border-gray-200 whitespace-nowrap">Employee</th>
                     <th className="px-3 py-3 border-b-2 border-gray-200 whitespace-nowrap">Department</th>
                     <th className="px-3 py-3 border-b-2 border-gray-200 whitespace-nowrap">From</th>
@@ -200,7 +262,7 @@ export default function DashboardPage() {
                 </thead>
                 <tbody>
                   {recentLeaveRequests.map((row, i) => (
-                    <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">{/* REMOVED WHITESPACE HERE */}
+                    <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="px-3 py-3 whitespace-nowrap text-gray-700">{row.name}</td>
                       <td className="px-3 py-3 whitespace-nowrap text-gray-700">{row.dept}</td>
                       <td className="px-3 py-3 whitespace-nowrap text-gray-700">{row.from}</td>
@@ -247,7 +309,7 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm text-left border-collapse">
               <thead className="bg-gray-100 text-gray-700 uppercase tracking-wider">
-                <tr>{/* REMOVED WHITESPACE HERE */}
+                <tr>
                   <th className="px-3 py-3 border-b-2 border-gray-200 whitespace-nowrap">Employee ID</th>
                   <th className="px-3 py-3 border-b-2 border-gray-200 whitespace-nowrap">Employee Name</th>
                   <th className="px-3 py-3 border-b-2 border-gray-200 whitespace-nowrap">Date</th>
@@ -259,7 +321,7 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {attendanceData.map((row, i) => (
-                  <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">{/* REMOVED WHITESPACE HERE */}
+                  <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-3 py-3 whitespace-nowrap text-gray-700">{row.id}</td>
                     <td className="px-3 py-3 whitespace-nowrap text-gray-700">{row.name}</td>
                     <td className="px-3 py-3 whitespace-nowrap text-gray-700">{row.date}</td>
@@ -268,7 +330,7 @@ export default function DashboardPage() {
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
                           row.status === 'Present'
                             ? 'bg-green-100 text-green-700'
-                            : row.status === 'Absent' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700' // 'On Leave' status
+                            : row.status === 'Absent' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
                         }`}
                       >
                         {row.status}

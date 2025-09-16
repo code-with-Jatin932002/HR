@@ -9,7 +9,7 @@ import {
   FaUserPlus, FaUsers, FaIdCard, FaBuilding, FaSitemap, FaClock,
   FaMoneyBill, FaBriefcase, FaUserFriends, FaPlane, FaCalendarAlt,
   FaChevronDown, FaChevronUp, FaPlusCircle, FaCheckCircle, FaTimesCircle,
-  FaHourglassHalf,FaTachometerAlt // Import the new icon for Time Tracker
+  FaHourglassHalf, FaTachometerAlt, FaBullhorn, FaComment // Import the new icon for Feedback
 } from 'react-icons/fa';
 
 interface ChildRoute {
@@ -36,14 +36,16 @@ const iconMap: Record<string, React.ReactNode> = {
   Jobs: <FaBriefcase className="text-xl" />,
   Candidates: <FaUserFriends className="text-xl" />,
   Leaves: <FaPlane className="text-xl" />,
-  'Create Leave': <FaPlusCircle className="text-xl" />,
+  'Pending': <FaPlusCircle className="text-xl" />,
   Accepted: <FaCheckCircle className="text-xl" />,
   Rejected: <FaTimesCircle className="text-xl" />,
   Holidays: <FaCalendarAlt className="text-xl" />,
   Organizations: <FaBuilding className="text-xl" />,
   'Organizations Type': <FaSitemap className="text-xl" />,
-  Dashboard: <FaTachometerAlt className="text-xl" />, // Placeholder icon for Dashboard
-  'Time Tracker': <FaHourglassHalf className="text-xl" />, // Added icon for Time Tracker
+  Dashboard: <FaTachometerAlt className="text-xl" />,
+  'Time Tracker': <FaHourglassHalf className="text-xl" />,
+  'Announcements': <FaBullhorn className="text-xl" />,
+  'Feedback': <FaComment className="text-xl" />, // <-- NEW Feedback Icon
 };
 
 const Sidebar = () => {
@@ -82,7 +84,7 @@ const Sidebar = () => {
     <aside className="h-full overflow-y-auto bg-white border-r w-20 md:w-64 transition-all duration-300 shadow-sm">
       <div className="p-4 pt-6">
         {/* Top - Dashboard Item */}
-        <div className="mb-2.5"> {/* 10px margin-bottom */}
+        <div className="mb-2.5">
           <Link
             href="/dashboard"
             className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-base font-semibold transition-all duration-200 justify-center md:justify-start

@@ -1,3 +1,4 @@
+// src/components/AuthModal.tsx
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -10,6 +11,7 @@ import * as Yup from 'yup';
 import Button from './Button';
 import toast from 'react-hot-toast';
 import AuthSvg from './AuthSvg';
+import ForgotPasswordModal from './ForgotPasswordModal'; // ✅ NEW: Import the new modal
 
 interface Props {
   onClose: () => void;
@@ -40,6 +42,7 @@ export default function AuthModal({ onClose }: Props) {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false); // ✅ NEW: State for forgot password modal
   const router = useRouter();
 
   const formik = useFormik({
@@ -57,7 +60,7 @@ export default function AuthModal({ onClose }: Props) {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL;
         const data = await callApi(
           'post',
-          `${baseUrl}/login`,
+          `${baseUrl}/login`, // ✅ FIX: Use the /auth/login path
           {
             email: values.email,
             password: values.password,
@@ -77,7 +80,9 @@ export default function AuthModal({ onClose }: Props) {
           sessionStorage.setItem('email', values.email);
           sessionStorage.setItem('role_type', data.role_type);
 
-          if (data.organization?.id) {
+          if (data.user?.organization_id) {
+            sessionStorage.setItem('organization_id', data.user.organization_id);
+          } else if (data.organization?.id) {
             sessionStorage.setItem('organization_id', data.organization.id);
             sessionStorage.setItem('organization_org_name', data.organization.org_name);
             sessionStorage.setItem('organization_address', data.organization.address);
@@ -87,12 +92,12 @@ export default function AuthModal({ onClose }: Props) {
             sessionStorage.setItem('organization_gst_number', data.organization.gst_number);
           }
 
-          login(data.access_token, values.email, data.role_type, data.organization?.id);
+          const orgIdToPass = data.user?.organization_id || data.organization?.id;
+          login(data.access_token, values.email, data.role_type, orgIdToPass);
 
           router.replace('/dashboard');
           
           onClose();
-
         } else {
           const errorMsg = 'Login failed: Missing authentication data.';
           formik.setErrors({ password: errorMsg });
@@ -116,7 +121,12 @@ export default function AuthModal({ onClose }: Props) {
           } else if (error.response.status === 404) {
             errorMsg = 'Endpoint not found. Please check the API URL.';
           } else {
-            errorMsg = `Error: ${error.response.status} - ${error.response.statusText || 'Something went wrong!'}`;
+            if (error.response.data?.detail && Array.isArray(error.response.data.detail)) {
+              const validationErrors = error.response.data.detail.map((err: any) => `${err.loc.join('.') || 'field'} - ${err.msg}`).join('; ');
+              errorMsg = `Validation failed: ${validationErrors}`;
+            } else {
+              errorMsg = `Error: ${error.response.status} - ${error.response.statusText || 'Something went wrong!'}`;
+            }
           }
         } else if (error.request) {
           errorMsg = 'No response from server. Please check your internet connection.';
@@ -132,6 +142,13 @@ export default function AuthModal({ onClose }: Props) {
       }
     },
   });
+
+  if (showForgotPassword) {
+    return <ForgotPasswordModal onClose={() => {
+        setShowForgotPassword(false);
+        onClose(); // Close the AuthModal as well
+    }} onBackToLogin={() => setShowForgotPassword(false)} />;
+  }
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
@@ -188,6 +205,17 @@ export default function AuthModal({ onClose }: Props) {
                 {formik.touched.password && formik.errors.password && (
                   <span className="mt-1 block text-sm text-red-500">{formik.errors.password}</span>
                 )}
+              </div>
+              <div className="text-right mb-4">
+                  <span className="text-sm text-gray-600 mr-1"> You Don't remember it</span>
+
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-blue-500 hover:text-blue-700 cursor-pointer"
+                >
+                  Forgot Password?
+                </button>
               </div>
               <div className="flex gap-4">
                 <Button

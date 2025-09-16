@@ -1,4 +1,5 @@
 'use client';
+
 import { useQuery, useQueryClient, QueryFunction } from '@tanstack/react-query';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
@@ -15,19 +16,19 @@ import Loader from '@/components/Loader';
 import Button from '@/components/Button';
 import Pagination from '@/components/Pagination';
 
-// Define interfaces for type safety
-interface Candidate {
+// Define interfaces for type safety, matching your API response
+interface Announcement {
   id: string;
-  candidate_name: string;
-  applied_for: string;
-  applied_date: string;
-  email: string;
-  mobile_number: string;
-  status: 'Shortlisted' | 'Pending' | 'Interview Scheduled' | 'Rejected';
+  title: string;
+  message: string;
+  created_by: string;
+  organization_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ApiResponse {
-  candidates: Candidate[];
+  announcements: Announcement[];
   totalItems: number;
   totalPages: number;
   currentPage: number;
@@ -42,26 +43,25 @@ interface ApiResponseError {
   };
 }
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+};
+
 const columns = [
-  { label: 'Candidate Name', key: 'candidate_name' },
-  { label: 'Applied For', key: 'applied_for' },
-  { label: 'Applied Date', key: 'applied_date' },
-  { label: 'Email', key: 'email' },
-  { label: 'Mobile Number', key: 'mobile_number' },
-  { label: 'Status', key: 'status' },
+  { label: 'Title', key: 'title' },
+  { label: 'Message', key: 'message' },
+  { label: 'Date', key: 'created_at', format: formatDate },
 ];
 
-const statusOptions = [
-  'Pending',
-  'Shortlisted',
-  'Interview Scheduled',
-  'Rejected',
-];
-
-// fetchCandidates will now only take page, limit, and search query
-const fetchCandidates: QueryFunction<
+// fetchAnnouncements will fetch announcements with pagination and search
+const fetchAnnouncements: QueryFunction<
   ApiResponse,
-  ['candidates', number, number, string]
+  ['announcements', number, number, string]
 > = async ({ queryKey }) => {
   const [_key, currentPage, itemsPerPage, searchQuery] = queryKey;
   const token = sessionStorage.getItem('token');
@@ -72,7 +72,7 @@ const fetchCandidates: QueryFunction<
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
-  let url = `${normalizedBaseUrl}candidates?page=${currentPage}&limit=${itemsPerPage}`;
+  let url = `${normalizedBaseUrl}announcements?page=${currentPage}&limit=${itemsPerPage}`;
   if (searchQuery) {
     url += `&search=${encodeURIComponent(searchQuery)}`;
   }
@@ -83,12 +83,12 @@ const fetchCandidates: QueryFunction<
     });
     return response as ApiResponse;
   } catch (error) {
-    console.error('Error fetching candidates:', error);
+    console.error('Error fetching announcements:', error);
     throw error;
   }
 };
 
-export default function CandidatePage() {
+export default function AnnouncementPage() {
   useAuthRedirect();
   useProtectRoute();
 
@@ -100,6 +100,9 @@ export default function CandidatePage() {
     const role = sessionStorage.getItem('role_type')?.toLowerCase() || null;
     setUserRole(role);
   }, []);
+  
+  // This variable now determines if the user can see and perform actions
+  const hasActionPermissions = userRole === 'super_admin' || userRole === 'admin' || userRole === 'hr';
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -109,51 +112,43 @@ export default function CandidatePage() {
     ApiResponse,
     Error,
     ApiResponse,
-    ['candidates', number, number, string]
+    ['announcements', number, number, string]
   >({
-    queryKey: ['candidates', currentPage, itemsPerPage, searchQuery],
-    queryFn: fetchCandidates,
+    queryKey: ['announcements', currentPage, itemsPerPage, searchQuery],
+    queryFn: fetchAnnouncements,
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const candidates = data?.candidates || [];
+  const announcements = data?.announcements || [];
   const totalItems = data?.totalItems || 0;
   const totalPages = data?.totalPages || 1;
 
   const [formOpen, setFormOpen] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
-  const [selectedCandidateId, setSelectedCandidateId] = useState('');
+  const [selectedAnnouncementId, setSelectedAnnouncementId] = useState('');
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
-  const [deletingCandidateId, setDeletingCandidateId] = useState<string | null>(null);
+  const [deletingAnnouncementId, setDeletingAnnouncementId] = useState<string | null>(null);
 
   const validationSchema = useMemo(() => {
     return Yup.object({
-      candidate_name: Yup.string().required('Candidate name is required'),
-      applied_for: Yup.string().required('Position applied for is required'),
-      applied_date: Yup.date().required('Applied date is required').typeError('Invalid date format'),
-      email: Yup.string().email('Invalid email format').required('Email is required'),
-      mobile_number: Yup.string().required('Mobile number is required').matches(/^\d{10}$/, 'Mobile number must be 10 digits'),
-      status: Yup.string().oneOf(statusOptions, 'Invalid status').required('Status is required'),
+      title: Yup.string().required('Title is required'),
+      message: Yup.string().required('Message is required'),
     });
   }, []);
 
   const formik = useFormik({
     initialValues: {
-      candidate_name: '',
-      applied_for: '',
-      applied_date: '',
-      email: '',
-      mobile_number: '',
-      status: statusOptions[0], // Default to the first status option
+      title: '',
+      message: '',
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       setIsSubmittingForm(true);
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-      const url = isUpdate ? `${normalizedBaseUrl}candidates/${selectedCandidateId}` : `${normalizedBaseUrl}candidates`;
+      const url = isUpdate ? `${normalizedBaseUrl}announcements/${selectedAnnouncementId}` : `${normalizedBaseUrl}announcements`;
       const method = isUpdate ? 'put' : 'post';
 
       try {
@@ -162,14 +157,14 @@ export default function CandidatePage() {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         });
 
-        toast.success(`Candidate ${isUpdate ? 'updated' : 'created'} successfully!`);
+        toast.success(`Announcement ${isUpdate ? 'updated' : 'created'} successfully!`);
 
-        queryClient.invalidateQueries({ queryKey: ['candidates'] });
+        queryClient.invalidateQueries({ queryKey: ['announcements'] });
         setCurrentPage(1);
 
         setFormOpen(false);
         setIsUpdate(false);
-        setSelectedCandidateId('');
+        setSelectedAnnouncementId('');
         resetForm();
       } catch (error: unknown) {
         const apiError = error as ApiResponseError;
@@ -180,55 +175,51 @@ export default function CandidatePage() {
     },
   });
 
-  const handleView = async (candidate: Candidate) => {
+  const handleView = async (announcement: Announcement) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
     try {
-      const response = await callApi('get', `${normalizedBaseUrl}candidates/${candidate.id}`, null, {
+      const response = await callApi('get', `${normalizedBaseUrl}announcements/${announcement.id}`, null, {
         Authorization: `Bearer ${sessionStorage.getItem('token')}`,
       });
-      const candidateDetails = response as Candidate;
-      toast.success(`Viewing: ${candidateDetails.candidate_name}, Applied for: ${candidateDetails.applied_for}`);
+      const announcementDetails = response as Announcement;
+      toast.success(`Viewing: ${announcementDetails.title}`);
     } catch (error: unknown) {
       const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to fetch candidate details');
+      toast.error(apiError?.response?.data?.detail || 'Failed to fetch announcement details');
     }
   };
 
-  const handleUpdate = (candidate: Candidate) => {
-    setSelectedCandidateId(candidate.id);
+  const handleUpdate = (announcement: Announcement) => {
+    setSelectedAnnouncementId(announcement.id);
     setIsUpdate(true);
     formik.setValues({
-      candidate_name: candidate.candidate_name,
-      applied_for: candidate.applied_for,
-      applied_date: candidate.applied_date,
-      email: candidate.email,
-      mobile_number: candidate.mobile_number,
-      status: candidate.status,
+      title: announcement.title,
+      message: announcement.message,
     });
     setFormOpen(true);
   };
 
-  const handleDelete = async (candidateId: string) => {
-    setDeletingCandidateId(candidateId);
+  const handleDelete = async (announcementId: string) => {
+    setDeletingAnnouncementId(announcementId);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-      await callApi('delete', `${normalizedBaseUrl}candidates/${candidateId}`, null, {
+      await callApi('delete', `${normalizedBaseUrl}announcements/${announcementId}`, null, {
         Authorization: `Bearer ${sessionStorage.getItem('token')}`,
       });
 
-      toast.success('Candidate has been deleted.');
-      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      toast.success('Announcement has been deleted.');
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
 
-      if (candidates.length === 1 && currentPage > 1) {
+      if (announcements.length === 1 && currentPage > 1) {
         setCurrentPage(prev => prev - 1);
       }
     } catch (error: unknown) {
       const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to delete candidate');
+      toast.error(apiError?.response?.data?.detail || 'Failed to delete announcement');
     } finally {
-      setDeletingCandidateId(null);
+      setDeletingAnnouncementId(null);
     }
   };
 
@@ -246,12 +237,6 @@ export default function CandidatePage() {
     setCurrentPage(1);
   };
 
-  // Determine if the current user can add candidates (HR, Manager)
-  const canAddCandidate = userRole === 'hr' || userRole === 'manager';
-
-  // Determine if the current user can see actions (HR, Manager)
-  const canSeeActions = userRole === 'hr' || userRole === 'manager';
-
   if (isLoading || userRole === null) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -263,26 +248,26 @@ export default function CandidatePage() {
   if (isError) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-red-500">
-        <p>Failed to load candidates. Please try again.</p>
+        <p>Failed to load announcements. Please try again.</p>
         <Button onClick={() => refetch()} label="Retry" variant="primary" className="mt-4" />
       </div>
     );
   }
+  
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
+      <div className="mx-auto mt-10 max-w-4xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-center sm:text-left">Candidate Management</h2>
-          {canAddCandidate && (
+          <h2 className="text-2xl font-bold text-center sm:text-left">Announcement Board</h2>
+          {hasActionPermissions && (
             <Button
-              label="Add Candidate"
+              label="Add Announcement"
               onClick={() => {
                 setFormOpen(true);
                 setIsUpdate(false);
-                setSelectedCandidateId('');
+                setSelectedAnnouncementId('');
                 formik.resetForm();
-                formik.setFieldValue('status', statusOptions[0]);
               }}
               variant="primary"
               disabled={isSubmittingForm}
@@ -291,7 +276,7 @@ export default function CandidatePage() {
           )}
         </div>
 
-        {/* Search Box for Candidates */}
+        {/* Search Box for Announcements */}
         <div className="w-full px-4 py-3">
           <div className="relative w-full">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -299,7 +284,7 @@ export default function CandidatePage() {
             </span>
             <input
               type="text"
-              placeholder="Search by name, email, or mobile..."
+              placeholder="Search by title or message..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -316,114 +301,49 @@ export default function CandidatePage() {
         </div>
 
         {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
               {isSubmittingForm && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                   <Loader />
                 </div>
               )}
               <h3 className="mb-4 text-xl font-semibold">
-                {isUpdate ? 'Update Candidate' : 'Create Candidate'}
+                {isUpdate ? 'Update Announcement' : 'Create Announcement'}
               </h3>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="candidate_name" className="mb-1 block">Candidate Name</label>
+                  <label htmlFor="title" className="mb-1 block">Title</label>
                   <input
                     type="text"
-                    id="candidate_name"
-                    name="candidate_name"
-                    value={formik.values.candidate_name}
+                    id="title"
+                    name="title"
+                    placeholder="e.g., New Holiday Policy"
+                    value={formik.values.title}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="w-full rounded border px-3 py-2"
                     disabled={isSubmittingForm}
                   />
-                  {formik.touched.candidate_name && formik.errors.candidate_name && (
-                    <span className="text-sm text-red-500">{formik.errors.candidate_name}</span>
+                  {formik.touched.title && formik.errors.title && (
+                    <span className="text-sm text-red-500">{formik.errors.title}</span>
                   )}
                 </div>
                 <div>
-                  <label htmlFor="applied_for" className="mb-1 block">Applied For</label>
-                  <input
-                    type="text"
-                    id="applied_for"
-                    name="applied_for"
-                    value={formik.values.applied_for}
+                  <label htmlFor="message" className="mb-1 block">Message</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    placeholder="e.g., From next month, we are changing the company's holiday policy."
+                    value={formik.values.message}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="w-full rounded border px-3 py-2"
+                    rows={4}
                     disabled={isSubmittingForm}
                   />
-                  {formik.touched.applied_for && formik.errors.applied_for && (
-                    <span className="text-sm text-red-500">{formik.errors.applied_for}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="applied_date" className="mb-1 block">Applied Date</label>
-                  <input
-                    type="date"
-                    id="applied_date"
-                    name="applied_date"
-                    value={formik.values.applied_date}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.applied_date && formik.errors.applied_date && (
-                    <span className="text-sm text-red-500">{formik.errors.applied_date}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="email" className="mb-1 block">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formik.values.email}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.email && formik.errors.email && (
-                    <span className="text-sm text-red-500">{formik.errors.email}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="mobile_number" className="mb-1 block">Mobile Number</label>
-                  <input
-                    type="text"
-                    id="mobile_number"
-                    name="mobile_number"
-                    value={formik.values.mobile_number}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.mobile_number && formik.errors.mobile_number && (
-                    <span className="text-sm text-red-500">{formik.errors.mobile_number}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="status" className="mb-1 block">Status</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formik.values.status}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  >
-                    {statusOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                  {formik.touched.status && formik.errors.status && (
-                    <span className="text-sm text-red-500">{formik.errors.status}</span>
+                  {formik.touched.message && formik.errors.message && (
+                    <span className="text-sm text-red-500">{formik.errors.message}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
@@ -433,7 +353,7 @@ export default function CandidatePage() {
                     onClick={() => {
                       setFormOpen(false);
                       setIsUpdate(false);
-                      setSelectedCandidateId('');
+                      setSelectedAnnouncementId('');
                       formik.resetForm();
                     }}
                     variant="secondary"
@@ -454,20 +374,20 @@ export default function CandidatePage() {
         <div>
           <Table
             columns={columns}
-            data={candidates}
+            data={announcements}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
-            {...(canSeeActions
+            {...(hasActionPermissions
               ? {
-                  actions: (candidate: Candidate) => (
+                  actions: (announcement: Announcement) => (
                     <div className="relative flex space-x-2">
                       <ActionButtons
-                        onView={() => handleView(candidate)}
-                        onUpdate={() => handleUpdate(candidate)}
-                        onDelete={() => handleDelete(candidate.id)}
+                        onView={() => handleView(announcement)}
+                        onUpdate={() => handleUpdate(announcement)}
+                        onDelete={() => handleDelete(announcement.id)}
                         showView={true}
                       />
-                      {deletingCandidateId === candidate.id && (
+                      {deletingAnnouncementId === announcement.id && (
                         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 rounded-md">
                           <Loader />
                         </div>

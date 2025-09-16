@@ -5,8 +5,7 @@ import { useQuery, QueryFunction } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { FiSearch, FiX } from 'react-icons/fi';
-
-import Loader from '@/components/Loader'; // Import your custom Loader
+import Loader from '@/components/Loader';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
 import useProtectRoute from '@/hooks/useProtectRoute';
 import callApi from '@/utils/callApi';
@@ -16,7 +15,7 @@ import UserForm from '@/components/UserForm';
 import Pagination from '@/components/Pagination';
 import { useAuth } from '@/context/AuthContext';
 
-// Define interfaces for type safety
+// Define interfaces for type safety, including ALL new fields
 interface User {
   id: string;
   first_name: string;
@@ -24,6 +23,18 @@ interface User {
   email: string;
   role_type: string;
   department_name: string;
+  date_of_birth: string | null;
+  gender: string | null;
+  image_url: string | null;
+  mobile_number: string | null;
+  marital_status: string | null;
+  address: string | null;
+  employee_type: string | null;
+  joining_date: string | null;
+  working_days: string | null;
+  official_email: string | null;
+  slack_id: string | null;
+  github_id: string | null;
 }
 
 interface ApiResponse {
@@ -42,6 +53,7 @@ interface ApiResponseError {
   };
 }
 
+// Columns for the table display (kept minimal for a clean UI)
 const columns = [
   { label: 'Name', key: 'full_name' },
   { label: 'Email', key: 'email' },
@@ -86,8 +98,7 @@ export default function ViewUsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
-  // Consolidate updating and deleting into one state for blocking
-  const [isBlockingOperations, setIsBlockingOperations] = useState(false); // Unified state for blocking UI
+  const [isBlockingOperations, setIsBlockingOperations] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery<ApiResponse, Error, ApiResponse, ['users', number, number, string]>({
     queryKey: ['users', currentPage, itemsPerPage, searchQuery],
@@ -111,8 +122,8 @@ export default function ViewUsersPage() {
   const [updateUser, setUpdateUser] = useState<User | null>(null);
 
   const handleView = async (userId: string) => {
-    setIsBlockingOperations(true); // Start blocking for view operation
-    const loadingToastId = toast.loading('Loading user details...'); // Default style, no spinner visible
+    setIsBlockingOperations(true);
+    const loadingToastId = toast.loading('Loading user details...');
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
@@ -125,17 +136,17 @@ export default function ViewUsersPage() {
     } catch (error: unknown) {
       toast.dismiss(loadingToastId);
       const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to load user data'); // Default style
+      toast.error(apiError?.response?.data?.detail || 'Failed to load user data');
     } finally {
-      setIsBlockingOperations(false); // End blocking
+      setIsBlockingOperations(false);
     }
   };
 
   const handleUpdateSubmit = async (values: any) => {
     if (!updateUser) return;
 
-    setIsBlockingOperations(true); // Start blocking for update operation
-    const loadingToastId = toast.loading('Updating user...'); // Default style, no spinner visible
+    setIsBlockingOperations(true);
+    const loadingToastId = toast.loading('Updating user...');
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -146,11 +157,22 @@ export default function ViewUsersPage() {
         last_name: values.last_name,
         email: values.email,
         role_type: values.role_type,
+        department_name: values.department_name,
+        date_of_birth: values.date_of_birth,
+        gender: values.gender,
+        image_url: values.image_url,
+        mobile_number: values.mobile_number,
+        marital_status: values.marital_status,
+        address: values.address,
+        employee_type: values.employee_type,
+        joining_date: values.joining_date,
+        working_days: values.working_days,
+        official_email: values.official_email,
+        slack_id: values.slack_id,
+        github_id: values.github_id,
       };
 
-      if ((values.role_type || '').toLowerCase() !== 'admin' && (values.role_type || '').toLowerCase() !== 'super_admin') {
-        payload.department_name = values.department_name;
-      } else {
+      if ((values.role_type || '').toLowerCase() === 'admin' || (values.role_type || '').toLowerCase() === 'super_admin') {
         payload.department_name = null;
       }
 
@@ -163,21 +185,21 @@ export default function ViewUsersPage() {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
       );
-      toast.success('User updated successfully!', { id: loadingToastId }); // Default style
+      toast.success('User updated successfully!', { id: loadingToastId });
       refetch();
       setUpdateUser(null);
     } catch (error: unknown) {
       toast.dismiss(loadingToastId);
       const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to update user'); // Default style
+      toast.error(apiError?.response?.data?.detail || 'Failed to update user');
     } finally {
-      setIsBlockingOperations(false); // End blocking
+      setIsBlockingOperations(false);
     }
   };
 
   const handleDelete = async (userId: string) => {
-    setIsBlockingOperations(true); // Start blocking for delete operation
-    const loadingToastId = toast.loading('Deleting user...'); // Default style, no spinner visible
+    setIsBlockingOperations(true);
+    const loadingToastId = toast.loading('Deleting user...');
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -192,7 +214,7 @@ export default function ViewUsersPage() {
         },
       );
 
-      toast.success('User has been deleted.', { id: loadingToastId }); // Default style
+      toast.success('User has been deleted.', { id: loadingToastId });
       refetch();
       if (transformedUsers.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
@@ -200,9 +222,9 @@ export default function ViewUsersPage() {
     } catch (error: unknown) {
       toast.dismiss(loadingToastId);
       const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to delete user'); // Default style
+      toast.error(apiError?.response?.data?.detail || 'Failed to delete user');
     } finally {
-      setIsBlockingOperations(false); // End blocking
+      setIsBlockingOperations(false);
     }
   };
 
@@ -220,11 +242,10 @@ export default function ViewUsersPage() {
     setCurrentPage(1);
   };
 
-  // Main page loader
   if (loading || isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader /> {/* Your custom Loader for main page load */}
+        <Loader />
       </div>
     );
   }
@@ -241,16 +262,12 @@ export default function ViewUsersPage() {
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 w-full overflow-x-auto rounded bg-white p-6 shadow">
         <h2 className="mb-6 text-2xl font-bold">All Users</h2>
-
-        {/* Apply blocking overlay to the entire main content area when operations are ongoing */}
         <div className="relative">
           {isBlockingOperations && (
             <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-              <Loader /> {/* Your custom Loader for blocking the main content */}
+              <Loader />
             </div>
           )}
-
-          {/* Search Box for Users */}
           <div className="w-full px-4 py-3">
             <div className="relative w-full">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500">
@@ -262,20 +279,19 @@ export default function ViewUsersPage() {
                 value={searchQuery}
                 onChange={handleSearchChange}
                 className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-300"
-                disabled={isBlockingOperations} // Disable search during blocking operations
+                disabled={isBlockingOperations}
               />
               {searchQuery && (
                 <button
                   onClick={clearSearch}
                   className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500 hover:text-red-500"
-                  disabled={isBlockingOperations} // Disable clear during blocking operations
+                  disabled={isBlockingOperations}
                 >
                   <FiX />
                 </button>
               )}
             </div>
           </div>
-
           <Table
             columns={columns}
             data={transformedUsers}
@@ -289,7 +305,6 @@ export default function ViewUsersPage() {
               />
             )}
           />
-
           <div className="mt-4 flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-gray-700">
               Showing{' '}
@@ -309,29 +324,72 @@ export default function ViewUsersPage() {
         {/* View User Modal */}
         {showViewModal && viewUser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            {/* Apply specific loader for the modal if a modal operation is blocking */}
-            <div className="relative w-full max-w-md space-y-3 rounded-lg bg-white p-6 shadow-lg">
-              {/* No specific loader needed inside view modal, as isBlockingOperations covers the whole page */}
+            <div className="relative w-full max-w-lg space-y-3 rounded-lg bg-white p-6 shadow-lg">
               <h3 className="mb-4 text-xl font-semibold">👤 User Details</h3>
-              <div className="flex">
-                <span className="w-28 font-bold">Name:</span>
-                <span>{`${viewUser.first_name} ${viewUser.last_name}`}</span>
-              </div>
-              <div className="flex">
-                <span className="w-28 font-bold">Email:</span>
-                <span>{viewUser.email}</span>
-              </div>
-              <div className="flex">
-                <span className="w-28 font-bold">Role:</span>
-                <span>{viewUser.role_type}</span>
-              </div>
-              {(viewUser.role_type || '').toLowerCase() !== 'admin' &&
-                (viewUser.role_type || '').toLowerCase() !== 'super_admin' && (
-                  <div className="flex">
-                    <span className="w-28 font-bold">Department:</span>
-                    <span>{viewUser.department_name || 'N/A'}</span>
+              <div className="max-h-[70vh] space-y-3 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-bold">Name:</span>
+                    <p>{`${viewUser.first_name} ${viewUser.last_name}`}</p>
                   </div>
-                )}
+                  <div>
+                    <span className="font-bold">Email:</span>
+                    <p>{viewUser.email}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Role:</span>
+                    <p>{viewUser.role_type}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Department:</span>
+                    <p>{viewUser.department_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">DOB:</span>
+                    <p>{viewUser.date_of_birth ? new Date(viewUser.date_of_birth).toLocaleDateString() : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Gender:</span>
+                    <p>{viewUser.gender || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Mobile No:</span>
+                    <p>{viewUser.mobile_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Marital Status:</span>
+                    <p>{viewUser.marital_status || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Address:</span>
+                    <p>{viewUser.address || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Employee Type:</span>
+                    <p>{viewUser.employee_type || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Joining Date:</span>
+                    <p>{viewUser.joining_date ? new Date(viewUser.joining_date).toLocaleDateString() : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Working Days:</span>
+                    <p>{viewUser.working_days || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Official Email:</span>
+                    <p>{viewUser.official_email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">Slack ID:</span>
+                    <p>{viewUser.slack_id || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold">GitHub ID:</span>
+                    <p>{viewUser.github_id || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
 
               <button
                 onClick={() => setShowViewModal(false)}
@@ -350,7 +408,7 @@ export default function ViewUsersPage() {
             <div className="relative w-full max-w-lg rounded-lg bg-white p-6">
               {isBlockingOperations && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader /> {/* Your custom Loader for the update modal */}
+                  <Loader />
                 </div>
               )}
               <h3 className="mb-4 text-xl font-semibold">Update User</h3>
@@ -363,11 +421,23 @@ export default function ViewUsersPage() {
                   password: '',
                   role_type: updateUser.role_type || '',
                   department_name: updateUser.department_name || '',
+                  date_of_birth: updateUser.date_of_birth || '',
+                  gender: updateUser.gender || '',
+                  image_url: updateUser.image_url || '',
+                  mobile_number: updateUser.mobile_number || '',
+                  marital_status: updateUser.marital_status || '',
+                  address: updateUser.address || '',
+                  employee_type: updateUser.employee_type || '',
+                  joining_date: updateUser.joining_date || '',
+                  working_days: updateUser.working_days || '',
+                  official_email: updateUser.official_email || '',
+                  slack_id: updateUser.slack_id || '',
+                  github_id: updateUser.github_id || '',
                 }}
                 onCancel={() => setUpdateUser(null)}
                 onSubmit={handleUpdateSubmit}
                 currentUserRole={user?.role_type || ''}
-                isSubmitting={isBlockingOperations} // Pass the loading state to disable fields
+                isSubmitting={isBlockingOperations}
               />
             </div>
           </div>

@@ -36,14 +36,14 @@ export default function AuthenticatedHeaderContent({ user, onProfileClick, onLog
                 </div>
             </div>
 
-            <div className="hidden md:flex relative ml-auto mr-3"> 
+            {/* <div className="hidden md:flex relative ml-auto mr-3"> 
                 <input
                     type="text"
                     placeholder="Search"
                     className="w-full h-10 max-w-[160px] lg:max-w-[200px] xl:max-w-[260px] min-w-[120px] pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 placeholder-gray-500"
                 />
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            </div>
+            </div> */}
 
             <div className="flex items-center gap-1">
                 <button className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
