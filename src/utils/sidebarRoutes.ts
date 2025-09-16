@@ -8,7 +8,7 @@ export const getSidebarRoutes = (role: string) => {
         { name: 'View Users', path: '/dashboard/view-users' },
       ],
     },
-    // { name: 'Departments', path: '/dashboard/departments' },
+     { name: 'Departments', path: '/dashboard/departments' },
      { name: 'Attendance', path: '/dashboard/attendance' },
     { name: 'Payroll', path: '/dashboard/payroll' },
     { name: 'Jobs', path: '/dashboard/jobs' },
