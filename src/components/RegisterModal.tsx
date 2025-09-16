@@ -1,10 +1,9 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { useFormik, getIn } from 'formik';
 import * as Yup from 'yup';
 import callApi from '@/utils/callApi';
-import toast from 'react-hot-toast'; // Changed from Swal to toast
+import toast from 'react-hot-toast';
 import {
   FaEnvelope,
   FaLock,
@@ -21,7 +20,7 @@ import {
 import Button from './Button';
 import OtpVerificationForm from './OtpVerificationForm';
 import Loader from './Loader';
-import AuthRegisterSVG from './AuthSvg'; // Import the new SVG component
+import AuthRegisterSVG from './AuthSvg';
 
 interface Props {
   onClose: () => void;
@@ -68,7 +67,6 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
   const [loadingOrgTypes, setLoadingOrgTypes] = useState(true);
   const [errorOrgTypes, setErrorOrgTypes] = useState<string | null>(null);
   const [loadingRegistration, setLoadingRegistration] = useState(false);
-
   const [showOtpVerification, setShowOtpVerification] = useState(false);
   const [registrationEmail, setRegistrationEmail] = useState<string>('');
 
@@ -79,7 +77,6 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
         setErrorOrgTypes(null);
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
         const response: OrganizationTypeApiResponse = await callApi('get', `${baseUrl}/organization-types/`);
-
         if (response && Array.isArray(response.organization_types)) {
           setOrganizationTypes(response.organization_types);
         } else {
@@ -91,7 +88,6 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
         setLoadingOrgTypes(false);
       }
     };
-
     fetchOrganizationTypes();
   }, []);
 
@@ -127,7 +123,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
         )
         .max(25, 'Address must be 25 characters only.'),
       phone_number: Yup.string()
-        .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits')
+        .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits')
         .required('Phone number is required'),
       organization_type: Yup.string().required('Organization type is required'),
       description: Yup.string()
@@ -135,28 +131,24 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
         .max(100, 'Description must be 100 characters only.'),
       website: Yup.string().url('Enter a valid website URL').required('Website is required'),
       gst_number: Yup.string()
-        .matches(/^[0-9A-Z]{15}$/, 'GST Number must be 15 alphanumeric characters')
-        .required('GST Number is required')
         .matches(
-          /^[0-9A-Z]+$/,
-          'GST Number should not contain special characters.'
-        ),
+          /^[0-9A-Z]{15}$/,
+          'GST Number must be 15 alphanumeric characters and all letters must be capital.'
+        )
+        .required('GST Number is required'),
     }),
     onSubmit: async (values, { resetForm }) => {
       setLoadingRegistration(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
-
         const payload = {
           ...values,
           role_type: values.role_type,
           organization_type: values.organization_type,
         };
-
         const response = await callApi('post', `${baseUrl}/organization`, payload, {
           'Content-Type': 'application/json',
         });
-
         if (response && response.detail && typeof response.detail === 'string' && response.detail.includes('exists')) {
           toast.error(response.detail, { position: 'top-center' });
         } else {
@@ -165,23 +157,16 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
           setShowOtpVerification(true);
         }
       } catch (err: any) {
-        let errorMessage = 'Registration failed. Please try again.';
-        if (err?.response?.data?.detail) {
-          errorMessage = err.response.data.detail;
-        } else if (err?.detail) {
-          errorMessage = err.detail;
-        } else if (err?.response?.data?.message) {
-          errorMessage = err.response.data.message;
-        } else if (err?.response?.data?.error) {
-          errorMessage = err.response.data.error;
-        } else if (err?.response?.data?.errors?.email && Array.isArray(err.response.data.errors.email)) {
-          errorMessage = err.response.data.errors.email[0];
-        } else if (typeof err?.response?.data === 'string') {
-          errorMessage = err.response.data;
-        } else if (err.message) {
-          errorMessage = err.message;
-        }
-        toast.error(errorMessage, { position: 'top-center' }); // Changed from Swal to toast
+        const errorMessage =
+          err?.response?.data?.detail ||
+          err?.detail ||
+          err?.response?.data?.message ||
+          (err?.response?.data?.errors?.email && Array.isArray(err.response.data.errors.email) && err.response.data.errors.email[0]) ||
+          err?.response?.data?.error ||
+          (typeof err?.response?.data === 'string' && err.response.data) ||
+          err.message ||
+          'Registration failed. Please try again.';
+        toast.error(errorMessage, { position: 'top-center' });
       } finally {
         setLoadingRegistration(false);
       }
@@ -198,12 +183,20 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
     const value = getIn(formik.values, name);
     const error = getIn(formik.errors, name);
     const touched = getIn(formik.touched, name);
+    const isPhoneNumber = name === 'phone_number';
+    const isGstNumber = name === 'gst_number';
 
     const commonProps = {
       name,
       placeholder,
       value,
-      onChange: formik.handleChange,
+      onChange: (e: any) => {
+        let newValue = e.target.value;
+        if (isGstNumber) {
+          newValue = newValue.toUpperCase();
+        }
+        formik.setFieldValue(name, newValue);
+      },
       onBlur: formik.handleBlur,
       className: 'w-full border rounded-lg py-3 px-4 text-black outline-none focus:border-blue-500',
     };
@@ -213,15 +206,22 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
         <label className="block text-sm font-medium mb-1 capitalize">{name.replace('_', ' ')}</label>
         <div className="relative">
           {isTextArea ? (
-            <>
-              <textarea {...commonProps} rows={4} />
-            </>
+            <textarea {...commonProps} rows={4} />
           ) : (
             <>
               <input
                 type={type}
                 {...commonProps}
                 className={`${commonProps.className} pl-10`}
+                maxLength={isPhoneNumber ? 10 : isGstNumber ? 15 : undefined}
+                onInput={
+                  isPhoneNumber
+                    ? (e: any) => {
+                        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                        formik.setFieldValue('phone_number', e.target.value);
+                      }
+                    : undefined
+                }
               />
               <Icon className="absolute left-3 top-4 text-gray-500" />
             </>
@@ -235,30 +235,40 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex justify-center items-start md:items-center p-4">
       <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg flex flex-col md:flex-row overflow-hidden max-h-[95vh] mt-10 md:mt-0 animate-slide-down">
-        {/* Left Side with SVG Graphic - Hidden on mobile */}
         <div className="hidden md:flex md:w-1/2 flex-col items-center justify-center bg-blue-100 p-0 relative min-h-[400px]">
-          {/* Use the new SVG component here */}
           <AuthRegisterSVG />
           <p className="text-gray-600 text-center text-sm mt-4">Register your organization as a Super Admin</p>
         </div>
-
-        {/* Right Side Form */}
         <div className="w-full md:w-1/2 p-6 md:p-8 relative flex flex-col min-h-0">
           <h2 className="text-2xl font-bold text-black mb-4 text-center flex-shrink-0">
             {showOtpVerification ? 'Verify Your Account' : 'Organization Register'}
           </h2>
-
           {loadingRegistration && (
             <div className="absolute inset-0 flex justify-center items-center bg-white/70 backdrop-blur-sm z-10">
               <Loader />
             </div>
           )}
-
           {!showOtpVerification ? (
             <form onSubmit={formik.handleSubmit} className="flex flex-col flex-grow overflow-y-auto pr-2">
-              {inputField('org_name', 'text', 'Organization name', FaUser)}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 capitalize">Organization name</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="org_name"
+                    placeholder="Organization name"
+                    value={formik.values.org_name}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500"
+                  />
+                  <FaUser className="absolute left-3 top-4 text-gray-500" />
+                </div>
+                {formik.touched.org_name && formik.errors.org_name && (
+                  <span className="text-sm text-red-500">{formik.errors.org_name}</span>
+                )}
+              </div>
               {inputField('email', 'email', 'Email', FaEnvelope)}
-
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Password</label>
                 <div className="relative">
@@ -284,10 +294,8 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                   <span className="text-sm text-red-500">{formik.errors.password}</span>
                 )}
               </div>
-
               {inputField('address', 'text', 'Address (Max 25 characters)', FaMapMarkerAlt)}
               {inputField('phone_number', 'text', 'Phone Number', FaPhone)}
-
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Organization Type</label>
                 <div className="relative">
@@ -317,14 +325,10 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                   <span className="text-sm text-red-500">{formik.errors.organization_type}</span>
                 )}
               </div>
-
               {inputField('website', 'text', 'Website URL', FaGlobe)}
               {inputField('gst_number', 'text', 'GST Number', FaFileInvoice)}
               {inputField('description', 'text', 'Description (Max 100 characters)', FaInfoCircle, true)}
-
-              {/* Flex-grow div to push buttons to the bottom */}
               <div className="flex-grow"></div>
-
               <Button
                 type="submit"
                 label="Register Organization"
@@ -333,7 +337,6 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                 disabled={loadingRegistration}
                 className="flex-shrink-0"
               />
-
               <Button
                 type="button"
                 onClick={onClose}

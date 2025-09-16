@@ -1,4 +1,5 @@
 'use client';
+
 import { useQuery, useQueryClient, QueryFunction } from '@tanstack/react-query';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
@@ -15,16 +16,19 @@ import Loader from '@/components/Loader';
 import Button from '@/components/Button';
 import Pagination from '@/components/Pagination';
 
-// Define interfaces for type safety
-interface Holiday {
+// Define interfaces for type safety, matching your API response
+interface Feedback {
   id: string;
-  date: string; // Changed from holiday_date to date based on create schema
-  day: string;
-  holiday_name: string;
+  organization_id: string;
+  category: 'suggestion' | 'complaint' | 'idea';
+  message: string;
+  status: 'pending' | 'in_review' | 'resolved';
+  created_at: string;
+  updated_at: string;
 }
 
-interface ApiResponse {
-  holidays: Holiday[];
+interface PaginatedFeedbackResponse {
+  feedbacks: Feedback[];
   totalItems: number;
   totalPages: number;
   currentPage: number;
@@ -39,17 +43,25 @@ interface ApiResponseError {
   };
 }
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+};
+
 const columns = [
-  { label: 'Holiday Name', key: 'holiday_name' },
-  { label: 'Date', key: 'date' },
-  { label: 'Day', key: 'day' },
-  // No explicit column for actions here, ActionButtons will be rendered directly
+  { label: 'Category', key: 'category' },
+  { label: 'Message', key: 'message' },
+  { label: 'Status', key: 'status' },
+  { label: 'Date', key: 'created_at', format: formatDate },
 ];
 
-// fetchHolidays will now explicitly take page, limit, and search query
-const fetchHolidays: QueryFunction<
-  ApiResponse,
-  ['holidays', number, number, string]
+const fetchFeedbacks: QueryFunction<
+  PaginatedFeedbackResponse,
+  ['feedbacks', number, number, string]
 > = async ({ queryKey }) => {
   const [_key, currentPage, itemsPerPage, searchQuery] = queryKey;
   const token = sessionStorage.getItem('token');
@@ -60,7 +72,7 @@ const fetchHolidays: QueryFunction<
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
-  let url = `${normalizedBaseUrl}holidays?page=${currentPage}&limit=${itemsPerPage}`;
+  let url = `${normalizedBaseUrl}feedbacks?page=${currentPage}&limit=${itemsPerPage}`;
   if (searchQuery) {
     url += `&search=${encodeURIComponent(searchQuery)}`;
   }
@@ -69,14 +81,14 @@ const fetchHolidays: QueryFunction<
     const response = await callApi('get', url, null, {
       Authorization: `Bearer ${token}`,
     });
-    return response as ApiResponse;
+    return response as PaginatedFeedbackResponse;
   } catch (error) {
-    console.error('Error fetching holidays:', error);
+    console.error('Error fetching feedbacks:', error);
     throw error;
   }
 };
 
-export default function HolidayPage() {
+export default function FeedbackPage() {
   useAuthRedirect();
   useProtectRoute();
 
@@ -89,73 +101,81 @@ export default function HolidayPage() {
     setUserRole(role);
   }, []);
 
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data, isLoading, isError, refetch } = useQuery<
-    ApiResponse,
+    PaginatedFeedbackResponse,
     Error,
-    ApiResponse,
-    ['holidays', number, number, string]
+    PaginatedFeedbackResponse,
+    ['feedbacks', number, number, string]
   >({
-    queryKey: ['holidays', currentPage, itemsPerPage, searchQuery],
-    queryFn: fetchHolidays,
+    queryKey: ['feedbacks', currentPage, itemsPerPage, searchQuery],
+    queryFn: fetchFeedbacks,
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const holidays = data?.holidays || [];
+  const feedbacks = data?.feedbacks || [];
   const totalItems = data?.totalItems || 0;
   const totalPages = data?.totalPages || 1;
 
   const [formOpen, setFormOpen] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
-  const [selectedHolidayId, setSelectedHolidayId] = useState('');
+  const [selectedFeedbackId, setSelectedFeedbackId] = useState('');
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
-  const [deletingHolidayId, setDeletingHolidayId] = useState<string | null>(null);
+  const [deletingFeedbackId, setDeletingFeedbackId] = useState<string | null>(null);
 
   const validationSchema = useMemo(() => {
+    if (isAdmin) {
+      return Yup.object({
+        category: Yup.string().oneOf(['suggestion', 'complaint', 'idea']).required('Category is required'),
+        message: Yup.string().required('Message is required'),
+        status: Yup.string().oneOf(['pending', 'in_review', 'resolved']).optional(),
+      });
+    }
     return Yup.object({
-      holiday_name: Yup.string().required('Holiday name is required'),
-      date: Yup.date().required('Date is required').typeError('Invalid date format'),
-      day: Yup.string().required('Day is required'),
+      category: Yup.string().oneOf(['suggestion', 'complaint', 'idea']).required('Category is required'),
+      message: Yup.string().required('Message is required'),
     });
-  }, []);
+  }, [isAdmin]);
 
   const formik = useFormik({
     initialValues: {
-      holiday_name: '',
-      date: '',
-      day: '',
+      category: 'suggestion',
+      message: '',
+      status: 'pending',
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       setIsSubmittingForm(true);
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-      const url = isUpdate ? `${normalizedBaseUrl}holidays/${selectedHolidayId}` : `${normalizedBaseUrl}holidays`;
+      const url = isUpdate ? `${normalizedBaseUrl}feedbacks/${selectedFeedbackId}` : `${normalizedBaseUrl}feedbacks`;
       const method = isUpdate ? 'put' : 'post';
 
-      try {
-        const payload = isUpdate
-          ? { ...values, holiday_date: values.date }
-          : values;
+      const payload = {
+        category: values.category,
+        message: values.message,
+        ...(isAdmin ? { status: values.status } : {}),
+      };
 
+      try {
         await callApi(method, url, payload, {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         });
 
-        toast.success(`Holiday ${isUpdate ? 'updated' : 'created'} successfully!`);
-
-        queryClient.invalidateQueries({ queryKey: ['holidays'] });
+        toast.success(`Feedback ${isUpdate ? 'updated' : 'created'} successfully!`);
+        queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
         setCurrentPage(1);
-
         setFormOpen(false);
         setIsUpdate(false);
-        setSelectedHolidayId('');
+        setSelectedFeedbackId('');
         resetForm();
       } catch (error: unknown) {
         const apiError = error as ApiResponseError;
@@ -166,52 +186,52 @@ export default function HolidayPage() {
     },
   });
 
-  const handleView = async (holiday: Holiday) => {
+  const handleView = async (feedback: Feedback) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
     try {
-      const response = await callApi('get', `${normalizedBaseUrl}holidays/${holiday.id}`, null, {
+      const response = await callApi('get', `${normalizedBaseUrl}feedbacks/${feedback.id}`, null, {
         Authorization: `Bearer ${sessionStorage.getItem('token')}`,
       });
-      const holidayDetails = response as Holiday;
-      toast.success(`Viewing: ${holidayDetails.holiday_name} on ${holidayDetails.date} (${holidayDetails.day})`);
+      const feedbackDetails = response as Feedback;
+      toast.success(`Viewing feedback: ${feedbackDetails.category}`);
     } catch (error: unknown) {
       const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to fetch holiday details');
+      toast.error(apiError?.response?.data?.detail || 'Failed to fetch feedback details');
     }
   };
 
-  const handleUpdate = (holiday: Holiday) => {
-    setSelectedHolidayId(holiday.id);
+  const handleUpdate = (feedback: Feedback) => {
+    setSelectedFeedbackId(feedback.id);
     setIsUpdate(true);
     formik.setValues({
-      holiday_name: holiday.holiday_name,
-      date: holiday.date,
-      day: holiday.day,
+      category: feedback.category,
+      message: feedback.message,
+      status: feedback.status,
     });
     setFormOpen(true);
   };
 
-  const handleDelete = async (holidayId: string) => {
-    setDeletingHolidayId(holidayId);
+  const handleDelete = async (feedbackId: string) => {
+    setDeletingFeedbackId(feedbackId);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-      await callApi('delete', `${normalizedBaseUrl}holidays/${holidayId}`, null, {
+      await callApi('delete', `${normalizedBaseUrl}feedbacks/${feedbackId}`, null, {
         Authorization: `Bearer ${sessionStorage.getItem('token')}`,
       });
 
-      toast.success('Holiday has been deleted.');
-      queryClient.invalidateQueries({ queryKey: ['holidays'] });
+      toast.success('Feedback has been deleted.');
+      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
 
-      if (holidays.length === 1 && currentPage > 1) {
-        setCurrentPage(prev => prev - 1);
+      if (feedbacks.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
       }
     } catch (error: unknown) {
       const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to delete holiday');
+      toast.error(apiError?.response?.data?.detail || 'Failed to delete feedback');
     } finally {
-      setDeletingHolidayId(null);
+      setDeletingFeedbackId(null);
     }
   };
 
@@ -228,9 +248,6 @@ export default function HolidayPage() {
     setSearchQuery('');
     setCurrentPage(1);
   };
-  
-  // Determine if the current user is a super_admin or admin
-  const canManageHolidays = userRole === 'super_admin' || userRole === 'admin';
 
   if (isLoading || userRole === null) {
     return (
@@ -243,25 +260,24 @@ export default function HolidayPage() {
   if (isError) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-red-500">
-        <p>Failed to load holidays. Please try again.</p>
+        <p>Failed to load feedbacks. Please try again.</p>
         <Button onClick={() => refetch()} label="Retry" variant="primary" className="mt-4" />
       </div>
     );
   }
 
-
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-4xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-center sm:text-left">Holiday Management</h2>
-          {canManageHolidays && (
+          <h2 className="text-2xl font-bold text-center sm:text-left">Feedback Board</h2>
+          {!isAdmin && (
             <Button
-              label="Add Holiday"
+              label="Add Feedback"
               onClick={() => {
                 setFormOpen(true);
                 setIsUpdate(false);
-                setSelectedHolidayId('');
+                setSelectedFeedbackId('');
                 formik.resetForm();
               }}
               variant="primary"
@@ -271,15 +287,14 @@ export default function HolidayPage() {
           )}
         </div>
 
-        {/* Search Box for Holidays */}
-        <div className="w-full px-4 py-3">
+        <div className="w-full mb-6">
           <div className="relative w-full">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
               <FiSearch />
             </span>
             <input
               type="text"
-              placeholder="Search by holiday name or day..."
+              placeholder="Search by category or message..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -304,57 +319,66 @@ export default function HolidayPage() {
                 </div>
               )}
               <h3 className="mb-4 text-xl font-semibold">
-                {isUpdate ? 'Update Holiday' : 'Create Holiday'}
+                {isUpdate ? 'Update Feedback' : 'Create Feedback'}
               </h3>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="holiday_name" className="mb-1 block">Holiday Name</label>
-                  <input
-                    type="text"
-                    id="holiday_name"
-                    name="holiday_name"
-                    value={formik.values.holiday_name}
+                  <label htmlFor="category" className="mb-1 block">Category</label>
+                  <select
+                    id="category"
+                    name="category"
+                    value={formik.values.category}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="w-full rounded border px-3 py-2"
                     disabled={isSubmittingForm}
-                  />
-                  {formik.touched.holiday_name && formik.errors.holiday_name && (
-                    <span className="text-sm text-red-500">{formik.errors.holiday_name}</span>
+                  >
+                    <option value="suggestion">Suggestion</option>
+                    <option value="complaint">Complaint</option>
+                    <option value="idea">Idea</option>
+                  </select>
+                  {formik.touched.category && formik.errors.category && (
+                    <span className="text-sm text-red-500">{formik.errors.category}</span>
                   )}
                 </div>
                 <div>
-                  <label htmlFor="date" className="mb-1 block">Date</label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={formik.values.date}
+                  <label htmlFor="message" className="mb-1 block">Message</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    placeholder="e.g., The office is too cold."
+                    value={formik.values.message}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="w-full rounded border px-3 py-2"
+                    rows={4}
                     disabled={isSubmittingForm}
                   />
-                  {formik.touched.date && formik.errors.date && (
-                    <span className="text-sm text-red-500">{formik.errors.date}</span>
+                  {formik.touched.message && formik.errors.message && (
+                    <span className="text-sm text-red-500">{formik.errors.message}</span>
                   )}
                 </div>
-                <div>
-                  <label htmlFor="day" className="mb-1 block">Day</label>
-                  <input
-                    type="text"
-                    id="day"
-                    name="day"
-                    value={formik.values.day}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.day && formik.errors.day && (
-                    <span className="text-sm text-red-500">{formik.errors.day}</span>
-                  )}
-                </div>
+                {isAdmin && isUpdate && (
+                  <div>
+                    <label htmlFor="status" className="mb-1 block">Status</label>
+                    <select
+                      id="status"
+                      name="status"
+                      value={formik.values.status}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full rounded border px-3 py-2"
+                      disabled={isSubmittingForm}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="in_review">In Review</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                    {formik.touched.status && formik.errors.status && (
+                      <span className="text-sm text-red-500">{formik.errors.status}</span>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <Button
                     label="Cancel"
@@ -362,7 +386,7 @@ export default function HolidayPage() {
                     onClick={() => {
                       setFormOpen(false);
                       setIsUpdate(false);
-                      setSelectedHolidayId('');
+                      setSelectedFeedbackId('');
                       formik.resetForm();
                     }}
                     variant="secondary"
@@ -383,20 +407,20 @@ export default function HolidayPage() {
         <div>
           <Table
             columns={columns}
-            data={holidays}
+            data={feedbacks}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
-            {...(canManageHolidays
+            {...(isAdmin
               ? {
-                  actions: (holiday: Holiday) => (
+                  actions: (feedback: Feedback) => (
                     <div className="relative flex space-x-2">
                       <ActionButtons
-                        onView={() => handleView(holiday)}
-                        onUpdate={() => handleUpdate(holiday)}
-                        onDelete={() => handleDelete(holiday.id)}
+                        onView={() => handleView(feedback)}
+                        onUpdate={() => handleUpdate(feedback)}
+                        onDelete={() => handleDelete(feedback.id)}
                         showView={true}
                       />
-                      {deletingHolidayId === holiday.id && (
+                      {deletingFeedbackId === feedback.id && (
                         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 rounded-md">
                           <Loader />
                         </div>

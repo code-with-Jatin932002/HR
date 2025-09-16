@@ -1,13 +1,10 @@
-// pending.tsx
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useProtectRoute from '@/hooks/useProtectRoute';
-import toast from 'react-hot-toast'; // Import react-hot-toast
- import Swal from 'sweetalert2';
+import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 import callApi from '@/utils/callApi';
 import ActionButtons from '@/components/ActionButtons';
@@ -15,21 +12,67 @@ import Table from '@/components/Table';
 import Loader from '@/components/Loader';
 import Button from "@/components/Button";
 import Pagination from '@/components/Pagination';
+import CreateLeaveModal from '@/components/CreateLeaveModal';
+import { FiX } from 'react-icons/fi';
 
-// Removed MySwal as it's not used
+// Define interfaces for type safety
+interface Leave {
+    id?: string;
+    user_id: string;
+    reviewer_id?: string;
+    manager_id?: string;
+    leave_type: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    hr_status?: string;
+    manager_status?: string;
+    status?: string;
+    hr_rejection_reason?: string | null;
+    manager_rejection_reason?: string | null;
+    created_at?: string;
+}
 
-// Custom hook to get user role from localStorage
+interface User {
+    id: string;
+    first_name: string;
+    last_name: string;
+    full_name?: string;
+}
+
+interface LeaveApiResponse {
+    leaves: Leave[];
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+}
+
+interface UserApiResponse {
+    users: User[];
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+}
+
+// Custom hook to get user role from sessionStorage
 const useUserRole = () => {
     const [role, setRole] = useState<string | null>(null);
 
     useEffect(() => {
         const userRole = sessionStorage.getItem('role_type');
-        setRole(userRole);
+        if (userRole) {
+            setRole(userRole.toLowerCase());
+        } else {
+            setRole(null);
+        }
     }, []);
 
     return role;
 };
 
+// Utility function to get status color
 function getStatusColor(status: string) {
     switch (status) {
         case 'ACCEPTED':
@@ -43,91 +86,75 @@ function getStatusColor(status: string) {
     }
 }
 
-interface Leave {
-    id?: string;
-    user_id?: string;
-    reviewer_id?: string;
-    manager_id?: string;
-    leave_type: string;
-    description: string;
-    start_date: string;
-    end_date: string;
-    hr_status?: string;
-    manager_status?: string;
-    status?: string; // Overall status
-    hr_rejection_reason?: string | null;
-    manager_rejection_reason?: string | null;
-    created_at?: string;
-}
-
 export default function PendingLeavesPage() {
     useProtectRoute();
     const userRole = useUserRole();
     const [showForm, setShowForm] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
-    const [isSubmittingForm, setIsSubmittingForm] = useState(false);
-    const [deletingLeaveId, setDeletingLeaveId] = useState<string | null>(null); // State to track deleting leave
-
+    const [editLeaveData, setEditLeaveData] = useState<Leave | null>(null);
+    const [deletingLeaveId, setDeletingLeaveId] = useState<string | null>(null);
     const [showViewForm, setShowViewForm] = useState(false);
     const [viewedLeave, setViewedLeave] = useState<Leave | null>(null);
     const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
-
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
 
     const queryClient = useQueryClient();
-    const fetchLeaves = async ({ queryKey }: { queryKey: any[] }) => {
-        const [_key, currentPage, itemsPerPage] = queryKey;
-        if (!token) {
-            throw new Error('Authentication token not found. Please log in.');
-        }
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        // Fetch only PENDING leaves
-        const responseData = await callApi('get', `${baseUrl}/leaves?page=${currentPage}&limit=${itemsPerPage}&status=PENDING`, null, {
-            Authorization: `Bearer ${token}`,
-        });
-        return responseData;
-    };
 
-    const { data, isLoading, isError, refetch } = useQuery({
-        queryKey: ['pendingLeaves', currentPage, itemsPerPage], // Updated query key
-        queryFn: fetchLeaves,
-        placeholderData: (previousData) => previousData,
-        enabled: !!token,
-    });
-    const leaves = data?.leaves || [];
-    const totalItems = data?.totalItems || 0;
-    const totalPages = data?.totalPages || 1;
-
-    const leaveMutation = useMutation({
-        mutationFn: async (values: Leave) => {
+    // Fetch leaves data
+    const {
+        data: leavesData,
+        isLoading: isLoadingLeaves,
+        isError: isErrorLeaves,
+        refetch: refetchLeaves
+    } = useQuery<LeaveApiResponse, Error, LeaveApiResponse, ['pendingLeaves', number, number]>({
+        queryKey: ['pendingLeaves', currentPage, itemsPerPage],
+        queryFn: async ({ queryKey }) => {
+            const [_key, page, limit] = queryKey;
+            if (!token) throw new Error('Authentication token not found.');
             const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-            const url = editId ? `${baseUrl}/leaves/${editId}` : `${baseUrl}/leaves`;
-            const method = editId ? 'put' : 'post';
-            return await callApi(method, url, values, {
-                'Content-Type': 'application/json',
+            return await callApi('get', `${baseUrl}/leaves?page=${page}&limit=${limit}&status=PENDING`, null, {
                 Authorization: `Bearer ${token}`,
             });
         },
-        onMutate: () => {
-            setIsSubmittingForm(true);
-        },
-        onSuccess: async () => {
-            await refetch();
-            toast.success(editId ? 'Leave updated successfully' : 'Leave submitted successfully');
-            setShowForm(false);
-            setEditId(null);
-            formik.resetForm();
-        },
-        onError: (error: any) => {
-            toast.error(error?.response?.data?.detail || 'Failed to submit leave');
-        },
-        onSettled: () => {
-            setIsSubmittingForm(false);
-        },
+        placeholderData: (previousData) => previousData,
+        enabled: !!token,
     });
+    const leaves = leavesData?.leaves || [];
+    const totalItems = leavesData?.totalItems || 0;
+    const totalPages = leavesData?.totalPages || 1;
+
+    // Fetch all users for name lookup
+    const {
+        data: usersData,
+        isLoading: isLoadingUsers,
+        isError: isErrorUsers
+    } = useQuery<UserApiResponse, Error, UserApiResponse, ['users']>({
+        queryKey: ['users'],
+        queryFn: async () => {
+            if (!token) throw new Error('Authentication token not found.');
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+            return await callApi('get', `${baseUrl}/users?page=1&limit=100`, null, {
+                Authorization: `Bearer ${token}`,
+            });
+        },
+        enabled: !!token,
+        refetchOnWindowFocus: false,
+        staleTime: 15 * 60 * 1000, // Cache for 15 minutes
+    });
+
+    const usersMap = React.useMemo(() => {
+        const map = new Map<string, string>();
+        if (usersData?.users) {
+            usersData.users.forEach(user => {
+                map.set(user.id, `${user.first_name} ${user.last_name}`.trim());
+            });
+        }
+        return map;
+    }, [usersData]);
+
 
     const updateStatusMutation = useMutation({
         mutationFn: async ({ leaveId, status, reason }: { leaveId: string, status: string, reason?: string }) => {
@@ -141,9 +168,9 @@ export default function PendingLeavesPage() {
             setIsSubmittingStatus(true);
         },
         onSuccess: async (data, variables) => {
-            await refetch();
+            await refetchLeaves();
             toast.success(`Leave ${variables.status.toLowerCase()} successfully`);
-            setShowViewForm(false); // Close the view form after status update
+            setShowViewForm(false);
             setViewedLeave(null);
         },
         onError: (error: any) => {
@@ -154,7 +181,6 @@ export default function PendingLeavesPage() {
         },
     });
 
-    // --- Delete Mutation ---
     const deleteMutation = useMutation({
         mutationFn: async (leaveId: string) => {
             const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -163,75 +189,26 @@ export default function PendingLeavesPage() {
             });
         },
         onMutate: (leaveId) => {
-            setDeletingLeaveId(leaveId); // Set the ID of the leave being deleted
-            toast.loading('Deleting leave...'); // Show loading toast
+            setDeletingLeaveId(leaveId);
+            toast.loading('Deleting leave...');
         },
         onSuccess: async () => {
-            await refetch();
-            toast.dismiss(); // Dismiss the loading toast
-            toast.success('Leave deleted successfully'); // Show success toast
+            await refetchLeaves();
+            toast.dismiss();
+            toast.success('Leave deleted successfully');
         },
         onError: (error: any) => {
-            toast.dismiss(); // Dismiss the loading toast
-            toast.error(error?.response?.data?.detail || 'Failed to delete leave'); // Show error toast
+            toast.dismiss();
+            toast.error(error?.response?.data?.detail || 'Failed to delete leave');
         },
         onSettled: () => {
-            setDeletingLeaveId(null); // Clear the deleting state
-        },
-    });
-    // --- End Delete Mutation ---
-
-    const formik = useFormik({
-        initialValues: {
-            leave_type: '',
-            description: '',
-            start_date: '',
-            end_date: '',
-        },
-        validationSchema: Yup.object({
-            leave_type: Yup.string().required('Leave type is required'),
-            description: Yup.string()
-                .min(10, 'Description must be at least 10 characters')
-                .required('Description is required'),
-            start_date: Yup.string()
-                .required('Start date is required')
-                .test(
-                    'is-today-or-future',
-                    'Start date must be today or in the future',
-                    function (value) {
-                        if (!value) return true;
-                        const today = new Date();
-                        const selectedDate = new Date(value);
-                        // Normalize both dates (remove time portion)
-                        today.setHours(0, 0, 0, 0);
-                        selectedDate.setHours(0, 0, 0, 0);
-                        return selectedDate >= today;
-                    }
-                ),
-            end_date: Yup.string()
-                .required('End date is required')
-                .test(
-                    'is-after-start',
-                    'End date must be after start date',
-                    function (end_date) {
-                        const { start_date } = this.parent;
-                        return start_date && end_date ? new Date(end_date) >= new Date(start_date) : true;
-                    },
-                ),
-        }),
-        onSubmit: (values) => {
-            leaveMutation.mutate(values);
+            setDeletingLeaveId(null);
         },
     });
 
     const handleEdit = (leave: Leave) => {
         setEditId(leave.id || null);
-        formik.setValues({
-            leave_type: leave.leave_type,
-            description: leave.description,
-            start_date: leave.start_date,
-            end_date: leave.end_date,
-        });
+        setEditLeaveData(leave);
         setShowForm(true);
     };
 
@@ -240,18 +217,11 @@ export default function PendingLeavesPage() {
         setShowViewForm(true);
     };
 
-    // --- Removed handleConfirmDelete function ---
-    // The onDelete will now directly call deleteMutation.mutate
-
     const handleStatusButtonClick = async (status: 'ACCEPTED' | 'REJECTED') => {
         if (viewedLeave?.id) {
             let reason = '';
             if (status === 'REJECTED') {
-                // If you still want a reason input for rejection, you'll need SweetAlert2 or a custom modal here.
-                // For now, I'm assuming you still want a reason if rejecting.
-                // If you remove SweetAlert2 completely, you'd need to replace this with your own input modal.
-                // Keeping the SweetAlert2 part for rejection reason for now, as it's common.
-                const { value: responseReason } = await Swal.fire({ // Changed back to Swal directly if not using MySwal
+                const { value: responseReason } = await Swal.fire({
                     title: 'Reason for rejection',
                     input: 'textarea',
                     inputPlaceholder: 'Type your reason here...',
@@ -266,7 +236,7 @@ export default function PendingLeavesPage() {
                         return null;
                     },
                 });
-                if (responseReason === undefined) { // User clicked cancel
+                if (responseReason === undefined) {
                     return;
                 }
                 reason = responseReason;
@@ -284,7 +254,7 @@ export default function PendingLeavesPage() {
         setCurrentPage(page);
     }, []);
 
-    if (isLoading) {
+    if (isLoadingLeaves || isLoadingUsers) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader />
@@ -292,27 +262,35 @@ export default function PendingLeavesPage() {
         );
     }
 
-    if (isError) {
+    if (isErrorLeaves || isErrorUsers) {
         return (
             <div className="flex h-full flex-col items-center justify-center text-red-500">
                 <p>Failed to load pending leave records. Please try again.</p>
-                <Button onClick={() => refetch()} label="Retry" variant="primary" className="mt-4" />
+                <Button onClick={() => refetchLeaves()} label="Retry" variant="primary" className="mt-4" />
             </div>
         );
     }
 
-    // Determine if the current user role can update leave statuses
-    const canUpdateStatus = userRole === 'Hr' || userRole === 'Manager';
+    const canUpdateStatus = userRole === 'hr' || userRole === 'manager';
+    const isManager = userRole === 'manager';
 
     const columns = [
+        {
+            label: 'Employee Name',
+            key: 'user_id',
+            render: (leave: Leave) => {
+                const userName = usersMap.get(leave.user_id) || 'N/A';
+                return <span>{userName}</span>;
+            },
+        },
         { label: 'Leave Type', key: 'leave_type' },
         { label: 'Description', key: 'description' },
         { label: 'From', key: 'start_date' },
         { label: 'To', key: 'end_date' },
         {
-            label: 'Overall Status', // Changed label for clarity
+            label: 'Overall Status',
             key: 'status',
-            render: (leave: any) => {
+            render: (leave: Leave) => {
                 const status = leave.status || 'Pending';
                 return (
                     <span
@@ -323,29 +301,25 @@ export default function PendingLeavesPage() {
                 );
             },
         },
-        { // New column for HR Status
+        {
             label: 'HR Status',
             key: 'hr_status',
-            render: (leave: any) => {
-                const status = leave.hr_status || 'N/A'; // Display 'N/A' if not set
+            render: (leave: Leave) => {
+                const status = leave.hr_status || 'N/A';
                 return (
-                    <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
-                    >
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}>
                         {status}
                     </span>
                 );
             },
         },
-        { // New column for Manager Status
+        {
             label: 'Manager Status',
             key: 'manager_status',
-            render: (leave: any) => {
-                const status = leave.manager_status || 'N/A'; // Display 'N/A' if not set
+            render: (leave: Leave) => {
+                const status = leave.manager_status || 'N/A';
                 return (
-                    <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
-                    >
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}>
                         {status}
                     </span>
                 );
@@ -354,118 +328,31 @@ export default function PendingLeavesPage() {
     ];
 
     return (
-        <div className="min-h-screen p-6 bg-gray-100">
-            <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-3xl font-bold">Pending Leave Records</h2>
-                <Button
-                    label="Create Leave"
-                    onClick={() => {
-                        setShowForm(true);
-                        setEditId(null);
-                        formik.resetForm();
-                    }}
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                />
+        <div className="min-h-screen p-4 bg-gray-100">
+            <div className="mb-6 flex items-center justify-end">
+                {!isManager && (
+                    <Button
+                        label="Create Leave"
+                        onClick={() => {
+                            setShowForm(true);
+                            setEditId(null);
+                            setEditLeaveData(null);
+                        }}
+                        variant="primary"
+                        disabled={false}
+                    />
+                )}
             </div>
 
-            {/* Form Modal for Create/Update Leave */}
-            {showForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                    <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg overflow-y-auto max-h-[90vh]">
-                        {isSubmittingForm && (
-                            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                                <Loader />
-                            </div>
-                        )}
-                        <h3 className="mb-4 text-xl font-semibold">
-                            {editId ? 'Update Leave' : 'Create Leave'}
-                        </h3>
-                        <form onSubmit={formik.handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="mb-1 block font-semibold">Leave Type</label>
-                                <input
-                                    type="text"
-                                    name="leave_type"
-                                    value={formik.values.leave_type}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    className="w-full rounded border px-3 py-2"
-                                    disabled={isSubmittingForm}
-                                />
-                                {formik.touched.leave_type && formik.errors.leave_type && (
-                                    <span className="text-sm text-red-500">{formik.errors.leave_type}</span>
-                                )}
-                            </div>
-                            <div>
-                                <label className="mb-1 block font-semibold">Description</label>
-                                <textarea
-                                    name="description"
-                                    value={formik.values.description}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    className="w-full px-3 py-2 border rounded"
-                                    disabled={isSubmittingForm}
-                                />
-                                {formik.touched.description && formik.errors.description && (
-                                    <span className="text-sm text-red-500">{formik.errors.description}</span>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="mb-1 block font-semibold">Start Date</label>
-                                    <input
-                                        type="date"
-                                        name="start_date"
-                                        value={formik.values.start_date}
-                                        onChange={formik.handleChange}
-                                        onBlur={formik.handleBlur}
-                                        className="w-full rounded border px-3 py-2"
-                                        disabled={isSubmittingForm}
-                                    />
-                                    {formik.touched.start_date && formik.errors.start_date && (
-                                        <span className="text-sm text-red-500">{formik.errors.start_date}</span>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="mb-1 block font-semibold">End Date</label>
-                                    <input
-                                        type="date"
-                                        name="end_date"
-                                        value={formik.values.end_date}
-                                        onChange={formik.handleChange}
-                                        onBlur={formik.handleBlur}
-                                        className="w-full rounded border px-3 py-2"
-                                        disabled={isSubmittingForm}
-                                    />
-                                    {formik.touched.end_date && formik.errors.end_date && (
-                                        <span className="text-sm text-red-500">{formik.errors.end_date}</span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex justify-between">
-                                <Button
-                                    type="button"
-                                    label="Cancel"
-                                    onClick={() => {
-                                        setShowForm(false);
-                                        setEditId(null);
-                                        formik.resetForm();
-                                    }}
-                                    variant="secondary"
-                                    disabled={isSubmittingForm}
-                                />
-                                <Button
-                                    type="submit"
-                                    label={editId ? 'Update Leave' : 'Submit Leave'}
-                                    variant="success"
-                                    disabled={isSubmittingForm}
-                                />
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Use the new component */}
+            <CreateLeaveModal
+                showForm={showForm}
+                setShowForm={setShowForm}
+                editId={editId}
+                setEditId={setEditId}
+                initialLeaveData={editLeaveData}
+                onSuccess={refetchLeaves}
+            />
 
             {/* View Leave Modal (Updated) */}
             {showViewForm && viewedLeave && (
@@ -478,6 +365,10 @@ export default function PendingLeavesPage() {
                         )}
                         <h3 className="mb-4 text-xl font-semibold">Leave Details</h3>
                         <div className="space-y-4">
+                            <div>
+                                <p className="mb-1 font-semibold">Employee Name:</p>
+                                <p className="rounded border px-3 py-2 bg-gray-50">{usersMap.get(viewedLeave.user_id) || 'Loading...'}</p>
+                            </div>
                             <div>
                                 <p className="mb-1 font-semibold">Leave Type:</p>
                                 <p className="rounded border px-3 py-2 bg-gray-50">{viewedLeave.leave_type}</p>
@@ -498,14 +389,11 @@ export default function PendingLeavesPage() {
                             </div>
                             <div>
                                 <p className="mb-1 font-semibold">Overall Status:</p>
-                                <span
-                                    className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(viewedLeave.status || 'Pending')}`}
-                                >
+                                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(viewedLeave.status || 'Pending')}`}>
                                     {viewedLeave.status || 'Pending'}
                                 </span>
                             </div>
 
-                            {/* Display HR Status and Reason */}
                             {viewedLeave.hr_status && (
                                 <div>
                                     <p className="mb-1 font-semibold">HR Status:</p>
@@ -515,10 +403,12 @@ export default function PendingLeavesPage() {
                                     {viewedLeave.hr_status === 'REJECTED' && viewedLeave.hr_rejection_reason && (
                                         <p className="rounded border px-3 py-2 bg-red-50 text-red-800 mt-2">Reason: {viewedLeave.hr_rejection_reason}</p>
                                     )}
+                                    {viewedLeave.reviewer_id && (
+                                        <p className="mt-2 text-sm text-gray-600">Reviewed by: {usersMap.get(viewedLeave.reviewer_id) || 'Loading...'}</p>
+                                    )}
                                 </div>
                             )}
 
-                            {/* Display Manager Status and Reason */}
                             {viewedLeave.manager_status && (
                                 <div>
                                     <p className="mb-1 font-semibold">Manager Status:</p>
@@ -528,10 +418,13 @@ export default function PendingLeavesPage() {
                                     {viewedLeave.manager_status === 'REJECTED' && viewedLeave.manager_rejection_reason && (
                                         <p className="rounded border px-3 py-2 bg-red-50 text-red-800 mt-2">Reason: {viewedLeave.manager_rejection_reason}</p>
                                     )}
+                                    {viewedLeave.manager_id && (
+                                        <p className="mt-2 text-sm text-gray-600">Reviewed by: {usersMap.get(viewedLeave.manager_id) || 'Loading...'}</p>
+                                    )}
                                 </div>
                             )}
 
-                            {canUpdateStatus && ( // Show buttons if user is HR or Manager
+                            {canUpdateStatus && (
                                 <div className="flex justify-between mt-4">
                                     <Button
                                         type="button"
@@ -582,7 +475,7 @@ export default function PendingLeavesPage() {
                                     showUpdate={true}
                                     onUpdate={() => handleEdit(leave)}
                                     showDelete={true}
-                                    onDelete={() => leave.id && deleteMutation.mutate(leave.id)} // Directly call mutate
+                                    onDelete={() => leave.id && deleteMutation.mutate(leave.id)}
                                     isDeleting={deletingLeaveId === leave.id}
                                     showStatusUpdate={canUpdateStatus}
                                 />

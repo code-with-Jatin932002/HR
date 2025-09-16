@@ -1,4 +1,3 @@
-// accepted.tsx
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
@@ -19,13 +18,58 @@ import { Toaster } from 'react-hot-toast'; // Still keeping it here for demonstr
 
 const MySwal = withReactContent(Swal); // Initialize SweetAlert2 for React
 
-// Custom hook to get user role from localStorage
+// Define interfaces for type safety
+interface Leave {
+    id?: string;
+    user_id: string; // Ensure user_id is always a string
+    reviewer_id?: string;
+    manager_id?: string;
+    leave_type: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    hr_status?: string;
+    manager_status?: string;
+    status?: string; // Overall status
+    hr_rejection_reason?: string | null;
+    manager_rejection_reason?: string | null;
+    created_at?: string;
+}
+
+interface User {
+    id: string;
+    first_name: string;
+    last_name: string;
+    full_name?: string;
+}
+
+interface LeaveApiResponse {
+    leaves: Leave[];
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+}
+
+interface UserApiResponse {
+    users: User[];
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+}
+
+// Custom hook to get user role from sessionStorage
 const useUserRole = () => {
     const [role, setRole] = useState<string | null>(null);
 
     useEffect(() => {
         const userRole = sessionStorage.getItem('role_type');
-        setRole(userRole);
+        if (userRole) {
+            setRole(userRole.toLowerCase());
+        } else {
+            setRole(null);
+        }
     }, []);
 
     return role;
@@ -46,23 +90,6 @@ function getStatusColor(status: string) {
     }
 }
 
-interface Leave {
-    id?: string;
-    user_id?: string;
-    reviewer_id?: string;
-    manager_id?: string;
-    leave_type: string;
-    description: string;
-    start_date: string;
-    end_date: string;
-    hr_status?: string;
-    manager_status?: string;
-    status?: string; // Overall status
-    hr_rejection_reason?: string | null;
-    manager_rejection_reason?: string | null;
-    created_at?: string;
-}
-
 export default function AcceptedLeavesPage() {
     useProtectRoute();
     const userRole = useUserRole();
@@ -74,29 +101,57 @@ export default function AcceptedLeavesPage() {
     const [itemsPerPage] = useState(10);
     const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
 
-    const fetchLeaves = async ({ queryKey }: { queryKey: any[] }) => {
-        const [_key, currentPage, itemsPerPage] = queryKey;
-        if (!token) {
-            // Use toast for this authentication error
-            toast.error('Authentication token not found. Please log in.');
-            throw new Error('Authentication token not found. Please log in.');
-        }
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        const responseData = await callApi('get', `${baseUrl}/leaves?page=${currentPage}&limit=${itemsPerPage}&status=ACCEPTED`, null, {
-            Authorization: `Bearer ${token}`,
-        });
-        return responseData;
-    };
-
-    const { data, isLoading, isError, refetch } = useQuery({
+    // Fetch accepted leaves data
+    const {
+        data: leavesData,
+        isLoading: isLoadingLeaves,
+        isError: isErrorLeaves,
+        refetch: refetchLeaves
+    } = useQuery<LeaveApiResponse, Error, LeaveApiResponse, ['acceptedLeaves', number, number]>({
         queryKey: ['acceptedLeaves', currentPage, itemsPerPage],
-        queryFn: fetchLeaves,
+        queryFn: async ({ queryKey }) => {
+            const [_key, page, limit] = queryKey;
+            if (!token) throw new Error('Authentication token not found.');
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+            return await callApi('get', `${baseUrl}/leaves?page=${page}&limit=${limit}&status=ACCEPTED`, null, {
+                Authorization: `Bearer ${token}`,
+            });
+        },
         placeholderData: (previousData) => previousData,
         enabled: !!token,
     });
-    const leaves = data?.leaves || [];
-    const totalItems = data?.totalItems || 0;
-    const totalPages = data?.totalPages || 1;
+    const leaves = leavesData?.leaves || [];
+    const totalItems = leavesData?.totalItems || 0;
+    const totalPages = leavesData?.totalPages || 1;
+
+    // Fetch all users for name lookup
+    const {
+        data: usersData,
+        isLoading: isLoadingUsers,
+        isError: isErrorUsers
+    } = useQuery<UserApiResponse, Error, UserApiResponse, ['users']>({
+        queryKey: ['users'],
+        queryFn: async () => {
+            if (!token) throw new Error('Authentication token not found.');
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+            return await callApi('get', `${baseUrl}/users?page=1&limit=100`, null, {
+                Authorization: `Bearer ${token}`,
+            });
+        },
+        enabled: !!token,
+        refetchOnWindowFocus: false,
+        staleTime: 15 * 60 * 1000, // Cache for 15 minutes
+    });
+
+    const usersMap = React.useMemo(() => {
+        const map = new Map<string, string>();
+        if (usersData?.users) {
+            usersData.users.forEach(user => {
+                map.set(user.id, `${user.first_name} ${user.last_name}`.trim());
+            });
+        }
+        return map;
+    }, [usersData]);
 
     const updateStatusMutation = useMutation({
         mutationFn: async ({ leaveId, status, reason }: { leaveId: string, status: string, reason?: string }) => {
@@ -111,7 +166,7 @@ export default function AcceptedLeavesPage() {
             toast.loading('Updating leave status...', { id: 'statusUpdate' }); // Show loading toast
         },
         onSuccess: async (data, variables) => {
-            await refetch();
+            await refetchLeaves();
             // Use toast for success message
             toast.success(`Leave ${variables.status.toLowerCase()} successfully`, { id: 'statusUpdate' });
             setShowViewForm(false);
@@ -145,26 +200,23 @@ export default function AcceptedLeavesPage() {
                     showCancelButton: true,
                     confirmButtonText: 'Submit',
                     cancelButtonText: 'Cancel',
-                    showLoaderOnConfirm: true, // Show loading on confirm
+                    showLoaderOnConfirm: true,
                     preConfirm: (value: string) => {
                         if (!value.trim()) {
-                            // Use Swal's built-in error for input validation
                             Swal.showValidationMessage('You need to write a reason!');
-                            return false; // Prevent closing the modal
+                            return false;
                         }
-                        return value; // Allow closing and pass the value
+                        return value;
                     },
                 });
 
-                // If user clicks cancel (responseReason is undefined) or dismisses the modal
                 if (responseReason === undefined || responseReason === false) {
-                    toast('Rejection cancelled.', { icon: '👋' }); // Optional: show a small toast for cancellation
+                    toast('Rejection cancelled.', { icon: '👋' });
                     return;
                 }
                 reason = responseReason;
             }
 
-            // Trigger the mutation after reason is obtained (if rejected)
             updateStatusMutation.mutate({
                 leaveId: viewedLeave.id,
                 status: status,
@@ -177,7 +229,7 @@ export default function AcceptedLeavesPage() {
         setCurrentPage(page);
     }, []);
 
-    if (isLoading) {
+    if (isLoadingLeaves || isLoadingUsers) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader />
@@ -185,19 +237,26 @@ export default function AcceptedLeavesPage() {
         );
     }
 
-    if (isError) {
+    if (isErrorLeaves || isErrorUsers) {
         return (
             <div className="flex h-full flex-col items-center justify-center text-red-500">
                 <p>Failed to load accepted leave records. Please try again.</p>
-                <Button onClick={() => refetch()} label="Retry" variant="primary" className="mt-4" />
+                <Button onClick={() => refetchLeaves()} label="Retry" variant="primary" className="mt-4" />
             </div>
         );
     }
 
-    // Determine if the current user role can update leave statuses
-    const canUpdateStatus = userRole === 'Hr' || userRole === 'Manager';
+    const canUpdateStatus = userRole === 'hr' || userRole === 'manager';
 
     const columns = [
+        {
+            label: 'Employee Name',
+            key: 'user_id',
+            render: (leave: Leave) => {
+                const userName = usersMap.get(leave.user_id) || 'N/A';
+                return <span>{userName}</span>;
+            },
+        },
         { label: 'Leave Type', key: 'leave_type' },
         { label: 'Description', key: 'description' },
         { label: 'From', key: 'start_date' },
@@ -205,7 +264,7 @@ export default function AcceptedLeavesPage() {
         {
             label: 'Overall Status',
             key: 'status',
-            render: (leave: any) => {
+            render: (leave: Leave) => {
                 const status = leave.status || 'Pending';
                 return (
                     <span
@@ -219,7 +278,7 @@ export default function AcceptedLeavesPage() {
         {
             label: 'HR Status',
             key: 'hr_status',
-            render: (leave: any) => {
+            render: (leave: Leave) => {
                 const status = leave.hr_status || 'N/A';
                 return (
                     <span
@@ -233,7 +292,7 @@ export default function AcceptedLeavesPage() {
         {
             label: 'Manager Status',
             key: 'manager_status',
-            render: (leave: any) => {
+            render: (leave: Leave) => {
                 const status = leave.manager_status || 'N/A';
                 return (
                     <span
@@ -251,9 +310,9 @@ export default function AcceptedLeavesPage() {
             {/* Toaster component to display toasts in the center */}
             <Toaster position="top-center" reverseOrder={false} />
 
-            <div className="mb-6 flex items-center justify-between">
-                {/* <h2 className="text-3xl font-bold">Accepted Leave Records</h2>  */}
-            </div>
+            {/* <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-3xl font-bold">Accepted Leave Records</h2>
+            </div> */}
 
             {/* View Leave Modal */}
             {showViewForm && viewedLeave && (
@@ -266,6 +325,10 @@ export default function AcceptedLeavesPage() {
                         )}
                         <h3 className="mb-4 text-xl font-semibold">Leave Details</h3>
                         <div className="space-y-4">
+                            <div>
+                                <p className="mb-1 font-semibold">Employee Name:</p>
+                                <p className="rounded border px-3 py-2 bg-gray-50">{usersMap.get(viewedLeave.user_id) || 'Loading...'}</p>
+                            </div>
                             <div>
                                 <p className="mb-1 font-semibold">Leave Type:</p>
                                 <p className="rounded border px-3 py-2 bg-gray-50">{viewedLeave.leave_type}</p>
@@ -303,6 +366,9 @@ export default function AcceptedLeavesPage() {
                                     {viewedLeave.hr_status === 'REJECTED' && viewedLeave.hr_rejection_reason && (
                                         <p className="rounded border px-3 py-2 bg-red-50 text-red-800 mt-2">Reason: {viewedLeave.hr_rejection_reason}</p>
                                     )}
+                                    {viewedLeave.reviewer_id && (
+                                        <p className="mt-2 text-sm text-gray-600">Reviewed by: {usersMap.get(viewedLeave.reviewer_id) || 'Loading...'}</p>
+                                    )}
                                 </div>
                             )}
 
@@ -316,6 +382,9 @@ export default function AcceptedLeavesPage() {
                                     {viewedLeave.manager_status === 'REJECTED' && viewedLeave.manager_rejection_reason && (
                                         <p className="rounded border px-3 py-2 bg-red-50 text-red-800 mt-2">Reason: {viewedLeave.manager_rejection_reason}</p>
                                     )}
+                                    {viewedLeave.manager_id && (
+                                        <p className="mt-2 text-sm text-gray-600">Reviewed by: {usersMap.get(viewedLeave.manager_id) || 'Loading...'}</p>
+                                    )}
                                 </div>
                             )}
 
@@ -324,8 +393,8 @@ export default function AcceptedLeavesPage() {
                                     <Button
                                         type="button"
                                         label="Accepted"
-                                        className='bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
                                         onClick={() => handleStatusButtonClick('ACCEPTED')}
+                                        variant="success"
                                         disabled={isSubmittingStatus || viewedLeave.status === 'ACCEPTED'}
                                     />
                                     <Button
@@ -367,7 +436,8 @@ export default function AcceptedLeavesPage() {
                                 <ActionButtons
                                     showView={true}
                                     onView={() => handleView(leave)}
-                                    showStatusUpdate={canUpdateStatus}
+                                    showUpdate={false}
+                                    showDelete={false}
                                 />
                             </div>
                         );
