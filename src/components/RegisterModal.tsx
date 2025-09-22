@@ -1,9 +1,12 @@
+// src/components/RegisterModal.tsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useFormik, getIn } from 'formik';
 import * as Yup from 'yup';
 import callApi from '@/utils/callApi';
 import toast from 'react-hot-toast';
+import Select from 'react-select'; // Import react-select
+import { Country, State, City } from 'country-state-city';
 import {
   FaEnvelope,
   FaLock,
@@ -16,15 +19,25 @@ import {
   FaEyeSlash,
   FaEye,
   FaPhone,
+  FaGlobeAmericas,
+  FaFlag,
+  FaMapMarkedAlt,
 } from 'react-icons/fa';
 import Button from './Button';
 import OtpVerificationForm from './OtpVerificationForm';
 import Loader from './Loader';
 import AuthRegisterSVG from './AuthSvg';
+import 'flag-icons/css/flag-icons.min.css'; // Import the flag icons CSS
+
+interface InitialState {
+  showOtpVerification: boolean;
+  registrationEmail: string;
+}
 
 interface Props {
   onClose: () => void;
   onRegisterSuccessAndRedirectToSignIn: () => void;
+  initialState?: InitialState;
 }
 
 interface OrganizationType {
@@ -61,15 +74,22 @@ const emailValidation = Yup.string()
     return validTLDs.includes(tld.toLowerCase());
   });
 
-export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToSignIn }: Props) {
+export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToSignIn, initialState }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [organizationTypes, setOrganizationTypes] = useState<OrganizationType[]>([]);
   const [loadingOrgTypes, setLoadingOrgTypes] = useState(true);
   const [errorOrgTypes, setErrorOrgTypes] = useState<string | null>(null);
   const [loadingRegistration, setLoadingRegistration] = useState(false);
-  const [showOtpVerification, setShowOtpVerification] = useState(false);
-  const [registrationEmail, setRegistrationEmail] = useState<string>('');
 
+  const [countries, setCountries] = useState<any[]>([]);
+  const [countryCodes, setCountryCodes] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+
+  const [showOtpVerification, setShowOtpVerification] = useState(initialState?.showOtpVerification || false);
+  const [registrationEmail, setRegistrationEmail] = useState<string>(initialState?.registrationEmail || '');
+
+  // Effect to fetch organization types
   useEffect(() => {
     const fetchOrganizationTypes = async () => {
       try {
@@ -88,7 +108,27 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
         setLoadingOrgTypes(false);
       }
     };
-    fetchOrganizationTypes();
+
+    if (!initialState?.showOtpVerification) {
+      fetchOrganizationTypes();
+    }
+  }, [initialState?.showOtpVerification]);
+
+  // Effect to load countries and country codes from the local library
+  useEffect(() => {
+    const formattedCountries = Country.getAllCountries().map(country => ({
+      value: country.isoCode,
+      label: country.name,
+      countryData: country,
+    }));
+    setCountries(formattedCountries);
+
+    const formattedCountryCodes = Country.getAllCountries().map(country => ({
+      value: country.phonecode,
+      label: `${country.phonecode}`, // Just show the code in the label
+      isoCode: country.isoCode,
+    }));
+    setCountryCodes(formattedCountryCodes);
   }, []);
 
   const formik = useFormik({
@@ -103,6 +143,10 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
       description: '',
       website: '',
       gst_number: '',
+      country: '',
+      country_code: '',
+      state: '',
+      city: '',
     },
     validationSchema: Yup.object({
       org_name: Yup.string()
@@ -113,15 +157,14 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
           'Enter a valid organization name (no numbers or special symbols like @, #, $)'
         ),
       email: emailValidation,
-      password: Yup.string().min(6, 'Min 6 characters').required('Password is required'),
+      password: Yup.string()
+        .min(8, 'Password must be at least 8 characters long')
+        .matches(/[0-9]/, 'Password requires at least one number')
+        .matches(/[A-Z]/, 'Password requires at least one uppercase letter')
+        .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/, 'Password requires at least one symbol')
+        .required('Password is required'),
       role_type: Yup.string().required('Role type is required'),
-      address: Yup.string()
-        .required('Address is required')
-        .matches(
-          /^[a-zA-Z0-9\s,.-]+$/,
-          'Address should not contain special characters @, #, $, %, etc.'
-        )
-        .max(25, 'Address must be 25 characters only.'),
+      address: Yup.string().required('Address is required').max(35, 'Address must be at most 35 characters.'),
       phone_number: Yup.string()
         .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits')
         .required('Phone number is required'),
@@ -136,6 +179,10 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
           'GST Number must be 15 alphanumeric characters and all letters must be capital.'
         )
         .required('GST Number is required'),
+      country: Yup.string().required('Country is required'),
+      country_code: Yup.string().required('Country code is required'),
+      state: Yup.string().required('State is required'),
+      city: Yup.string().required('City is required'),
     }),
     onSubmit: async (values, { resetForm }) => {
       setLoadingRegistration(true);
@@ -161,7 +208,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
           err?.response?.data?.detail ||
           err?.detail ||
           err?.response?.data?.message ||
-          (err?.response?.data?.errors?.email && Array.isArray(err.response.data.errors.email) && err.response.data.errors.email[0]) ||
+          (err?.response?.data?.errors?.email && Array.isArray(err.response.data.errors.email) && err.response.data.errors[0]) ||
           err?.response?.data?.error ||
           (typeof err?.response?.data === 'string' && err.response.data) ||
           err.message ||
@@ -173,6 +220,66 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
     },
   });
 
+  const handleCountryChange = (selectedOption: any) => {
+    if (!selectedOption) {
+      formik.setFieldValue('country', '');
+      formik.setFieldValue('country_code', '');
+      formik.setFieldValue('state', '');
+      formik.setFieldValue('city', '');
+      setStates([]);
+      setCities([]);
+      return;
+    }
+
+    const selectedCountry = selectedOption.countryData;
+    formik.setFieldValue('country', selectedCountry.name);
+    formik.setFieldValue('country_code', selectedCountry.phonecode);
+
+    const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
+    setStates(countryStates);
+    setCities([]);
+    formik.setFieldValue('state', '');
+    formik.setFieldValue('city', '');
+  };
+
+  const handleCountryCodeChange = (selectedOption: any) => {
+    if (!selectedOption) {
+      formik.setFieldValue('country', '');
+      formik.setFieldValue('country_code', '');
+      formik.setFieldValue('state', '');
+      formik.setFieldValue('city', '');
+      setStates([]);
+      setCities([]);
+      return;
+    }
+    const country = Country.getAllCountries().find(c => c.phonecode === selectedOption.value);
+    if (country) {
+      formik.setFieldValue('country', country.name);
+      formik.setFieldValue('country_code', country.phonecode);
+      const countryStates = State.getStatesOfCountry(country.isoCode);
+      setStates(countryStates);
+      setCities([]);
+      formik.setFieldValue('state', '');
+      formik.setFieldValue('city', '');
+    }
+  };
+
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedStateCode = e.target.value;
+    formik.setFieldValue('state', selectedStateCode);
+    formik.setFieldValue('city', '');
+    setCities([]);
+
+    const selectedCountry = countries.find(option => option.label === formik.values.country);
+    if (selectedCountry && selectedStateCode) {
+      const state = states.find(s => s.name === selectedStateCode);
+      if (state) {
+        const citiesOfState = City.getCitiesOfState(selectedCountry.value, state.isoCode);
+        setCities(citiesOfState);
+      }
+    }
+  };
+  
   const inputField = (
     name: string,
     type: string,
@@ -183,8 +290,8 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
     const value = getIn(formik.values, name);
     const error = getIn(formik.errors, name);
     const touched = getIn(formik.touched, name);
-    const isPhoneNumber = name === 'phone_number';
     const isGstNumber = name === 'gst_number';
+    const isAddress = name === 'address';
 
     const commonProps = {
       name,
@@ -213,12 +320,12 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                 type={type}
                 {...commonProps}
                 className={`${commonProps.className} pl-10`}
-                maxLength={isPhoneNumber ? 10 : isGstNumber ? 15 : undefined}
+                maxLength={isGstNumber ? 15 : isAddress ? 35 : undefined}
                 onInput={
-                  isPhoneNumber
+                  isGstNumber
                     ? (e: any) => {
-                        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
-                        formik.setFieldValue('phone_number', e.target.value);
+                        e.target.value = e.target.value.toUpperCase().slice(0, 15);
+                        formik.setFieldValue('gst_number', e.target.value);
                       }
                     : undefined
                 }
@@ -294,8 +401,186 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                   <span className="text-sm text-red-500">{formik.errors.password}</span>
                 )}
               </div>
-              {inputField('address', 'text', 'Address (Max 25 characters)', FaMapMarkerAlt)}
-              {inputField('phone_number', 'text', 'Phone Number', FaPhone)}
+              {inputField('address', 'text', 'Address (Max 35 characters)', FaMapMarkerAlt)}
+
+              {/* Country Select with Flags */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Country</label>
+                <div className="relative">
+                  <Select
+                    name="country"
+                    options={countries}
+                    onChange={handleCountryChange}
+                    onBlur={() => formik.setTouched({ ...formik.touched, country: true })}
+                    value={countries.find(option => option.label === formik.values.country) || null}
+                    placeholder="Select Country"
+                    getOptionLabel={(option) => option.label}
+                    getOptionValue={(option) => option.value}
+                    formatOptionLabel={option => (
+                      <div className="flex items-center">
+                        <span className={`fi fi-${option.value.toLowerCase()} mr-2`}></span>
+                        <span>{option.label}</span>
+                      </div>
+                    )}
+                    classNamePrefix="react-select"
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        paddingLeft: '2.5rem',
+                        minHeight: '3rem',
+                        borderRadius: '0.5rem',
+                        borderColor: state.isFocused
+                          ? '#3b82f6'
+                          : (formik.touched.country && formik.errors.country)
+                            ? 'black'
+                            : 'black',
+                        boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none',
+                        '&:hover': {
+                          borderColor: 'black'
+                        }
+                      }),
+                      placeholder: (base) => ({
+                        ...base,
+                        color: '#6b7280'
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        padding: '0 1rem',
+                      }),
+                      singleValue: (base) => ({
+                        ...base,
+                        color: 'black'
+                      })
+                    }}
+                  />
+                  <FaGlobeAmericas className="absolute left-3 top-4 text-gray-500" />
+                </div>
+                {formik.touched.country && formik.errors.country && (
+                  <span className="text-sm text-red-500">{formik.errors.country}</span>
+                )}
+              </div>
+
+              {/* Combined Country Code & Phone Number Field */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Phone Number</label>
+                <div className="relative flex items-center w-full border rounded-lg text-black focus-within:border-blue-500">
+                  <div className="flex items-center absolute left-0 z-10 w-24 h-full pr-2">
+                    <Select
+                      name="country_code"
+                      options={countryCodes}
+                      onChange={handleCountryCodeChange}
+                      onBlur={() => formik.setTouched({ ...formik.touched, country_code: true })}
+                      value={countryCodes.find(option => option.value === formik.values.country_code) || null}
+                      placeholder="Code"
+                      getOptionLabel={(option) => option.label}
+                      getOptionValue={(option) => option.value}
+                      classNamePrefix="react-select"
+                      styles={{
+                        control: (base, state) => ({
+                          ...base,
+                          height: '3rem',
+                          minHeight: '3rem',
+                          border: 'none',
+                          boxShadow: 'none',
+                          '&:hover': { borderColor: 'black' },
+                          backgroundColor: 'transparent',
+                          width: '100%',
+                        }),
+                        singleValue: (base) => ({
+                          ...base,
+                          color: 'black',
+                        }),
+                        indicatorSeparator: () => ({
+                          display: 'none',
+                        }),
+                        dropdownIndicator: (base) => ({
+                          ...base,
+                          padding: '0 4px',
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          padding: '0 8px',
+                        }),
+                      }}
+                    />
+                  </div>
+                  <FaPhone className="absolute left-24 top-1/2 -translate-y-1/2 text-gray-500" />
+                  <div className="absolute left-20 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300"></div>
+                  <input
+                    type="text"
+                    name="phone_number"
+                    placeholder="Phone Number"
+                    value={formik.values.phone_number}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    maxLength={10}
+                    onInput={(e: any) => {
+                      e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                      formik.setFieldValue('phone_number', e.target.value);
+                    }}
+                    className="w-full h-12 rounded-lg py-3 px-4 pl-[8.5rem] text-black outline-none border-none"
+                  />
+                </div>
+                {formik.touched.phone_number && formik.errors.phone_number && (
+                  <span className="text-sm text-red-500">{formik.errors.phone_number}</span>
+                )}
+                {formik.touched.country_code && formik.errors.country_code && (
+                  <span className="text-sm text-red-500">{formik.errors.country_code}</span>
+                )}
+              </div>
+
+              {/* State Select (Populated automatically) */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">State</label>
+                <div className="relative">
+                  <select
+                    name="state"
+                    value={formik.values.state}
+                    onChange={handleStateChange}
+                    onBlur={formik.handleBlur}
+                    disabled={states.length === 0}
+                    className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select State</option>
+                    {states.map((state) => (
+                      <option key={state.isoCode} value={state.name}>
+                        {state.name}
+                      </option>
+                    ))}
+                  </select>
+                  <FaMapMarkedAlt className="absolute left-3 top-3.5 text-gray-500" />
+                </div>
+                {formik.touched.state && formik.errors.state && (
+                  <span className="text-sm text-red-500">{formik.errors.state}</span>
+                )}
+              </div>
+
+              {/* City Select (Populated automatically) */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">City</label>
+                <div className="relative">
+                  <select
+                    name="city"
+                    value={formik.values.city}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={cities.length === 0}
+                    className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select City</option>
+                    {cities.map((city) => (
+                      <option key={city.name} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                  <FaMapMarkerAlt className="absolute left-3 top-3.5 text-gray-500" />
+                </div>
+                {formik.touched.city && formik.errors.city && (
+                  <span className="text-sm text-red-500">{formik.errors.city}</span>
+                )}
+              </div>
+
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Organization Type</label>
                 <div className="relative">
@@ -359,3 +644,6 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
     </div>
   );
 }
+
+
+

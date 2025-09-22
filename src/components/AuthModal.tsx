@@ -11,7 +11,8 @@ import * as Yup from 'yup';
 import Button from './Button';
 import toast from 'react-hot-toast';
 import AuthSvg from './AuthSvg';
-import ForgotPasswordModal from './ForgotPasswordModal'; // ✅ NEW: Import the new modal
+import ForgotPasswordModal from './ForgotPasswordModal';
+import RegisterModal from './RegisterModal';
 
 interface Props {
   onClose: () => void;
@@ -42,7 +43,13 @@ export default function AuthModal({ onClose }: Props) {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false); // ✅ NEW: State for forgot password modal
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
+  const [showRegisterModal, setShowRegisterModal] = useState(false); 
+  const [initialRegisterState, setInitialRegisterState] = useState<{ showOtpVerification: boolean; registrationEmail: string } | undefined>(undefined);
+  
+  const [isUnverified, setIsUnverified] = useState(false);
+  
   const router = useRouter();
 
   const formik = useFormik({
@@ -56,11 +63,12 @@ export default function AuthModal({ onClose }: Props) {
     }),
     onSubmit: async (values) => {
       setLoading(true);
+      setIsUnverified(false);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL;
         const data = await callApi(
           'post',
-          `${baseUrl}/login`, // ✅ FIX: Use the /auth/login path
+          `${baseUrl}/login`,
           {
             email: values.email,
             password: values.password,
@@ -108,48 +116,80 @@ export default function AuthModal({ onClose }: Props) {
         }
       } catch (error: any) {
         let errorMsg = 'An unexpected error occurred. Please try again.';
+        const responseDetail = error.response?.data?.detail;
 
-        if (error.response) {
-          if (error.response.status === 401 && error.response.data?.detail) {
-            errorMsg = error.response.data.detail;
-          } else if (error.response.data?.detail) {
-            if (Array.isArray(error.response.data.detail)) {
-              errorMsg = error.response.data.detail.map((d: any) => d.msg).join(', ');
+        if (responseDetail && typeof responseDetail === 'string' && responseDetail.toLowerCase().includes('account is not active')) {
+          setInitialRegisterState({ showOtpVerification: true, registrationEmail: values.email });
+          setIsUnverified(true);
+          errorMsg = 'Account is not active. Please verify your email with the OTP.';
+          formik.setErrors({ password: errorMsg });
+        } else if (error.response) {
+          if (error.response.status === 401 && responseDetail) {
+            errorMsg = responseDetail;
+          } else if (responseDetail) {
+            if (Array.isArray(responseDetail)) {
+              errorMsg = responseDetail.map((d: any) => d.msg).join(', ');
             } else {
-              errorMsg = error.response.data.detail;
+              errorMsg = responseDetail;
             }
           } else if (error.response.status === 404) {
             errorMsg = 'Endpoint not found. Please check the API URL.';
           } else {
-            if (error.response.data?.detail && Array.isArray(error.response.data.detail)) {
-              const validationErrors = error.response.data.detail.map((err: any) => `${err.loc.join('.') || 'field'} - ${err.msg}`).join('; ');
+            if (responseDetail && Array.isArray(responseDetail)) {
+              const validationErrors = responseDetail.map((err: any) => `${err.loc.join('.') || 'field'} - ${err.msg}`).join('; ');
               errorMsg = `Validation failed: ${validationErrors}`;
             } else {
               errorMsg = `Error: ${error.response.status} - ${error.response.statusText || 'Something went wrong!'}`;
             }
           }
+          formik.setErrors({ password: errorMsg });
         } else if (error.request) {
           errorMsg = 'No response from server. Please check your internet connection.';
+          formik.setErrors({ password: errorMsg });
         } else {
           errorMsg = error.message || 'An unknown error occurred.';
+          formik.setErrors({ password: errorMsg });
         }
-
-        formik.setErrors({ password: errorMsg });
-        toast.error(errorMsg, {
-          position: 'top-center',
-        });
+      } finally {
         setLoading(false);
       }
     },
   });
+  
+  const handleVerifyClick = () => {
+    // Correctly set the state and trigger the re-render.
+    // The conditional rendering logic will take care of showing the right modal.
+    setInitialRegisterState({
+      showOtpVerification: true,
+      registrationEmail: formik.values.email
+    });
+    setShowRegisterModal(true);
+  };
 
   if (showForgotPassword) {
     return <ForgotPasswordModal onClose={() => {
         setShowForgotPassword(false);
-        onClose(); // Close the AuthModal as well
+        onClose();
     }} onBackToLogin={() => setShowForgotPassword(false)} />;
   }
 
+  // This is the key part that handles the modal transition
+  if (showRegisterModal) {
+    return <RegisterModal
+      onClose={() => {
+        setShowRegisterModal(false);
+        setInitialRegisterState(undefined);
+      }}
+      onRegisterSuccessAndRedirectToSignIn={() => {
+        setShowRegisterModal(false);
+        setInitialRegisterState(undefined);
+        onClose();
+      }}
+      initialState={initialRegisterState}
+    />;
+  }
+
+  // Normal login form is rendered by default
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
       <div className="flex min-h-screen items-start md:items-center justify-center p-4">
@@ -204,6 +244,13 @@ export default function AuthModal({ onClose }: Props) {
                 </div>
                 {formik.touched.password && formik.errors.password && (
                   <span className="mt-1 block text-sm text-red-500">{formik.errors.password}</span>
+                )}
+                {isUnverified && (
+                  <div className="mt-2 text-sm text-blue-500 hover:text-blue-700 cursor-pointer text-right">
+                    <span onClick={handleVerifyClick} className="font-semibold">
+                      Verify with OTP
+                    </span>
+                  </div>
                 )}
               </div>
               <div className="text-right mb-4">
