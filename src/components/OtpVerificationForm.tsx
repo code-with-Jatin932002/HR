@@ -1,20 +1,14 @@
-
 'use client';
 
 import { useState } from 'react';
-import toast from 'react-hot-toast'; // Changed from Swal to toast
+import toast from 'react-hot-toast';
 import { FaShieldAlt } from 'react-icons/fa';
-import Button from './Button'; // Assuming Button component is in the same directory
-import callApi from '@/utils/callApi'; // Assuming callApi utility is available
+import Button from './Button';
+import callApi from '@/utils/callApi';
 
 interface OtpVerificationFormProps {
-  /** The email address to which the OTP was sent. This is required for the verification API call. */
   email: string;
-  /** Callback function to be called when OTP verification is successful.
-   * This typically triggers the redirection to the sign-in page. */
   onVerificationSuccess: () => void;
-  /** Callback function to be called when the user cancels the OTP verification process.
-   * This typically closes the modal or navigates back. */
   onCancel: () => void;
 }
 
@@ -24,21 +18,20 @@ export default function OtpVerificationForm({
   onCancel,
 }: OtpVerificationFormProps) {
   const [otp, setOtp] = useState<string>('');
-  const [isVerifying, setIsVerifying] = useState<boolean>(false); // State for loading indicator
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
-  
   const handleOtpVerification = async () => {
     if (!otp) {
-      toast.error('Please enter the OTP.', { position: 'top-center' }); // Changed from Swal to toast
+      toast.error('Please enter the OTP.', { position: 'top-center' });
       return;
     }
 
-    setIsVerifying(true); // Start loading
+    setIsVerifying(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'; // Fallback URL
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
       const otpPayload = {
-        email: email, // Use the email passed via props
+        email: email,
         otp: otp,
       };
 
@@ -46,27 +39,50 @@ export default function OtpVerificationForm({
         'Content-Type': 'application/json',
       });
 
-      if (response && response.detail === 'OTP verified successfully') {
-        toast.success('Account verified successfully! You can now sign in.', { position: 'top-center' }); // Changed from Swal to toast
-        setOtp(''); // Clear OTP field
-        onVerificationSuccess(); // Trigger the success callback (e.g., redirect to sign-in)
+      // Centralized success handling:
+      // Assuming a successful API call (HTTP 200 series status code) means OTP is verified.
+      // The message in `response.detail` is a bonus check.
+      const normalizedMessage = response?.detail?.trim().toLowerCase();
+      if (normalizedMessage && normalizedMessage.includes('otp verified successfully')) {
+        toast.success('Account verified successfully! You can now sign in.', { position: 'top-center' });
+        setOtp('');
+        // Delay redirection to allow the user to see the success message
+        setTimeout(() => {
+          onVerificationSuccess();
+        }, 1500);
       } else {
-        let errorMessage = 'OTP verification failed. Please try again.';
-        if (response && response.detail) {
-          errorMessage = response.detail;
-        }
-        toast.error(errorMessage, { position: 'top-center' }); // Changed from Swal to toast
+        // Handle cases where the API returns a 200 but with an unexpected or failed message.
+        // This is a safety net.
+        const errorMessage = response?.detail || 'OTP verification failed. Please try again.';
+        toast.error(errorMessage, { position: 'top-center' });
       }
+
     } catch (err: any) {
-      let errorMessage = 'An error occurred during OTP verification.';
-      if (err?.response?.data?.detail) {
+      // This block will only be executed if the API call truly failed (e.g., HTTP status 400, 500)
+      // and not for a successful response with an unexpected status code.
+      let errorMessage = 'An unexpected error occurred during OTP verification.';
+      if (err.response?.data?.detail) {
         errorMessage = err.response.data.detail;
-      } else if (err?.detail) {
-        errorMessage = err.detail;
+      } else if (err.message) {
+        errorMessage = err.message;
       }
-      toast.error(errorMessage, { position: 'top-center' }); // Changed from Swal to toast
+
+      // Check if the error message is the 'OTP verified successfully' message which could be
+      // a bug in the backend returning a non-200 status code with a success message.
+      // We handle this edge case to prevent the red cross.
+      const normalizedErrorMsg = errorMessage.trim().toLowerCase();
+      if (normalizedErrorMsg.includes('otp verified successfully')) {
+        toast.success('Account verified successfully! You can now sign in.', { position: 'top-center' });
+        setOtp('');
+        setTimeout(() => {
+          onVerificationSuccess();
+        }, 1500);
+      } else {
+        // This is the correct place to show an error toast.
+        toast.error(errorMessage, { position: 'top-center' });
+      }
     } finally {
-      setIsVerifying(false); // End loading
+      setIsVerifying(false);
     }
   };
 
@@ -79,14 +95,14 @@ export default function OtpVerificationForm({
         <label htmlFor="otp" className="block text-sm font-medium mb-1">Enter OTP</label>
         <div className="relative">
           <input
-            id="otp" // Added id for better accessibility
+            id="otp"
             type="text"
             name="otp"
             placeholder="Enter OTP"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500"
-            maxLength={6} // Assuming OTP is 6 digits
+            maxLength={6}
           />
           <FaShieldAlt className="absolute left-3 top-4 text-gray-500" />
         </div>
@@ -98,7 +114,7 @@ export default function OtpVerificationForm({
         fullWidth
         variant="primary"
         onClick={handleOtpVerification}
-        disabled={isVerifying} // Disable button while verifying
+        disabled={isVerifying}
       />
 
       <Button
@@ -108,9 +124,8 @@ export default function OtpVerificationForm({
         fullWidth
         variant="secondary"
         className="mt-4 font-semibold"
-        disabled={isVerifying} // Disable cancel while verifying
+        disabled={isVerifying}
       />
-
     </div>
   );
 }
