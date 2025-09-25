@@ -84,11 +84,11 @@ export default function AuthModal({ onClose }: Props) {
             duration : 3000,
           });
 
-          sessionStorage.setItem('token', data.access_token);
-          sessionStorage.setItem('refresh_token', data.refresh_token);
-          sessionStorage.setItem('email', values.email);
-          sessionStorage.setItem('role_type', data.role_type);
+          // Extract IDs based on API response structure
+          const organizationId = data.user?.organization_id || data.organization?.id;
+          const userId = data.user?.id;
 
+<<<<<<< HEAD
           if (data.user?.organization_id) {
             sessionStorage.setItem('organization_id', data.user.organization_id);
           } else if (data.organization?.id) {
@@ -106,7 +106,12 @@ export default function AuthModal({ onClose }: Props) {
           setTimeout(()=>{
           router.replace('/dashboard');
           },1000)
+=======
+          // Call the login function with the extracted IDs
+          login(data.access_token, values.email, data.role_type, userId, organizationId);
+>>>>>>> 81b36785773a479d84cc0039cb2ed9d6b3108346
           
+          router.replace('/dashboard');
           onClose();
         } else {
           const errorMsg = 'Login failed: Missing authentication data.';
@@ -159,8 +164,6 @@ export default function AuthModal({ onClose }: Props) {
   });
   
   const handleVerifyClick = () => {
-    // Correctly set the state and trigger the re-render.
-    // The conditional rendering logic will take care of showing the right modal.
     setInitialRegisterState({
       showOtpVerification: true,
       registrationEmail: formik.values.email
@@ -175,7 +178,6 @@ export default function AuthModal({ onClose }: Props) {
     }} onBackToLogin={() => setShowForgotPassword(false)} />;
   }
 
-  // This is the key part that handles the modal transition
   if (showRegisterModal) {
     return <RegisterModal
       onClose={() => {
@@ -191,7 +193,6 @@ export default function AuthModal({ onClose }: Props) {
     />;
   }
 
-  // Normal login form is rendered by default
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
       <div className="relative w-full max-w-9xl rounded-xl bg-white shadow-2xl md:flex overflow-hidden animate-scale-fade">

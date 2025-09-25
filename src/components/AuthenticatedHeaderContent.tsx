@@ -50,7 +50,7 @@ export default function AuthenticatedHeaderContent({ user, onProfileClick, onLog
                     <FaBell className="text-xl" />
                 </button>
 
-                <div className="flex items-center gap-1 border border-purple-300 rounded-md pl-3 pr-1 py-1 min-w-0"> {/* Reduced padding */}
+                <div className="flex items-center gap-1 border border-purple-300 rounded-md pl-2 pr-1 py-1 min-w-0"> {/* Reduced padding */}
              
                     <div className="flex flex-col items-end min-w-0">
                         <span className="text-gray-900 text-xs xs:text-sm md:text-base font-semibold text-right break-words leading-tight">
@@ -62,7 +62,7 @@ export default function AuthenticatedHeaderContent({ user, onProfileClick, onLog
                     </div>
 
                     <UserAuthenticatedSection
-                        onProfileClick={onProfileClick}
+                        // onProfileClick={onProfileClick}
                         onLogout={onLogout}
                         userImageSrc="/people/person1.jpg"
                     />

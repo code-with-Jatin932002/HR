@@ -74,7 +74,9 @@ const fetchUsers: QueryFunction<
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
-  let url = `${normalizedBaseUrl}users?page=${currentPage}&limit=${itemsPerPage}`;
+  // Fetch all users on the first page and allow the API limit
+  // This will ensure we have all the data to filter client-side
+  let url = `${normalizedBaseUrl}users?page=1&limit=100`;
   if (searchQuery) {
     url += `&search=${encodeURIComponent(searchQuery)}`;
   }
@@ -101,18 +103,44 @@ export default function ViewUsersPage() {
   const [isBlockingOperations, setIsBlockingOperations] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery<ApiResponse, Error, ApiResponse, ['users', number, number, string]>({
-    queryKey: ['users', currentPage, itemsPerPage, searchQuery],
+    queryKey: ['users', 1, 100, searchQuery],
     queryFn: fetchUsers,
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const users = data?.users || [];
-  const totalItems = data?.totalItems || 0;
-  const totalPages = data?.totalPages || 1;
+  const allUsers = data?.users || [];
 
-  const transformedUsers = users.map((user: User) => ({
+  // Implement role-based filtering here
+  const filteredUsers = allUsers.filter(u => {
+    switch (user?.role_type) {
+      case 'super_Admin':
+      case 'Admin':
+        // Super Admins and Admins can see all users
+        return true;
+      case 'Manager':
+        // Managers can see Hr and Employee users
+        return u.role_type === 'Hr' || u.role_type === 'Employee';
+      case 'Hr':
+        // HRs can only see Employee users
+        return u.role_type === 'Employee';
+      default:
+        // Other roles (e.g., Employee) see no one else
+        return false;
+    }
+  });
+
+  // Calculate total items and total pages based on the FILTERED list
+  const totalItems = filteredUsers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Apply client-side pagination to the filtered list
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(start, end);
+
+  const transformedUsers = paginatedUsers.map((user: User) => ({
     ...user,
     full_name: `${user.first_name} ${user.last_name}`,
   }));
@@ -144,6 +172,27 @@ export default function ViewUsersPage() {
 
   const handleUpdateSubmit = async (values: any) => {
     if (!updateUser) return;
+
+    const isUpdateAuthorized = () => {
+      const targetUserRole = updateUser.role_type;
+      switch (user?.role_type) {
+        case 'super_Admin':
+          return targetUserRole !== 'super_Admin';
+        case 'Admin':
+          return targetUserRole !== 'super_Admin';
+        case 'Manager':
+          return targetUserRole === 'Hr' || targetUserRole === 'Employee';
+        case 'Hr':
+          return targetUserRole === 'Employee';
+        default:
+          return false;
+      }
+    };
+
+    if (!isUpdateAuthorized()) {
+      toast.error("You are not authorized to update this user's role.");
+      return;
+    }
 
     setIsBlockingOperations(true);
     const loadingToastId = toast.loading('Updating user...');
@@ -201,6 +250,30 @@ export default function ViewUsersPage() {
     setIsBlockingOperations(true);
     const loadingToastId = toast.loading('Deleting user...');
 
+    const userToDelete = allUsers.find(u => u.id === userId);
+    const isDeleteAuthorized = () => {
+      if (!userToDelete) return false;
+      const targetUserRole = userToDelete.role_type;
+      switch (user?.role_type) {
+        case 'super_Admin':
+          return targetUserRole !== 'super_Admin';
+        case 'Admin':
+          return targetUserRole !== 'super_Admin' && targetUserRole !== 'Admin';
+        case 'Manager':
+          return targetUserRole === 'Hr' || targetUserRole === 'Employee';
+        case 'Hr':
+          return targetUserRole === 'Employee';
+        default:
+          return false;
+      }
+    };
+
+    if (!isDeleteAuthorized()) {
+      toast.error("You are not authorized to delete this user.");
+      setIsBlockingOperations(false);
+      return;
+    }
+
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
@@ -216,9 +289,6 @@ export default function ViewUsersPage() {
 
       toast.success('User has been deleted.', { id: loadingToastId });
       refetch();
-      if (transformedUsers.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
-      }
     } catch (error: unknown) {
       toast.dismiss(loadingToastId);
       const apiError = error as ApiResponseError;
@@ -254,6 +324,51 @@ export default function ViewUsersPage() {
     return (
       <div className="flex h-full flex-col items-center justify-center text-red-500">
         <p>Failed to load users. Please try again.</p>
+      </div>
+    );
+  }
+
+  // Conditional rendering: If a user is selected for update, show the form; otherwise, show the table.
+  if (updateUser) {
+    return (
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
+          <h2 className="mb-6 text-2xl font-bold">Update User</h2>
+          <div className="relative">
+            {isBlockingOperations && (
+              <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+                <Loader />
+              </div>
+            )}
+            <UserForm
+              isUpdate={true}
+              initialValues={{
+                first_name: updateUser.first_name,
+                last_name: updateUser.last_name,
+                email: updateUser.email,
+                password: '',
+                role_type: updateUser.role_type || '',
+                department_name: updateUser.department_name || '',
+                date_of_birth: updateUser.date_of_birth || '',
+                gender: updateUser.gender || '',
+                image_url: updateUser.image_url || '',
+                mobile_number: updateUser.mobile_number || '',
+                marital_status: updateUser.marital_status || '',
+                address: updateUser.address || '',
+                employee_type: updateUser.employee_type || '',
+                joining_date: updateUser.joining_date || '',
+                working_days: updateUser.working_days || '',
+                official_email: updateUser.official_email || '',
+                slack_id: updateUser.slack_id || '',
+                github_id: updateUser.github_id || '',
+              }}
+              onCancel={() => setUpdateUser(null)}
+              onSubmit={handleUpdateSubmit}
+              currentUserRole={user?.role_type || ''}
+              isSubmitting={isBlockingOperations}
+            />
+          </div>
+        </div>
       </div>
     );
   }
@@ -401,6 +516,7 @@ export default function ViewUsersPage() {
           </div>
 
         )}
+<<<<<<< HEAD
 
         {/* Update User Modal */}
         {updateUser && (
@@ -442,6 +558,8 @@ export default function ViewUsersPage() {
             </div>
           </div>
         )}
+=======
+>>>>>>> 81b36785773a479d84cc0039cb2ed9d6b3108346
       </div>
     </div>
   );

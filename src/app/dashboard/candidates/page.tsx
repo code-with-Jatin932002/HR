@@ -399,6 +399,8 @@ export default function CandidatePage() {
                     type="text"
                     id="mobile_number"
                     name="mobile_number"
+                     maxLength={10}
+                     pattern="\d*"
                     value={formik.values.mobile_number}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}

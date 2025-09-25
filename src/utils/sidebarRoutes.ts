@@ -8,8 +8,8 @@ export const getSidebarRoutes = (role: string) => {
         { name: 'View Users', path: '/dashboard/view-users' },
       ],
     },
-     { name: 'Departments', path: '/dashboard/departments' },
-     { name: 'Attendance', path: '/dashboard/attendance' },
+    { name: 'Departments', path: '/dashboard/departments' },
+    { name: 'Attendance', path: '/dashboard/attendance' },
     { name: 'Payroll', path: '/dashboard/payroll' },
     { name: 'Jobs', path: '/dashboard/jobs' },
     { name: 'Candidates', path: '/dashboard/candidates' },
@@ -52,7 +52,11 @@ export const getSidebarRoutes = (role: string) => {
 
     case 'Hr':
     case 'Manager':
-      return commonRoutes;
+      // Filters out the 'Departments' route for both Hr and Manager roles
+      const filteredRoutesForHrAndManager = commonRoutes.filter(
+        (route) => route.name !== 'Departments',
+      );
+      return filteredRoutesForHrAndManager;
 
     case 'Employee':
       return [
@@ -65,12 +69,10 @@ export const getSidebarRoutes = (role: string) => {
           ],
         },
         { name: 'Holidays', path: '/dashboard/holidays' },
-        // { name: 'Attendance', path: '/dashboard/attendance' },
         { name: 'Time Tracker', path: '/dashboard/time-tracker' }, // <-- NEW for Employee
         { name: 'Announcements', path: '/dashboard/announcement' },
         { name: 'Feedback', path: '/dashboard/feedback' },
         { name: 'Jobs', path: '/dashboard/jobs' },
-
       ];
 
     default:
