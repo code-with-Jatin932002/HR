@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { FiSearch, FiX, FiMapPin, FiDollarSign } from 'react-icons/fi';
+import { FaRupeeSign } from "react-icons/fa";
 
 import callApi from '@/utils/callApi';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
@@ -379,6 +380,7 @@ export default function JobsPage() {
                     id="job_title"
                     name="job_title"
                     value={formik.values.job_title}
+                    placeholder='Enter Job Title'
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="w-full rounded border px-3 py-2"
@@ -414,6 +416,7 @@ export default function JobsPage() {
                     type="text"
                     id="location"
                     name="location"
+                    placeholder='Enter Location'
                     value={formik.values.location}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -621,7 +624,7 @@ const JobStatusColumn: React.FC<JobStatusColumnProps> = ({
                   <FiMapPin className="mr-1 text-gray-500" size={14} /> {job.location}
                 </p>
                 <p className="flex items-center">
-                  <FiDollarSign className="mr-1 text-gray-500" size={14} /> ${job.amount.toLocaleString()}/Month
+                  <FaRupeeSign className="mr-1 text-gray-500" size={14} /> {job.amount.toLocaleString()}/Month
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">

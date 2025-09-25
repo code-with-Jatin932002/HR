@@ -83,28 +83,14 @@ export default function AuthModal({ onClose }: Props) {
             position: 'top-center',
           });
 
-          sessionStorage.setItem('token', data.access_token);
-          sessionStorage.setItem('refresh_token', data.refresh_token);
-          sessionStorage.setItem('email', values.email);
-          sessionStorage.setItem('role_type', data.role_type);
+          // Extract IDs based on API response structure
+          const organizationId = data.user?.organization_id || data.organization?.id;
+          const userId = data.user?.id;
 
-          if (data.user?.organization_id) {
-            sessionStorage.setItem('organization_id', data.user.organization_id);
-          } else if (data.organization?.id) {
-            sessionStorage.setItem('organization_id', data.organization.id);
-            sessionStorage.setItem('organization_org_name', data.organization.org_name);
-            sessionStorage.setItem('organization_address', data.organization.address);
-            sessionStorage.setItem('organization_phone_number', data.organization.phone_number);
-            sessionStorage.setItem('organization_description', data.organization.description);
-            sessionStorage.setItem('organization_website', data.organization.website);
-            sessionStorage.setItem('organization_gst_number', data.organization.gst_number);
-          }
-
-          const orgIdToPass = data.user?.organization_id || data.organization?.id;
-          login(data.access_token, values.email, data.role_type, orgIdToPass);
-
-          router.replace('/dashboard');
+          // Call the login function with the extracted IDs
+          login(data.access_token, values.email, data.role_type, userId, organizationId);
           
+          router.replace('/dashboard');
           onClose();
         } else {
           const errorMsg = 'Login failed: Missing authentication data.';
@@ -157,8 +143,6 @@ export default function AuthModal({ onClose }: Props) {
   });
   
   const handleVerifyClick = () => {
-    // Correctly set the state and trigger the re-render.
-    // The conditional rendering logic will take care of showing the right modal.
     setInitialRegisterState({
       showOtpVerification: true,
       registrationEmail: formik.values.email
@@ -173,7 +157,6 @@ export default function AuthModal({ onClose }: Props) {
     }} onBackToLogin={() => setShowForgotPassword(false)} />;
   }
 
-  // This is the key part that handles the modal transition
   if (showRegisterModal) {
     return <RegisterModal
       onClose={() => {
@@ -189,7 +172,6 @@ export default function AuthModal({ onClose }: Props) {
     />;
   }
 
-  // Normal login form is rendered by default
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
       <div className="flex min-h-screen items-start md:items-center justify-center p-4">
