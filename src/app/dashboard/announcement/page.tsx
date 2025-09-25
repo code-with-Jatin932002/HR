@@ -322,7 +322,7 @@ export default function AnnouncementPage() {
                     value={formik.values.title}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="rounded-xl border px-55 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                    className="rounded-xl border px-55 py-2 border-gray-200 bg-purple-50 p-2 text-gray-600"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.title && formik.errors.title && (
@@ -338,8 +338,8 @@ export default function AnnouncementPage() {
                     value={formik.values.message}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="rounded-xl border px-58 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
-                    rows={4}
+                    className="rounded-xl border px-58 py-2 border-gray-200 bg-purple-50 p-2 text-gray-600"
+                    rows={10}
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.message && formik.errors.message && (

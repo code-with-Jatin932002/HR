@@ -25,9 +25,9 @@ const Breadcrumb = () => {
       <ol className="flex items-center space-x-2 text-gray-600">
         <li>
           {pathname.startsWith('/dashboard') ? (
-            <span className="text-blue-600 cursor-not-allowed">Home</span>
+            <span className="text-purple-600 cursor-not-allowed">Home</span>
           ) : (
-            <Link href="/" className="text-blue-600 hover:underline">Home</Link>
+            <Link href="/" className="text-purple-600 hover:underline">Home</Link>
           )}
         </li>
 
@@ -37,7 +37,7 @@ const Breadcrumb = () => {
             {index === pathLinks.length - 1 ? (
               <span className="text-gray-500">{item.label}</span>
             ) : (
-              <Link href={item.href} className="text-blue-600 hover:underline">
+              <Link href={item.href} className="text-purple-600 hover:underline">
                 {item.label}
               </Link>
             )}

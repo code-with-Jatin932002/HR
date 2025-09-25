@@ -28,7 +28,7 @@ key={page}
  onClick={() => onPageChange(page)}
  className={`px-2 py-0.5 rounded border ${
 currentPage === page
- ? 'bg-blue-600 text-white'
+ ? 'bg-purple-600 text-white'
  : 'bg-white text-gray-700 hover:bg-gray-100'
  }`}
  >
