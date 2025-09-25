@@ -218,9 +218,9 @@ export default function DepartmentsPage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-4xl rounded bg-white p-6 shadow">
+      <div className="mx-auto mt-10 max-w-290 rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-center sm:text-left">Department Management</h2>
+          <h2 className="text-2xl font-bold text-gray-700 sm:text-left">Department Management</h2>
           {isSuperAdmin && (
             <Button
               label="Create Department"
@@ -240,7 +240,7 @@ export default function DepartmentsPage() {
         {/* Search Box for Departments */}
         <div className="w-full px-4 py-3">
           <div className="relative w-full">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-700">
               <FiSearch />
             </span>
             <input
@@ -248,7 +248,7 @@ export default function DepartmentsPage() {
               placeholder="Search by department name..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
             />
             {searchQuery && (
               <button

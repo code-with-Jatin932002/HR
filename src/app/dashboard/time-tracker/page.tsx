@@ -967,7 +967,7 @@ const AttendancePage = () => {
               setShowDailyReport(false);
               setShowWeeklyReport(false);
             }}
-            className="p-2 border rounded-md"
+            className="p-2 border rounded-md text-gray-600"
           />
         </div>
         <div className="flex flex-wrap justify-center gap-4">
@@ -993,7 +993,7 @@ const AttendancePage = () => {
 
         {showDailyReport && (
           <div className="mt-8 border p-4 rounded-lg bg-gray-50">
-            <h3 className="text-xl font-bold mb-4">Daily Report for {dailyReport?.date}</h3>
+            <h3 className="text-xl font-bold mb-4 text-gray-700">Daily Report for {dailyReport?.date}</h3>
             {isLoadingDaily && <Loader />}
             {dailyReport && (
               <div>
@@ -1026,7 +1026,7 @@ const AttendancePage = () => {
 
         {showWeeklyReport && (
           <div className="mt-8 border p-4 rounded-lg bg-gray-50">
-            <h3 className="text-xl font-bold mb-4">Weekly Report for {weeklyReport?.start_date} to {weeklyReport?.end_date}</h3>
+            <h3 className="text-xl font-bold mb-4 text-gray-700">Weekly Report for {weeklyReport?.start_date} to {weeklyReport?.end_date}</h3>
             {isLoadingWeekly && <Loader />}
             {weeklyReport && (
               <div>

@@ -81,6 +81,7 @@ export default function AuthModal({ onClose }: Props) {
         if (data.access_token && data.role_type) {
           toast.success('Login successful! Redirecting...', {
             position: 'top-center',
+            duration : 3000,
           });
 
           sessionStorage.setItem('token', data.access_token);
@@ -102,8 +103,9 @@ export default function AuthModal({ onClose }: Props) {
 
           const orgIdToPass = data.user?.organization_id || data.organization?.id;
           login(data.access_token, values.email, data.role_type, orgIdToPass);
-
+          setTimeout(()=>{
           router.replace('/dashboard');
+          },1000)
           
           onClose();
         } else {
@@ -191,14 +193,20 @@ export default function AuthModal({ onClose }: Props) {
 
   // Normal login form is rendered by default
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm">
-      <div className="flex min-h-screen items-start md:items-center justify-center p-4">
-        <div className="w-full max-w-2xl rounded-lg bg-white shadow-lg md:flex md:overflow-hidden animate-slide-down mt-10 md:mt-0">
-          <div className="hidden md:flex md:w-1/2 flex-col items-center justify-center bg-blue-100 p-0 relative min-h-[400px]">
-            <AuthSvg />
-          </div>
-          <div className="w-full md:w-1/2 p-6 md:p-10 max-h-screen overflow-y-auto flex flex-col justify-center">
-            <h2 className="mb-6 text-center text-2xl font-bold text-black">Sign In</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
+      <div className="relative w-full max-w-9xl rounded-xl bg-white shadow-2xl md:flex overflow-hidden animate-scale-fade">
+        <div className="hidden md:flex md:w-1/2 flex-col justify-center items-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-10 relative  h-200">
+         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm rounded-2xl h-10"></div>
+            <div className="relative z-10 text-center mt-20 h-90 ">
+             <h1 className="text-4xl font-extrabold tracking-tight -mt-30">HR Management</h1>
+                <p className="mt-4 text-lg opacity-90">Simplify HR tasks and keep your team productive.
+                 All-in-one platform to manage employees, payroll, and performance.</p>
+                <p></p>
+                <AuthSvg />
+              </div>
+        </div>
+          <div className="w-full md:w-1/2 p-8 md:p-12 max-h-[90vh] overflow-y-auto flex flex-col justify-center">
+            <h2 className="text-4xl font-bold text-gray-700 mb-4 text-center flex-shrink-0">Sign In</h2>
             <form onSubmit={formik.handleSubmit}>
               <div className="mb-4">
                 <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700">Email</label>
@@ -211,7 +219,7 @@ export default function AuthModal({ onClose }: Props) {
                     value={formik.values.email}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded-lg border px-4 pl-10 py-3 text-black outline-none transition focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2"
                   />
                   <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 </div>
@@ -230,7 +238,7 @@ export default function AuthModal({ onClose }: Props) {
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded-lg border px-4 pl-10 pr-10 py-3 text-black outline-none transition focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2"
                   />
                   <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                   <button
@@ -271,6 +279,7 @@ export default function AuthModal({ onClose }: Props) {
                   fullWidth
                   variant="secondary"
                   disabled={loading}
+                   className="rounded-xl h-10 border-gray-300 text-white-600 bg-gray-500 hover:bg-gray-700 py-3 font-medium transition"
                 />
                 <Button
                   label={loading ? 'Logging...' : 'Login'}
@@ -278,12 +287,13 @@ export default function AuthModal({ onClose }: Props) {
                   fullWidth
                   variant="primary"
                   loading={loading}
+                   className="rounded-xl h-10 border-purple-300 text-white-600 bg-purple-600 hover:bg-purple-700 py-3 font-medium transition"
                 />
               </div>
             </form>
           </div>
         </div>
       </div>
-    </div>
+
   );
 }

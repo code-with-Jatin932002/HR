@@ -273,7 +273,7 @@ export default function CandidatePage() {
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-center sm:text-left">Candidate Management</h2>
+          <h2 className="text-2xl font-bold text-gray-700 sm:text-left">Candidate Management</h2>
           {canAddCandidate && (
             <Button
               label="Add Candidate"
@@ -302,7 +302,7 @@ export default function CandidatePage() {
               placeholder="Search by name, email, or mobile..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
             />
             {searchQuery && (
               <button
@@ -316,19 +316,21 @@ export default function CandidatePage() {
         </div>
 
         {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 p-4">
+            <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg h-140 ">
               {isSubmittingForm && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                   <Loader />
                 </div>
               )}
-              <h3 className="mb-4 text-xl font-semibold">
+              <h3 className="mb-4 text-xl font-semibold text-gray-700">
                 {isUpdate ? 'Update Candidate' : 'Create Candidate'}
               </h3>
+              <br></br>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
+               <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <div>
-                  <label htmlFor="candidate_name" className="mb-1 block">Candidate Name</label>
+                  <label htmlFor="candidate_name" className="mb-1 block text-sm font-medium text-gray-700">Candidate Name</label>
                   <input
                     type="text"
                     id="candidate_name"
@@ -336,7 +338,7 @@ export default function CandidatePage() {
                     value={formik.values.candidate_name}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.candidate_name && formik.errors.candidate_name && (
@@ -344,7 +346,7 @@ export default function CandidatePage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="applied_for" className="mb-1 block">Applied For</label>
+                  <label htmlFor="applied_for" className="mb-1 block text-sm font-medium text-gray-700">Applied For</label>
                   <input
                     type="text"
                     id="applied_for"
@@ -352,7 +354,7 @@ export default function CandidatePage() {
                     value={formik.values.applied_for}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300-full rounded border px-3 py-2"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.applied_for && formik.errors.applied_for && (
@@ -360,7 +362,7 @@ export default function CandidatePage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="applied_date" className="mb-1 block">Applied Date</label>
+                  <label htmlFor="applied_date" className="mb-1 block text-sm font-medium text-gray-700">Applied Date</label>
                   <input
                     type="date"
                     id="applied_date"
@@ -368,7 +370,7 @@ export default function CandidatePage() {
                     value={formik.values.applied_date}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.applied_date && formik.errors.applied_date && (
@@ -376,7 +378,7 @@ export default function CandidatePage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="email" className="mb-1 block">Email</label>
+                  <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">Email</label>
                   <input
                     type="email"
                     id="email"
@@ -384,7 +386,7 @@ export default function CandidatePage() {
                     value={formik.values.email}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.email && formik.errors.email && (
@@ -392,7 +394,7 @@ export default function CandidatePage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="mobile_number" className="mb-1 block">Mobile Number</label>
+                  <label htmlFor="mobile_number" className="mb-1 block text-sm font-medium text-gray-700">Mobile Number</label>
                   <input
                     type="text"
                     id="mobile_number"
@@ -400,7 +402,7 @@ export default function CandidatePage() {
                     value={formik.values.mobile_number}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.mobile_number && formik.errors.mobile_number && (
@@ -408,14 +410,14 @@ export default function CandidatePage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="status" className="mb-1 block">Status</label>
+                  <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">Status</label>
                   <select
                     id="status"
                     name="status"
                     value={formik.values.status}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   >
                     {statusOptions.map(option => (
@@ -426,7 +428,8 @@ export default function CandidatePage() {
                     <span className="text-sm text-red-500">{formik.errors.status}</span>
                   )}
                 </div>
-                <div className="flex justify-between">
+              </div>
+                <div className="flex justify-end gap-2 mt-4">
                   <Button
                     label="Cancel"
                     type="button"

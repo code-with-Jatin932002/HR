@@ -163,7 +163,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+    <div className="flex-1 p-4 sm:p-6 lg:p-8 bg-white min-h-screen">
       <Toaster position="top-center" reverseOrder={false} />
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
         {/* Welcome Section */}

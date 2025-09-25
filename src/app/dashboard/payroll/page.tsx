@@ -427,7 +427,7 @@ export default function PayrollsPage() {
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <h2 className="text-center text-2xl font-bold sm:text-left">Payroll Management</h2>
+          <h2 className="text-gray-700 text-2xl  font-bold sm:text-left">Payroll Management</h2>
           {canAddPayroll && (
             <Button
               label="Add Payroll"
@@ -457,7 +457,7 @@ export default function PayrollsPage() {
               placeholder="Search by employee name..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full rounded-md border px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
             />
             {searchQuery && (
               <button
@@ -606,13 +606,13 @@ export default function PayrollsPage() {
 
         {/* View Payroll Details Modal */}
         {viewingPayrollId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 backdrop-blur-sm transition-opacity">
+            <div className="relative w-full max-w-8xl h-150 rounded-2xl bg-white backdrop-blur-md shadow-2xl border border-gray-200 p-8 animate-fadeIn scale-95 transform transition-all duration-300 ease-out">
               <button
                 onClick={handleCloseView}
-                className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+                className="absolute right-4 top-4 rounded-full p-2 text-gray-900 hover:text-white hover:bg-red-500 transition"
               >
-                <FiX size={24} />
+                ✖
               </button>
               {isLoadingViewingPayroll ? (
                 <div className="flex h-32 items-center justify-center">
@@ -622,15 +622,21 @@ export default function PayrollsPage() {
                 <div className="text-center text-red-500">Failed to load payroll details.</div>
               ) : viewingPayrollDetails ? (
                 <>
-                  <h3 className="mb-4 text-xl font-semibold">Payroll Details</h3>
-                  <div className="space-y-2">
-                    <p><strong>Employee Name:</strong> {viewingPayrollDetails.employee_name}</p>
-                    <p><strong>CTC:</strong> {viewingPayrollDetails.ctc}</p>
-                    <p><strong>Salary Per Month:</strong> {viewingPayrollDetails.salary_per_month}</p>
-                    <p><strong>Deduction:</strong> {viewingPayrollDetails.deduction}</p>
-                    <p><strong>Status:</strong> {viewingPayrollDetails.status}</p>
-                    <p className="text-sm text-gray-500"><strong>Created At:</strong> {new Date(viewingPayrollDetails.created_at).toLocaleString()}</p>
-                    <p className="text-sm text-gray-500"><strong>Updated At:</strong> {new Date(viewingPayrollDetails.updated_at).toLocaleString()}</p>
+                  <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">Payroll Details</h3><br></br>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>Employee Name:</span> {viewingPayrollDetails.employee_name}</p></div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '> <p  className='text-gray-900 font-medium'><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>CTC:</span> {viewingPayrollDetails.ctc}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Salary Per Month:</span> {viewingPayrollDetails.salary_per_month}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Deduction:</span> {viewingPayrollDetails.deduction}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Status:</span> {viewingPayrollDetails.status}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Created At:</strong> {new Date(viewingPayrollDetails.created_at).toLocaleString()}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Updated At:</strong> {new Date(viewingPayrollDetails.updated_at).toLocaleString()}</p>
+                    </div>
                   </div>
                 </>
               ) : null}

@@ -118,56 +118,43 @@ export default function CreateLeaveModal({
     if (!showForm) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg overflow-y-auto max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
+            <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg overflow-y-auto h-140">
                 {leaveMutation.isPending && (
                     <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                         <Loader />
                     </div>
                 )}
-                <h3 className="mb-4 text-xl font-semibold">
+                <h2 className="mb-4 text-xl font-semibold text-gray-700">
                     {editId ? 'Update Leave' : 'Create Leave'}
-                </h3>
+                </h2>
                 <form onSubmit={formik.handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                        <label className="mb-1 block font-semibold">Leave Type</label>
+                        <label className="mb-1 block font-semibold text-gray-600">Leave Type</label>
                         <input
                             type="text"
                             name="leave_type"
                             value={formik.values.leave_type}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            className="w-full rounded border px-3 py-2"
+                            className="rounded-xl border px-50 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                             disabled={leaveMutation.isPending}
                         />
                         {formik.touched.leave_type && formik.errors.leave_type && (
                             <span className="text-sm text-red-500">{formik.errors.leave_type}</span>
                         )}
                     </div>
-                    <div>
-                        <label className="mb-1 block font-semibold">Description</label>
-                        <textarea
-                            name="description"
-                            value={formik.values.description}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className="w-full px-3 py-2 border rounded"
-                            disabled={leaveMutation.isPending}
-                        />
-                        {formik.touched.description && formik.errors.description && (
-                            <span className="text-sm text-red-500">{formik.errors.description}</span>
-                        )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="mb-1 block font-semibold">Start Date</label>
+                            <label className="mb-1 block font-semibold text-gray-600">Start Date</label>
                             <input
                                 type="date"
                                 name="start_date"
                                 value={formik.values.start_date}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className="w-full rounded border px-3 py-2"
+                                className="rounded-xl border px-23 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                                 disabled={leaveMutation.isPending}
                             />
                             {formik.touched.start_date && formik.errors.start_date && (
@@ -175,14 +162,14 @@ export default function CreateLeaveModal({
                             )}
                         </div>
                         <div>
-                            <label className="mb-1 block font-semibold">End Date</label>
+                            <label className="mb-1 block font-semibold text-gray-600">End Date</label>
                             <input
                                 type="date"
                                 name="end_date"
                                 value={formik.values.end_date}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className="w-full rounded border px-3 py-2"
+                                className="rounded-xl border px-23 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                                 disabled={leaveMutation.isPending}
                             />
                             {formik.touched.end_date && formik.errors.end_date && (
@@ -190,7 +177,22 @@ export default function CreateLeaveModal({
                             )}
                         </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div>
+                        <label className="mb-1 block font-semibold text-gray-600">Description</label>
+                        <textarea
+                            name="description"
+                            value={formik.values.description}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className="rounded-xl border px-53 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                            disabled={leaveMutation.isPending}
+                        />
+                        {formik.touched.description && formik.errors.description && (
+                            <span className="text-sm text-red-500">{formik.errors.description}</span>
+                        )}
+                    </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-9">
                         <Button
                             type="button"
                             label="Cancel"

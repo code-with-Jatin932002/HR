@@ -257,9 +257,9 @@ export default function AnnouncementPage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-4xl rounded bg-white p-6 shadow">
+      <div className="mx-auto mt-10 max-w-9xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-center sm:text-left">Announcement Board</h2>
+          <h2 className="text-3xl font-bold text-gray-700 sm:text-left">Announcement Board</h2>
           {hasActionPermissions && (
             <Button
               label="Add Announcement"
@@ -287,7 +287,7 @@ export default function AnnouncementPage() {
               placeholder="Search by title or message..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
             />
             {searchQuery && (
               <button
@@ -301,19 +301,19 @@ export default function AnnouncementPage() {
         </div>
 
         {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
+            <div className="relative w-250 rounded-lg bg-white p-6 shadow-lg h-140">
               {isSubmittingForm && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                   <Loader />
                 </div>
               )}
-              <h3 className="mb-4 text-xl font-semibold">
+              <h3 className="mt-10 ml-45 mb-4 text-3xl font-semibold text-gray-700">
                 {isUpdate ? 'Update Announcement' : 'Create Announcement'}
               </h3>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="title" className="mb-1 block">Title</label>
+                <div className='ml-45'>
+                  <label htmlFor="title" className="mb-1 block text-gray-600">Title</label>
                   <input
                     type="text"
                     id="title"
@@ -322,15 +322,15 @@ export default function AnnouncementPage() {
                     value={formik.values.title}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="rounded-xl border px-55 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.title && formik.errors.title && (
                     <span className="text-sm text-red-500">{formik.errors.title}</span>
                   )}
                 </div>
-                <div>
-                  <label htmlFor="message" className="mb-1 block">Message</label>
+                <div className='ml-45'>
+                  <label htmlFor="message" className="mb-1 block text-gray-700">Message</label>
                   <textarea
                     id="message"
                     name="message"
@@ -338,7 +338,7 @@ export default function AnnouncementPage() {
                     value={formik.values.message}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="rounded-xl border px-58 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                     rows={4}
                     disabled={isSubmittingForm}
                   />
@@ -346,7 +346,7 @@ export default function AnnouncementPage() {
                     <span className="text-sm text-red-500">{formik.errors.message}</span>
                   )}
                 </div>
-                <div className="flex justify-between">
+                <div className="mr-35 flex justify-end gap-2 mt-9">
                   <Button
                     label="Cancel"
                     type="button"

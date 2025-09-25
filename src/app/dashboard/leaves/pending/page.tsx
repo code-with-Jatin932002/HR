@@ -356,47 +356,47 @@ export default function PendingLeavesPage() {
 
             {/* View Leave Modal (Updated) */}
             {showViewForm && viewedLeave && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                    <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg overflow-y-auto max-h-[90vh]">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
+                    <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg overflow-y-auto h-140">
                         {isSubmittingStatus && (
                             <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                                 <Loader />
                             </div>
                         )}
-                        <h3 className="mb-4 text-xl font-semibold">Leave Details</h3>
-                        <div className="space-y-4">
+                        <h3 className="mb-4 text-xl font-semibold text-gray-700">Leave Details</h3>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <p className="mb-1 font-semibold">Employee Name:</p>
-                                <p className="rounded border px-3 py-2 bg-gray-50">{usersMap.get(viewedLeave.user_id) || 'Loading...'}</p>
+                                <p className="mb-1 font-semibold text-gray-600">Employee Name:</p>
+                                <p className="rounded-xl border px-3 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600">{usersMap.get(viewedLeave.user_id) || 'Loading...'}</p>
                             </div>
                             <div>
-                                <p className="mb-1 font-semibold">Leave Type:</p>
-                                <p className="rounded border px-3 py-2 bg-gray-50">{viewedLeave.leave_type}</p>
+                                <p className="mb-1 font-semibold text-gray-600">Leave Type:</p>
+                                <p className="rounded-xl border px-3 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600">{viewedLeave.leave_type}</p>
                             </div>
                             <div>
-                                <p className="mb-1 font-semibold">Description:</p>
-                                <p className="rounded border px-3 py-2 bg-gray-50">{viewedLeave.description}</p>
+                                <p className="mb-1 font-semibold text-gray-600">Description:</p>
+                                <p className="rounded-xl border px-3 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600">{viewedLeave.description}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="mb-1 font-semibold">From:</p>
-                                    <p className="rounded border px-3 py-2 bg-gray-50">{viewedLeave.start_date}</p>
+                                <div className=''>
+                                    <p className="mb-1 font-semibold text-gray-600 text-gray-600">From:</p>
+                                    <p className="rounded-xl border px-3 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600">{viewedLeave.start_date}</p>
                                 </div>
                                 <div>
-                                    <p className="mb-1 font-semibold">To:</p>
-                                    <p className="rounded border px-3 py-2 bg-gray-50">{viewedLeave.end_date}</p>
+                                    <p className="mb-1 font-semibold text-gray-600 text-gray-600">To:</p>
+                                    <p className="rounded-xl border px-3 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600">{viewedLeave.end_date}</p>
                                 </div>
                             </div>
                             <div>
-                                <p className="mb-1 font-semibold">Overall Status:</p>
-                                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(viewedLeave.status || 'Pending')}`}>
+                                <p className="mb-1 font-semibold text-gray-600">Overall Status:</p>
+                                <span className={` px-3 py-1 rounded-full text-sm font-semibold mt-2 ${getStatusColor(viewedLeave.status || 'Pending')}`}>
                                     {viewedLeave.status || 'Pending'}
                                 </span>
                             </div>
 
                             {viewedLeave.hr_status && (
                                 <div>
-                                    <p className="mb-1 font-semibold">HR Status:</p>
+                                    <p className="mb-1 font-semibold text-gray-600">HR Status:</p>
                                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(viewedLeave.hr_status)}`}>
                                         {viewedLeave.hr_status}
                                     </span>
@@ -411,7 +411,7 @@ export default function PendingLeavesPage() {
 
                             {viewedLeave.manager_status && (
                                 <div>
-                                    <p className="mb-1 font-semibold">Manager Status:</p>
+                                    <p className="mb-1 font-semibold text-gray-600">Manager Status:</p>
                                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(viewedLeave.manager_status)}`}>
                                         {viewedLeave.manager_status}
                                     </span>
@@ -425,25 +425,23 @@ export default function PendingLeavesPage() {
                             )}
 
                             {canUpdateStatus && (
-                                <div className="flex justify-between mt-4">
+                                <div className="flex justify-end gap-2 mt-9">
+                                   
                                     <Button
                                         type="button"
-                                        label="Accepted"
+                                        label="Accept"
                                         onClick={() => handleStatusButtonClick('ACCEPTED')}
                                         variant="success"
                                         disabled={isSubmittingStatus || viewedLeave.status === 'ACCEPTED'}
                                     />
                                     <Button
                                         type="button"
-                                        label="Rejected"
+                                        label="Reject"
                                         onClick={() => handleStatusButtonClick('REJECTED')}
                                         variant="danger"
                                         disabled={isSubmittingStatus || viewedLeave.status === 'REJECTED'}
                                     />
-                                </div>
-                            )}
-                            <div className="flex justify-end">
-                                <Button
+                                    <Button
                                     type="button"
                                     label="Close"
                                     onClick={() => {
@@ -452,7 +450,8 @@ export default function PendingLeavesPage() {
                                     }}
                                     variant="secondary"
                                 />
-                            </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -460,7 +459,7 @@ export default function PendingLeavesPage() {
 
             {/* Leave Table */}
             <div>
-                <h3 className="mb-4 text-xl font-semibold">Pending Leave Table</h3>
+                <h3 className="mb-4 text-2xl font-semibold text-gray-700">Pending Leave Table</h3>
                 <Table
                     columns={columns}
                     data={leaves}

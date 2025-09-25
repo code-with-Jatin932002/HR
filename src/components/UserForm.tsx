@@ -244,18 +244,18 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
   return (
     <form onSubmit={formik.handleSubmit} className="space-y-4">
       {/* Scrollable Container for the form fields */}
-      <div className="max-h-[60vh] overflow-y-auto pr-4">
+      <div className="max-h-[60vh]  w-full  overflow-y-auto pr-4">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* First Name */}
           <div>
-            <label className="mb-1 block">First Name</label>
+            <label className="mb-1 text-gray-500 block">First Name</label>
             <input
               type="text"
               name="first_name"
               value={formik.values.first_name || ''}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="Enter First Name"
               disabled={isSubmitting}
             />
@@ -266,14 +266,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Last Name */}
           <div>
-            <label className="mb-1 block">Last Name</label>
+            <label className="mb-1 text-gray-500 block">Last Name</label>
             <input
               type="text"
               name="last_name"
               value={formik.values.last_name || ''}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="Enter Last Name"
               disabled={isSubmitting}
             />
@@ -284,14 +284,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Email */}
           <div>
-            <label className="mb-1 block">Email</label>
+            <label className="mb-1 text-gray-500 block">Email</label>
             <input
               type="email"
               name="email"
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="Enter Email"
               disabled={isSubmitting}
             />
@@ -303,14 +303,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           {/* Password */}
           {!isUpdate && (
             <div className="relative">
-              <label className="mb-1 block">Password</label>
+              <label className="mb-1 text-gray-500 block">Password</label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                 placeholder="Enter password"
                 disabled={isSubmitting}
               />
@@ -328,14 +328,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Date of Birth */}
           <div>
-            <label className="mb-1 block">Date of Birth</label>
+            <label className="mb-1 text-gray-500 block">Date of Birth</label>
             <input
               type="date"
               name="date_of_birth"
               value={formik.values.date_of_birth}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               disabled={isSubmitting}
             />
             {formik.touched.date_of_birth && formik.errors.date_of_birth && (
@@ -345,14 +345,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Joining Date */}
           <div>
-            <label className="mb-1 block">Joining Date</label>
+            <label className="mb-1 text-gray-500 block">Joining Date</label>
             <input
               type="date"
               name="joining_date"
               value={formik.values.joining_date}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               disabled={isSubmitting}
             />
             {formik.touched.joining_date && formik.errors.joining_date && (
@@ -362,14 +362,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Mobile Number */}
           <div>
-            <label className="mb-1 block">Mobile Number</label>
+            <label className="mb-1 text-gray-500 block">Mobile Number</label>
             <input
               type="text"
               name="mobile_number"
               value={formik.values.mobile_number}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="Enter 10-digit mobile number"
               maxLength={10}
               disabled={isSubmitting}
@@ -381,13 +381,13 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Gender */}
           <div>
-            <label className="mb-1 block">Gender</label>
+            <label className="mb-1 text-gray-500 block">Gender</label>
             <select
               name="gender"
               value={formik.values.gender}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               disabled={isSubmitting}
             >
               <option value="" disabled>Select Gender</option>
@@ -402,13 +402,13 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Marital Status */}
           <div>
-            <label className="mb-1 block">Marital Status</label>
+            <label className="mb-1 text-gray-500 block">Marital Status</label>
             <select
               name="marital_status"
               value={formik.values.marital_status}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               disabled={isSubmitting}
             >
               <option value="" disabled>Select Status</option>
@@ -422,13 +422,13 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Employee Type */}
           <div>
-            <label className="mb-1 block">Employee Type</label>
+            <label className="mb-1 text-gray-500 block">Employee Type</label>
             <select
               name="employee_type"
               value={formik.values.employee_type}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               disabled={isSubmitting}
             >
               <option value="" disabled>Select Type</option>
@@ -442,14 +442,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Working Days */}
           <div>
-            <label className="mb-1 block">Working Days</label>
+            <label className="mb-1 text-gray-500 block">Working Days</label>
             <input
               type="text"
               name="working_days"
               value={formik.values.working_days}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="e.g., Mon-Fri, 5"
               disabled={isSubmitting}
             />
@@ -460,14 +460,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           
           {/* Official Email */}
           <div>
-            <label className="mb-1 block">Official Email</label>
+            <label className="mb-1 text-gray-500 block">Official Email</label>
             <input
               type="email"
               name="official_email"
               value={formik.values.official_email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="Enter Official Email"
               disabled={isSubmitting}
             />
@@ -478,14 +478,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Slack ID */}
           <div>
-            <label className="mb-1 block">Slack ID</label>
+            <label className="mb-1 text-gray-500 block">Slack ID</label>
             <input
               type="text"
               name="slack_id"
               value={formik.values.slack_id}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="Enter Slack ID"
               disabled={isSubmitting}
             />
@@ -496,14 +496,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* GitHub ID */}
           <div>
-            <label className="mb-1 block">GitHub ID</label>
+            <label className="mb-1 text-gray-500 block">GitHub ID</label>
             <input
               type="text"
               name="github_id"
               value={formik.values.github_id}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="Enter GitHub ID"
               disabled={isSubmitting}
             />
@@ -514,14 +514,14 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           
           {/* Address */}
           <div>
-            <label className="mb-1 block">Address</label>
+            <label className="mb-1 text-gray-500 block">Address</label>
             <input
               type="text"
               name="address"
               value={formik.values.address}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
               placeholder="Enter Address"
               disabled={isSubmitting}
             />
@@ -550,7 +550,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Role Type */}
           <div>
-            <label className="mb-1 block">Role Type</label>
+            <label className="mb-1 text-gray-500 block">Role Type</label>
             {loadingRoles ? (
               <p>Loading roles...</p>
             ) : rolesError ? (
@@ -561,7 +561,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
                 value={formik.values.role_type}
                 onChange={handleRoleTypeChange}
                 onBlur={formik.handleBlur}
-                className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                 disabled={isSubmitting}
               >
                 {(!isUpdate || !formik.values.role_type) && <option value="" disabled>Select a Role</option>}
@@ -580,7 +580,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           {/* Department Name */}
           {(selectedRole.toLowerCase() !== 'admin' && selectedRole.toLowerCase() !== 'super_admin') && (
             <div className="col-span-1 md:col-span-2">
-              <label className="mb-1 block">Department Name</label>
+              <label className="mb-1 text-gray-500 block">Department Name</label>
               {loadingDepartments ? (
                 <p>Loading departments...</p>
               ) : departmentError ? (
@@ -591,7 +591,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
                   value={formik.values.department_name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="w-full rounded border px-4 py-3 text-black outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                   disabled={isSubmitting}
                 >
                   <option value="" disabled>Select a Department</option>

@@ -251,10 +251,10 @@ export default function HolidayPage() {
 
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-4xl rounded bg-white p-6 shadow">
+    <div className="min-h-screen p-4 bg-gray-100">
+      <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-center sm:text-left">Holiday Management</h2>
+          <h2 className="text-3xl font-bold text-gray-700 sm:text-left">Holiday Management</h2>
           {canManageHolidays && (
             <Button
               label="Add Holiday"
@@ -282,7 +282,7 @@ export default function HolidayPage() {
               placeholder="Search by holiday name or day..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
             />
             {searchQuery && (
               <button

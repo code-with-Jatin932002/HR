@@ -31,7 +31,7 @@ export default function AuthenticatedHeaderContent({ user, onProfileClick, onLog
 
             <div className="flex items-center space-x-2 md:space-x-3 flex-shrink">
                 <div className="flex items-center space-x-2 md:space-x-3 cursor-pointer">
-                    <Image src="/logo.png" alt="Logo" width={40} height={40} />
+                    <Image src="/new logo.png" alt="Logo" width={40} height={40} />
                     <h1 className="text-sm md:text-xl font-bold text-gray-800 whitespace-nowrap">HR Portal</h1>
                 </div>
             </div>
@@ -46,11 +46,11 @@ export default function AuthenticatedHeaderContent({ user, onProfileClick, onLog
             </div> */}
 
             <div className="flex items-center gap-1">
-                <button className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-100 text-gray-600 hover:bg-purple-200 transition focus:outline-none focus:ring-2 focus:ring-purple-500">
                     <FaBell className="text-xl" />
                 </button>
 
-                <div className="flex items-center gap-1 border border-gray-300 rounded-md pl-2 pr-1 py-1 min-w-0"> {/* Reduced padding */}
+                <div className="flex items-center gap-1 border border-purple-300 rounded-md pl-3 pr-1 py-1 min-w-0"> {/* Reduced padding */}
              
                     <div className="flex flex-col items-end min-w-0">
                         <span className="text-gray-900 text-xs xs:text-sm md:text-base font-semibold text-right break-words leading-tight">

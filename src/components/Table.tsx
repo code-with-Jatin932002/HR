@@ -34,7 +34,7 @@ const Table: React.FC<TableProps> = ({ columns, data, actions, currentPage, item
           <tbody className="divide-y divide-gray-200">{
             data.length > 0 ? (
               data.map((row, index) => (
-                <tr key={row.id || index} className="hover:bg-blue-50 transition duration-150 ease-in-out">
+                <tr key={row.id || index} className="hover:bg-purple-50 transition duration-150 ease-in-out">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {(currentPage - 1) * itemsPerPage + index + 1}
                   </td>

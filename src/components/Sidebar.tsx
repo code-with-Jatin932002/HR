@@ -81,7 +81,7 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="h-full overflow-y-auto bg-white border-r w-20 md:w-64 transition-all duration-300 shadow-sm">
+    <aside className="h-full overflow-y-auto bg-gray-50 border-r w-20 md:w-64 transition-all duration-300 shadow-sm">
       <div className="p-4 pt-6">
         {/* Top - Dashboard Item */}
         <div className="mb-2.5">
@@ -89,8 +89,8 @@ const Sidebar = () => {
             href="/dashboard"
             className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-base font-semibold transition-all duration-200 justify-center md:justify-start
               ${pathname === '/dashboard'
-                ? 'bg-[#EEF4FF] text-blue-600 border-l-4 border-blue-600'
-                : 'text-gray-600 hover:bg-blue-100'
+                ? 'bg-purple-100 text-purple-500 border-l-4 border-purple-600'
+                : 'text-gray-600 hover:bg-purple-100'
               }`}
           >
             {iconMap['Dashboard']}
@@ -110,8 +110,8 @@ const Sidebar = () => {
                     onClick={() => toggleMenu(route.name)}
                     className={`flex items-center justify-between px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-200 w-full text-base
                       ${isOpen
-                        ? 'bg-[#EEF4FF] text-blue-600 font-semibold border-l-4 border-blue-600'
-                        : 'text-gray-800 hover:bg-blue-100'
+                        ? 'bg-purple-100 text-purple-500 font-semibold border-l-4 border-purple-500'
+                        : 'text-gray-800 hover:bg-purple-100'
                       }`}
                   >
                     <div className="flex items-center gap-4 w-full justify-center md:justify-start">
@@ -131,8 +131,8 @@ const Sidebar = () => {
                             href={sub.path}
                             className={`flex items-center gap-4 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm justify-center md:justify-start
                               ${isActive(sub.path)
-                                ? 'bg-[#EEF4FF] text-blue-600 font-medium border-l-4 border-blue-600'
-                                : 'text-gray-700 hover:bg-blue-100'
+                                ? 'bg-purple-100 text-purple-500 font-medium border-l-4 border-purple-500'
+                                : 'text-gray-700 hover:bg-purple-100'
                               }`}
                           >
                             {iconMap[sub.name]}
@@ -152,8 +152,8 @@ const Sidebar = () => {
                   href={(route as ChildRoute).path}
                   className={`flex items-center gap-4 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer text-base justify-center md:justify-start
                     ${isActive((route as ChildRoute).path)
-                      ? 'bg-[#EEF4FF] text-blue-600 font-semibold border-l-4 border-blue-600'
-                      : 'text-gray-800 hover:bg-blue-100'
+                      ? 'bg-purple-100 text-purple-500 font-semibold border-l-4 border-puprle-600'
+                      : 'text-gray-800 hover:bg-purple-100'
                     }`}
                 >
                   {iconMap[route.name]}

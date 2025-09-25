@@ -305,12 +305,12 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
         formik.setFieldValue(name, newValue);
       },
       onBlur: formik.handleBlur,
-      className: 'w-full border rounded-lg py-3 px-4 text-black outline-none focus:border-blue-500',
+      className:"w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2"
     };
 
     return (
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1 capitalize">{name.replace('_', ' ')}</label>
+        <label className="mb-2 block text-sm font-medium text-gray-700 capitalize">{name.replace('_', ' ')}</label>
         <div className="relative">
           {isTextArea ? (
             <textarea {...commonProps} rows={4} />
@@ -330,7 +330,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                     : undefined
                 }
               />
-              <Icon className="absolute left-3 top-4 text-gray-500" />
+              <Icon className="absolute left-3 top-4 text-gray-900" />
             </>
           )}
         </div>
@@ -340,25 +340,34 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex justify-center items-start md:items-center p-4">
-      <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg flex flex-col md:flex-row overflow-hidden max-h-[95vh] mt-10 md:mt-0 animate-slide-down">
-        <div className="hidden md:flex md:w-1/2 flex-col items-center justify-center bg-blue-100 p-0 relative min-h-[400px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex justify-center items-start md:items-center">
+      <div className="bg-white w-900 rounded-lg shadow-lg flex flex-col md:flex-row overflow-hidden max-h-[100vh] animate-slide-down">
+        <div className="hidden md:flex md:w-1/2 flex-col justify-center items-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-10 relative  h-200">
+         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm rounded-2xl"></div>
+             <div className="relative z-10 text-center ">
+          <h1 className="text-4xl font-extrabold tracking-tight -mt-30">HR Management</h1>
+               <p className="mt-4 text-lg opacity-90">Simplify HR tasks and keep your team productive.
+                All-in-one platform to manage employees, payroll, and performance.</p>
+               <p></p>
+              <div className="mt-5 h-90">  
           <AuthRegisterSVG />
-          <p className="text-gray-600 text-center text-sm mt-4">Register your organization as a Super Admin</p>
         </div>
-        <div className="w-full md:w-1/2 p-6 md:p-8 relative flex flex-col min-h-0">
-          <h2 className="text-2xl font-bold text-black mb-4 text-center flex-shrink-0">
+        </div>
+        </div>
+        <div className="w-full md:w-1/2 p-8 lg:p-10 relative overflow-y-auto">
+          <h2 className="text-4xl font-bold text-gray-700 mb-4 text-center flex-shrink-0">
             {showOtpVerification ? 'Verify Your Account' : 'Organization Register'}
           </h2>
           {loadingRegistration && (
-            <div className="absolute inset-0 flex justify-center items-center bg-white/70 backdrop-blur-sm z-10">
+            <div className="absolute inset-0 flex justify-center items-center bg-white\/70 backdrop-blur-sm z-10">
               <Loader />
             </div>
           )}
           {!showOtpVerification ? (
-            <form onSubmit={formik.handleSubmit} className="flex flex-col flex-grow overflow-y-auto pr-2">
+            <form onSubmit={formik.handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1 capitalize">Organization name</label>
+                <label className="mb-2 block text-sm font-medium text-gray-700 capitalize ">Organization name</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -367,17 +376,17 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                     value={formik.values.org_name}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500"
+                    className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2"
                   />
-                  <FaUser className="absolute left-3 top-4 text-gray-500" />
+                  <FaUser className="absolute left-3 top-4 text-gray-900" />
                 </div>
                 {formik.touched.org_name && formik.errors.org_name && (
                   <span className="text-sm text-red-500">{formik.errors.org_name}</span>
                 )}
               </div>
               {inputField('email', 'email', 'Email', FaEnvelope)}
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Password</label>
+              <div className="mb-4 outline-white">
+                <label className="mb-2 block text-sm font-medium text-gray-700 capitalize">Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -386,13 +395,13 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full border rounded-lg py-3 px-4 pl-10 pr-10 text-black outline-none focus:border-blue-500"
+                    className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2"
                   />
-                  <FaLock className="absolute left-3 top-4 text-gray-500" />
+                  <FaLock className="absolute left-3 top-4 text-gray-900" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-4 text-gray-500"
+                    className="absolute right-4 top-4 text-gray-900"
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
@@ -401,12 +410,17 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                   <span className="text-sm text-red-500">{formik.errors.password}</span>
                 )}
               </div>
-              {inputField('address', 'text', 'Address (Max 35 characters)', FaMapMarkerAlt)}
+             
+              {inputField('address', 'text', 'Address (Max 25 characters)', FaMapMarkerAlt)}
+              {/* {inputField('Country', 'text', 'Country ', FaMapMarkerAlt)}
+              {inputField('State', 'text', 'State ', FaMapMarkerAlt)}
+              {inputField('City', 'text', 'City ', FaMapMarkerAlt)} */}
+              {/* {inputField('phone_number', 'type', 'Phone Number', FaPhone)} */}
 
-              {/* Country Select with Flags */}
+            {/* Country Select with Flags */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Country</label>
-                <div className="relative">
+                <label className="mb-2 block text-sm font-medium text-gray-700 capitalize">Country</label>
+                <div className="relative ">
                   <Select
                     name="country"
                     options={countries}
@@ -462,8 +476,8 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
 
               {/* Combined Country Code & Phone Number Field */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Phone Number</label>
-                <div className="relative flex items-center w-full border rounded-lg text-black focus-within:border-blue-500">
+                <label className="block text-sm font-medium mb-1 text-gray-700">Phone Number</label>
+                <div className=" mr-15 relative flex w-full rounded-2xl border border-gray-300 px-11 py-1text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2 ">
                   <div className="flex items-center absolute left-0 z-10 w-24 h-full pr-2">
                     <Select
                       name="country_code"
@@ -531,7 +545,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
 
               {/* State Select (Populated automatically) */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">State</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700">State</label>
                 <div className="relative">
                   <select
                     name="state"
@@ -539,7 +553,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                     onChange={handleStateChange}
                     onBlur={formik.handleBlur}
                     disabled={states.length === 0}
-                    className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2 disabled:cursor-not-allowed"
                   >
                     <option value="">Select State</option>
                     {states.map((state) => (
@@ -557,7 +571,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
 
               {/* City Select (Populated automatically) */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">City</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700">City</label>
                 <div className="relative">
                   <select
                     name="city"
@@ -565,7 +579,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     disabled={cities.length === 0}
-                    className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2 disabled:cursor-not-allowed"
                   >
                     <option value="">Select City</option>
                     {cities.map((city) => (
@@ -581,8 +595,10 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                 )}
               </div>
 
+
+
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Organization Type</label>
+                <label className="mb-2 block text-sm font-medium text-gray-700 capitalize">Organization Type</label>
                 <div className="relative">
                   {loadingOrgTypes ? (
                     <p className="py-3 px-4 pl-10 text-gray-500">Loading organization types...</p>
@@ -594,7 +610,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                       value={formik.values.organization_type}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500"
+                      className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2"
                     >
                       <option value="">Select Organization Type</option>
                       {organizationTypes.map((type) => (
@@ -604,7 +620,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                       ))}
                     </select>
                   )}
-                  <FaIndustry className="absolute left-3 top-3.5 text-gray-500" />
+                  <FaIndustry className="absolute left-3 top-3.5 text-gray-900" />
                 </div>
                 {formik.touched.organization_type && formik.errors.organization_type && (
                   <span className="text-sm text-red-500">{formik.errors.organization_type}</span>
@@ -620,7 +636,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                 fullWidth
                 variant="primary"
                 disabled={loadingRegistration}
-                className="flex-shrink-0"
+                className="rounded-xl h-10 border-green-300 text-gray-600 bg-green-700 hover:bg-green-700 py-3 font-medium transition"
               />
               <Button
                 type="button"
@@ -628,7 +644,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                 label="Cancel"
                 fullWidth
                 variant="secondary"
-                className="mt-4 font-semibold flex-shrink-0"
+                className=" rounded-xl h-10 border-gray-300 text-white-600 bg-gray-500 hover:bg-gray-700 py-3 font-medium transition"
                 disabled={loadingRegistration}
               />
             </form>
@@ -642,8 +658,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
         </div>
       </div>
     </div>
+    </div>
   );
-}
-
-
-
+ }
+ 

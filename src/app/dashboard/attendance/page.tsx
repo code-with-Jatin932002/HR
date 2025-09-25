@@ -153,15 +153,15 @@ export default function AttendancePage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-4xl rounded bg-white p-6 shadow">
+      <div className="mx-auto mt-10 w-290 rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-center sm:text-left">Attendance Tracker</h2>
+          <h2 className="text-2xl font-bold text-gray-700 sm:text-left">Attendance Tracker</h2>
           <div className="relative">
             <input
               type="date"
               value={reportDate}
               onChange={handleDateChange}
-              className="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="pl-10 pr-4 py-2 border text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-300"
             />
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
               <FiCalendar />

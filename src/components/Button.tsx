@@ -30,11 +30,11 @@ const Button: React.FC<ButtonProps> = ({
   'px-4 py-2 rounded-md shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2 cursor-pointer';
 
   const variantClasses = {
-    primary: 'bg-blue-500 text-white hover:bg-blue-700 focus:ring-blue-500',
+    primary: 'bg-purple-500 text-white hover:bg-purple-700 focus:ring-purple-500',
     secondary: 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-500',
     danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
-    white: 'bg-white text-blue-600 hover:bg-blue-100 focus:ring-blue-500',
-    text: 'bg-transparent text-blue-600 hover:text-blue-800',
+    white: 'bg-white text-purple-600 hover:bg-purple-100 focus:ring-purple-500',
+    text: 'bg-transparent text-purple-600 hover:text-purple-800',
     success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
       dropdown: 'w-full text-left text-gray-800 hover:bg-gray-100 px-4 py-2 flex items-center gap-2 focus:outline-none',
 

@@ -318,7 +318,7 @@ export default function JobsPage() {
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-7xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-center sm:text-left">Job Management</h2>
+          <h2 className="text-2xl font-bold text-gray-700 sm:text-left">Job Management</h2>
           {canManageJobs && (
             <Button
               label="Add New Job"
@@ -347,7 +347,7 @@ export default function JobsPage() {
               placeholder="Search by job title..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
             />
             {searchQuery && (
               <button
@@ -361,17 +361,19 @@ export default function JobsPage() {
         </div>
 
         {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg overflow-y-auto max-h-[90vh]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 p-4">
+            <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg overflow-y-auto h-140">
               {isSubmittingForm && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                   <Loader />
                 </div>
               )}
-              <h3 className="mb-4 text-xl font-semibold">
+          
+              <h3 className="mb-4 text-xl font-semibold text-gray-700">
                 {isUpdate ? 'Update Job' : 'Create New Job'}
               </h3>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <div>
                   <label htmlFor="job_title" className="mb-1 block text-sm font-medium text-gray-700">Job Title</label>
                   <input
@@ -381,7 +383,7 @@ export default function JobsPage() {
                     value={formik.values.job_title}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.job_title && formik.errors.job_title && (
@@ -396,7 +398,7 @@ export default function JobsPage() {
                     value={formik.values.department}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   >
                     <option value="">Select Department</option>
@@ -405,7 +407,7 @@ export default function JobsPage() {
                     ))}
                   </select>
                   {formik.touched.department && formik.errors.department && (
-                    <span className="text-sm text-red-500">{formik.errors.department}</span>
+                    <span className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300">{formik.errors.department}</span>
                   )}
                 </div>
                 <div>
@@ -417,7 +419,7 @@ export default function JobsPage() {
                     value={formik.values.location}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.location && formik.errors.location && (
@@ -433,7 +435,7 @@ export default function JobsPage() {
                     value={formik.values.amount}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   />
                   {formik.touched.amount && formik.errors.amount && (
@@ -448,7 +450,7 @@ export default function JobsPage() {
                     value={formik.values.job_type}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                     disabled={isSubmittingForm}
                   >
                     {jobTypeOptions.map(option => (
@@ -461,6 +463,7 @@ export default function JobsPage() {
                     <span className="text-sm text-red-500">{formik.errors.job_type}</span>
                   )}
                 </div>
+              
                 {isUpdate && (
                   <div>
                     <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">Status</label>
@@ -470,7 +473,7 @@ export default function JobsPage() {
                       value={formik.values.status}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full rounded border px-3 py-2"
+                      className="w-167 rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                       disabled={isSubmittingForm}
                     >
                       {jobStatusOptions.map(option => (
@@ -483,7 +486,9 @@ export default function JobsPage() {
                       <span className="text-sm text-red-500">{formik.errors.status}</span>
                     )}
                   </div>
+                 
                 )}
+                 </div>
                 <div className="flex justify-end gap-2 mt-4">
                   <Button
                     label="Cancel"

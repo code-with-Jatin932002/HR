@@ -260,8 +260,8 @@ export default function ViewUsersPage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 w-full overflow-x-auto rounded bg-white p-6 shadow">
-        <h2 className="mb-6 text-2xl font-bold">All Users</h2>
+      <div className="mx-auto mt-10 w-290 overflow-x-auto rounded bg-white p-6 shadow">
+        <h2 className="mb-6 text-3xl text-gray-600 font-bold">All Users</h2>
         <div className="relative">
           {isBlockingOperations && (
             <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
@@ -270,7 +270,7 @@ export default function ViewUsersPage() {
           )}
           <div className="w-full px-4 py-3">
             <div className="relative w-full">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-700">
                 <FiSearch />
               </span>
               <input
@@ -278,7 +278,7 @@ export default function ViewUsersPage() {
                 placeholder="Search by name or email..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-300"
+                className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
                 disabled={isBlockingOperations}
               />
               {searchQuery && (
@@ -323,95 +323,95 @@ export default function ViewUsersPage() {
 
         {/* View User Modal */}
         {showViewModal && viewUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg space-y-3 rounded-lg bg-white p-6 shadow-lg">
-              <h3 className="mb-4 text-xl font-semibold">👤 User Details</h3>
-              <div className="max-h-[70vh] space-y-3 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="font-bold">Name:</span>
-                    <p>{`${viewUser.first_name} ${viewUser.last_name}`}</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 backdrop-blur-sm transition-opacity">
+            <div className="relative w-full max-w-5xl rounded-2xl bg-white backdrop-blur-md shadow-2xl border border-gray-200 p-8 animate-fadeIn scale-95 transform transition-all duration-300 ease-out">
+           <button
+             onClick={() => setShowViewModal(false)}
+             className="absolute right-4 top-4 rounded-full p-2 text-gray-900 hover:text-white hover:bg-red-500 transition"
+             disabled={isBlockingOperations}
+           >
+            ✖
+            </button>
+              <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">👤 User Details</h3>
+              <div className="max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar  ">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Name:</span>
+                    <p className='text-gray-900 font-medium'>{`${viewUser.first_name} ${viewUser.last_name}`}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Email:</span>
-                    <p>{viewUser.email}</p>
+                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Email:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.email}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Role:</span>
-                    <p>{viewUser.role_type}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Role:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.role_type}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Department:</span>
-                    <p>{viewUser.department_name || 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Department:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.department_name || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">DOB:</span>
-                    <p>{viewUser.date_of_birth ? new Date(viewUser.date_of_birth).toLocaleDateString() : 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">DOB:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.date_of_birth ? new Date(viewUser.date_of_birth).toLocaleDateString() : 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Gender:</span>
-                    <p>{viewUser.gender || 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Gender:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.gender || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Mobile No:</span>
-                    <p>{viewUser.mobile_number || 'N/A'}</p>
+                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Mobile No:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.mobile_number || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Marital Status:</span>
-                    <p>{viewUser.marital_status || 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Marital Status:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.marital_status || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Address:</span>
-                    <p>{viewUser.address || 'N/A'}</p>
+                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Address:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.address || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Employee Type:</span>
-                    <p>{viewUser.employee_type || 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Employee Type:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.employee_type || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Joining Date:</span>
-                    <p>{viewUser.joining_date ? new Date(viewUser.joining_date).toLocaleDateString() : 'N/A'}</p>
+                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Joining Date:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.joining_date ? new Date(viewUser.joining_date).toLocaleDateString() : 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Working Days:</span>
-                    <p>{viewUser.working_days || 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Working Days:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.working_days || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Official Email:</span>
-                    <p>{viewUser.official_email || 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Official Email:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.official_email || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">Slack ID:</span>
-                    <p>{viewUser.slack_id || 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Slack ID:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.slack_id || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-bold">GitHub ID:</span>
-                    <p>{viewUser.github_id || 'N/A'}</p>
+                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">GitHub ID:</span>
+                    <p className='text-gray-900 font-medium'>{viewUser.github_id || 'N/A'}</p>
                   </div>
                 </div>
               </div>
-
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="absolute right-2 top-2 text-xl text-gray-500 hover:text-black"
-                disabled={isBlockingOperations}
-              >
-                ✖
-              </button>
             </div>
           </div>
+
         )}
 
         {/* Update User Modal */}
         {updateUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg rounded-lg bg-white p-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 backdrop-blur-sm">
+            <div className="relative w-full max-w-250 rounded-lg bg-white p-6">
               {isBlockingOperations && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                   <Loader />
                 </div>
               )}
-              <h3 className="mb-4 text-xl font-semibold">Update User</h3>
+              <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">Update User</h3>
               <UserForm
                 isUpdate={true}
                 initialValues={{

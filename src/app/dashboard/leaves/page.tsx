@@ -458,15 +458,15 @@ export default function LeavesPage() {
 
             {/* View Leave Modal (Updated) */}
             {showViewForm && viewedLeave && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
                     {/* Added overflow-y-auto and max-h-[90vh] for scrolling */}
-                    <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg overflow-y-auto max-h-[90vh]">
+                    <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg h-140">
                         {isSubmittingStatus && (
                             <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                                 <Loader />
                             </div>
                         )}
-                        <h3 className="mb-4 text-xl font-semibold">Leave Details</h3>
+                        <h3 className="mb-4 text-xl font-semibold text-gray-700">Leave Details</h3>
                         <div className="space-y-4">
                             <div>
                                 <p className="mb-1 font-semibold">Leave Type:</p>
