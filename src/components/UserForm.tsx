@@ -149,7 +149,10 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
       marital_status: Yup.string().required('Marital status is required'),
       employee_type: Yup.string().required('Employee type is required'),
       joining_date: Yup.string().required('Joining date is required'),
-      working_days: Yup.string().required('Working days is required'),
+      // working_days: Yup.string().required('Working days is required'),
+      working_days: Yup.string()
+        .required('Weekly working days is required')
+        .matches(/^[1-6]$/, 'Weekly working days must be 6 days or less'),
       official_email: emailValidation.required('Official email is required'),
       slack_id: Yup.string()
         .required('Slack ID is required')
@@ -442,7 +445,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Working Days */}
           <div>
-            <label className="mb-1 block">Working Days</label>
+            <label className="mb-1 block">Week Working Days</label>
             <input
               type="text"
               name="working_days"
@@ -578,7 +581,9 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           </div>
 
           {/* Department Name */}
-          {(selectedRole.toLowerCase() !== 'admin' && selectedRole.toLowerCase() !== 'super_admin') && (
+          {/* {(selectedRole.toLowerCase() !== 'admin' && selectedRole.toLowerCase() !== 'super_admin') && ( */}
+          {currentUserRole.toLowerCase() !== 'super_admin' &&
+            (selectedRole.toLowerCase() !== 'admin' && selectedRole.toLowerCase() !== 'super_admin') && (
             <div className="col-span-1 md:col-span-2">
               <label className="mb-1 block">Department Name</label>
               {loadingDepartments ? (

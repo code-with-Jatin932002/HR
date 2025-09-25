@@ -46,7 +46,7 @@ export default function CreateUserPage() {
   };
 
   return (
-    <div className="mx-auto mt-10 max-w-3xl rounded bg-white p-6 shadow">
+    <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
       <h2 className="mb-4 text-2xl font-bold">Create New User</h2>
       <div className="relative">
         {formLoading && (

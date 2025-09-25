@@ -62,7 +62,7 @@ export default function AuthenticatedHeaderContent({ user, onProfileClick, onLog
                     </div>
 
                     <UserAuthenticatedSection
-                        onProfileClick={onProfileClick}
+                        // onProfileClick={onProfileClick}
                         onLogout={onLogout}
                         userImageSrc="/people/person1.jpg"
                     />

@@ -65,6 +65,14 @@ interface ApiResponseError {
   };
 }
 
+interface PayrollFormValues {
+  user_id: string;
+  ctc: string;
+  salary_per_month: string;
+  deduction: string;
+  status: 'Pending' | 'Completed';
+}
+
 const payrollColumns = [
   { label: 'Employee Name', key: 'employee_name' },
   { label: 'CTC', key: 'ctc' },
@@ -237,19 +245,28 @@ export default function PayrollsPage() {
   const validationSchema = useMemo(() => {
     return Yup.object({
       user_id: Yup.string().required('Employee is required'),
-      ctc: Yup.number().required('CTC is required').min(0, 'CTC cannot be negative'),
-      salary_per_month: Yup.number().required('Salary per month is required').min(0, 'Salary cannot be negative'),
-      deduction: Yup.number().required('Deduction is required').min(0, 'Deduction cannot be negative'),
+      ctc: Yup.number()
+        .required('CTC is required')
+        .typeError('CTC must be a number')
+        .min(0.01, 'CTC must be greater than zero'),
+      salary_per_month: Yup.number()
+        .required('Salary per month is required')
+        .typeError('Salary must be a number')
+        .min(0.01, 'Salary must be greater than zero'),
+      deduction: Yup.number()
+        .required('Deduction is required')
+        .typeError('Deduction must be a number')
+        .min(0, 'Deduction cannot be negative'),
       status: Yup.string().oneOf(payrollStatusOptions, 'Invalid status').optional(),
     });
   }, []);
 
-  const formik = useFormik({
+  const formik = useFormik<PayrollFormValues>({
     initialValues: {
       user_id: '',
-      ctc: 0,
-      salary_per_month: 0,
-      deduction: 0,
+      ctc: '',
+      salary_per_month: '',
+      deduction: '',
       status: 'Pending',
     },
     validationSchema,
@@ -264,18 +281,17 @@ export default function PayrollsPage() {
 
       if (isUpdate) {
         payload = {
-          ctc: values.ctc,
-          salary_per_month: values.salary_per_month,
-          deduction: values.deduction,
+          ctc: parseFloat(values.ctc),
+          salary_per_month: parseFloat(values.salary_per_month),
+          deduction: parseFloat(values.deduction),
           status: values.status,
         };
       } else {
-        // For creation, include employee_name if your backend truly requires it
         payload = {
           user_id: values.user_id,
-          ctc: values.ctc,
-          salary_per_month: values.salary_per_month,
-          deduction: values.deduction,
+          ctc: parseFloat(values.ctc),
+          salary_per_month: parseFloat(values.salary_per_month),
+          deduction: parseFloat(values.deduction),
           employee_name: selectedEmployeeName, // Add employee_name here if backend POST requires it
         };
       }
@@ -306,8 +322,6 @@ export default function PayrollsPage() {
             errorMessage = apiError.response.data.detail;
           } else if (typeof apiError.response.data.detail === 'object') {
             // If 'detail' is an object, try to stringify or get a specific message
-            // This is where the "Objects are not valid as a React child" error usually comes from.
-            // You might need to adjust this based on the exact structure of your backend's validation errors.
             try {
               errorMessage = JSON.stringify(apiError.response.data.detail);
             } catch (e) {
@@ -334,9 +348,9 @@ export default function PayrollsPage() {
     setIsUpdate(true);
     formik.setValues({
       user_id: payroll.user_id, // Pre-fill, but disabled in form if isUpdate
-      ctc: parseFloat(payroll.ctc),
-      salary_per_month: parseFloat(payroll.salary_per_month),
-      deduction: parseFloat(payroll.deduction),
+      ctc: payroll.ctc,
+      salary_per_month: payroll.salary_per_month,
+      deduction: payroll.deduction,
       status: payroll.status,
     });
     // For update, employee_name is already in payroll object for display
@@ -513,6 +527,7 @@ export default function PayrollsPage() {
                     type="number"
                     id="ctc"
                     name="ctc"
+                    placeholder="Enter CTC"
                     value={formik.values.ctc}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -529,6 +544,7 @@ export default function PayrollsPage() {
                     type="number"
                     id="salary_per_month"
                     name="salary_per_month"
+                    placeholder="Enter salary per month"
                     value={formik.values.salary_per_month}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -545,6 +561,7 @@ export default function PayrollsPage() {
                     type="number"
                     id="deduction"
                     name="deduction"
+                    placeholder="Enter deduction"
                     value={formik.values.deduction}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
