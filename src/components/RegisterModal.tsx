@@ -36,9 +36,9 @@ interface InitialState {
 
 interface Props {
   onClose: () => void;
-  onRegisterSuccessAndRedirectToSignIn: () => void;
+  onRegisterSuccessAndRedirectToSignIn?: () => void;
   initialState?: InitialState;
-}
+} 
 
 interface OrganizationType {
   id: string;
