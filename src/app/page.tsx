@@ -4,6 +4,8 @@ import { useState } from "react";
 import Image from 'next/image';
 import RegisterModal from '@/components/RegisterModal';
 import Button from "@/components/Button";
+import { useRouter } from "next/navigation";
+
 const testimonials = [
   {
     name: "John Doe",
@@ -31,9 +33,13 @@ const brandLogos = [
 
 export default function Home() {
   const [showRegister, setShowRegister] = useState(false);
+  const router =  useRouter()
   return (
     <div className="min-h-screen bg-[#FAF7FF]    font-sans overflow-x-hidden -mb-15">
-      {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
+      {showRegister && <RegisterModal onRegisterSuccessAndRedirectToSignIn={() => {
+      setShowRegister(false);
+      router.push("/signin"); // ✅ redirect
+       } }  onClose={() => setShowRegister(false)} />}
  <section id ="home"
   className="relative h-[88vh] w-full flex items-center justify-center overflow-hidden rounded-b-[2rem] shadow-2xl"
 >

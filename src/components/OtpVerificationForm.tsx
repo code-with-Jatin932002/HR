@@ -8,7 +8,7 @@ import callApi from '@/utils/callApi';
 
 interface OtpVerificationFormProps {
   email: string;
-  onVerificationSuccess: () => void;
+  onVerificationSuccess: () => void ;
   onCancel: () => void;
 }
 

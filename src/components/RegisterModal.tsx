@@ -651,7 +651,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
           ) : (
             <OtpVerificationForm
               email={registrationEmail}
-              onVerificationSuccess={onRegisterSuccessAndRedirectToSignIn}
+              onVerificationSuccess={onRegisterSuccessAndRedirectToSignIn ?? (() => {})}
               onCancel={onClose}
             />
           )}
