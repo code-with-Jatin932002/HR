@@ -20,7 +20,7 @@ const Table: React.FC<TableProps> = ({ columns, data, actions, currentPage, item
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 antialiased">
       <div className="overflow-x-auto rounded-lg">
         <table className="min-w-full text-sm text-left text-gray-700">
-          <thead className="bg-gray-50 uppercase text-xs text-gray-900 tracking-wider">
+          <thead className="bg-purple-200 uppercase text-xs text-gray-900 tracking-wider">
             <tr>{ /* THIS LINE: Ensure no newline/space after <tr> and before the first <th> */ }
               <th scope="col" className="px-6 py-3 font-medium">S. No</th>
               {columns.map((col, index) => (

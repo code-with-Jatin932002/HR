@@ -251,7 +251,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* First Name */}
           <div>
-            <label className="mb-1 text-gray-500 block">First Name</label>
+            <label className="mb-1 text-gray-700 block">First Name</label>
             <input
               type="text"
               name="first_name"
@@ -269,7 +269,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Last Name */}
           <div>
-            <label className="mb-1 text-gray-500 block">Last Name</label>
+            <label className="mb-1 text-gray-700 block">Last Name</label>
             <input
               type="text"
               name="last_name"
@@ -287,7 +287,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Email */}
           <div>
-            <label className="mb-1 text-gray-500 block">Email</label>
+            <label className="mb-1 text-gray-700 block">Email</label>
             <input
               type="email"
               name="email"
@@ -306,7 +306,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           {/* Password */}
           {!isUpdate && (
             <div className="relative">
-              <label className="mb-1 text-gray-500 block">Password</label>
+              <label className="mb-1 text-gray-700 block">Password</label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
@@ -331,7 +331,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Date of Birth */}
           <div>
-            <label className="mb-1 text-gray-500 block">Date of Birth</label>
+            <label className="mb-1 text-gray-700 block">Date of Birth</label>
             <input
               type="date"
               name="date_of_birth"
@@ -348,7 +348,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Joining Date */}
           <div>
-            <label className="mb-1 text-gray-500 block">Joining Date</label>
+            <label className="mb-1 text-gray-700 block">Joining Date</label>
             <input
               type="date"
               name="joining_date"
@@ -365,7 +365,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Mobile Number */}
           <div>
-            <label className="mb-1 text-gray-500 block">Mobile Number</label>
+            <label className="mb-1 text-gray-700 block">Mobile Number</label>
             <input
               type="text"
               name="mobile_number"
@@ -384,7 +384,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Gender */}
           <div>
-            <label className="mb-1 text-gray-500 block">Gender</label>
+            <label className="mb-1 text-gray-700 block">Gender</label>
             <select
               name="gender"
               value={formik.values.gender}
@@ -405,7 +405,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Marital Status */}
           <div>
-            <label className="mb-1 text-gray-500 block">Marital Status</label>
+            <label className="mb-1 text-gray-700 block">Marital Status</label>
             <select
               name="marital_status"
               value={formik.values.marital_status}
@@ -425,7 +425,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Employee Type */}
           <div>
-            <label className="mb-1 text-gray-500 block">Employee Type</label>
+            <label className="mb-1 text-gray-700 block">Employee Type</label>
             <select
               name="employee_type"
               value={formik.values.employee_type}
@@ -445,7 +445,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Working Days */}
           <div>
-            <label className="mb-1 block">Week Working Days</label>
+            <label className="mb-1 block text-gray-700">Week Working Days</label>
             <input
               type="text"
               name="working_days"
@@ -463,7 +463,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           
           {/* Official Email */}
           <div>
-            <label className="mb-1 text-gray-500 block">Official Email</label>
+            <label className="mb-1 text-gray-700 block">Official Email</label>
             <input
               type="email"
               name="official_email"
@@ -481,7 +481,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Slack ID */}
           <div>
-            <label className="mb-1 text-gray-500 block">Slack ID</label>
+            <label className="mb-1 text-gray-700 block">Slack ID</label>
             <input
               type="text"
               name="slack_id"
@@ -499,7 +499,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* GitHub ID */}
           <div>
-            <label className="mb-1 text-gray-500 block">GitHub ID</label>
+            <label className="mb-1 text-gray-700 block">GitHub ID</label>
             <input
               type="text"
               name="github_id"
@@ -517,7 +517,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           
           {/* Address */}
           <div>
-            <label className="mb-1 text-gray-500 block">Address</label>
+            <label className="mb-1 text-gray-700 block">Address</label>
             <input
               type="text"
               name="address"
@@ -553,7 +553,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
 
           {/* Role Type */}
           <div>
-            <label className="mb-1 text-gray-500 block">Role Type</label>
+            <label className="mb-1 text-gray-700 block">Role Type</label>
             {loadingRoles ? (
               <p>Loading roles...</p>
             ) : rolesError ? (
@@ -584,7 +584,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
           {/* {(selectedRole.toLowerCase() !== 'admin' && selectedRole.toLowerCase() !== 'super_admin') && ( */}
           {currentUserRole.toLowerCase() !== 'super_admin' && (selectedRole.toLowerCase() !== 'admin' && selectedRole.toLowerCase() !== 'super_admin') && (
             <div className="col-span-1 md:col-span-2">
-              <label className="mb-1 text-gray-500 block">Department Name</label>
+              <label className="mb-1 text-gray-700 block">Department Name</label>
               {loadingDepartments ? (
                 <p>Loading departments...</p>
               ) : departmentError ? (

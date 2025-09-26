@@ -332,7 +332,7 @@ export default function ViewUsersPage() {
   if (updateUser) {
     return (
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <h2 className="mb-6 text-2xl font-bold">Update User</h2>
           <div className="relative">
             {isBlockingOperations && (
@@ -438,8 +438,8 @@ export default function ViewUsersPage() {
 
         {/* View User Modal */}
         {showViewModal && viewUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 backdrop-blur-sm transition-opacity">
-            <div className="relative w-full max-w-5xl rounded-2xl bg-white backdrop-blur-md shadow-2xl border border-gray-200 p-8 animate-fadeIn scale-95 transform transition-all duration-300 ease-out">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
            <button
              onClick={() => setShowViewModal(false)}
              className="absolute right-4 top-4 rounded-full p-2 text-gray-900 hover:text-white hover:bg-red-500 transition"
@@ -516,50 +516,6 @@ export default function ViewUsersPage() {
           </div>
 
         )}
-<<<<<<< HEAD
-
-        {/* Update User Modal */}
-        {updateUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 backdrop-blur-sm">
-            <div className="relative w-full max-w-250 rounded-lg bg-white p-6">
-              {isBlockingOperations && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
-              )}
-              <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">Update User</h3>
-              <UserForm
-                isUpdate={true}
-                initialValues={{
-                  first_name: updateUser.first_name,
-                  last_name: updateUser.last_name,
-                  email: updateUser.email,
-                  password: '',
-                  role_type: updateUser.role_type || '',
-                  department_name: updateUser.department_name || '',
-                  date_of_birth: updateUser.date_of_birth || '',
-                  gender: updateUser.gender || '',
-                  image_url: updateUser.image_url || '',
-                  mobile_number: updateUser.mobile_number || '',
-                  marital_status: updateUser.marital_status || '',
-                  address: updateUser.address || '',
-                  employee_type: updateUser.employee_type || '',
-                  joining_date: updateUser.joining_date || '',
-                  working_days: updateUser.working_days || '',
-                  official_email: updateUser.official_email || '',
-                  slack_id: updateUser.slack_id || '',
-                  github_id: updateUser.github_id || '',
-                }}
-                onCancel={() => setUpdateUser(null)}
-                onSubmit={handleUpdateSubmit}
-                currentUserRole={user?.role_type || ''}
-                isSubmitting={isBlockingOperations}
-              />
-            </div>
-          </div>
-        )}
-=======
->>>>>>> 81b36785773a479d84cc0039cb2ed9d6b3108346
       </div>
     </div>
   );

@@ -61,7 +61,7 @@ export default function UserAuthenticatedSection({
                             <Link 
                                 href="/dashboard/profile" 
                                 onClick={handleProfileClick}
-                                className="flex items-center gap-3.5 w-full text-left text-sm font-medium text-gray-700 hover:text-blue-500 transition-colors duration-200 ease-in-out focus:outline-none"
+                                className="flex items-center gap-3.5 w-full text-left text-sm font-medium text-gray-700 hover:text-purple-500 transition-colors duration-200 ease-in-out focus:outline-none"
                             >
                                 <FaUserCircle className="text-lg" />
                                 My Profile
@@ -74,7 +74,7 @@ export default function UserAuthenticatedSection({
                                 setShowDropdown(false);
                                 onLogout();
                             }}
-                            className="flex items-center gap-3.5 w-full text-left text-sm font-medium text-gray-700 hover:text-blue-500 transition-colors duration-200 ease-in-out focus:outline-none"
+                            className="flex items-center gap-3.5 w-full text-left text-sm font-medium text-gray-700 hover:text-purple-500 transition-colors duration-200 ease-in-out focus:outline-none"
                         >
                             <FaSignOutAlt className="text-lg" />
                             Log Out

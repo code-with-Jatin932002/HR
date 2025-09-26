@@ -88,28 +88,8 @@ export default function AuthModal({ onClose }: Props) {
           const organizationId = data.user?.organization_id || data.organization?.id;
           const userId = data.user?.id;
 
-<<<<<<< HEAD
-          if (data.user?.organization_id) {
-            sessionStorage.setItem('organization_id', data.user.organization_id);
-          } else if (data.organization?.id) {
-            sessionStorage.setItem('organization_id', data.organization.id);
-            sessionStorage.setItem('organization_org_name', data.organization.org_name);
-            sessionStorage.setItem('organization_address', data.organization.address);
-            sessionStorage.setItem('organization_phone_number', data.organization.phone_number);
-            sessionStorage.setItem('organization_description', data.organization.description);
-            sessionStorage.setItem('organization_website', data.organization.website);
-            sessionStorage.setItem('organization_gst_number', data.organization.gst_number);
-          }
-
-          const orgIdToPass = data.user?.organization_id || data.organization?.id;
-          login(data.access_token, values.email, data.role_type, orgIdToPass);
-          setTimeout(()=>{
-          router.replace('/dashboard');
-          },1000)
-=======
           // Call the login function with the extracted IDs
           login(data.access_token, values.email, data.role_type, userId, organizationId);
->>>>>>> 81b36785773a479d84cc0039cb2ed9d6b3108346
           
           router.replace('/dashboard');
           onClose();
