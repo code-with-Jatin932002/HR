@@ -437,6 +437,191 @@ export default function PayrollsPage() {
   const allowedRolesForAddPayroll = ['super_admin', 'admin', 'hr', 'manager'];
   const canAddPayroll = userRole ? allowedRolesForAddPayroll.includes(userRole) : false;
 
+        {/* Payroll Form Modal */}
+        if(formOpen){ 
+          return(
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
+              {isSubmittingForm && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+                  <Loader />
+                </div>
+              )}
+              <h3 className="mb-4 text-xl font-semibold text-gray-700">
+                {isUpdate ? 'Update Payroll' : 'Create Payroll'}
+              </h3>
+              <form onSubmit={formik.handleSubmit} className="space-y-4">
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                {!isUpdate && ( // Only show user selection for new payrolls
+                  <div>
+                    <label htmlFor="user_id" className="mb-1 block text-sm font-medium text-gray-700">Employee</label>
+                    <select
+                      id="user_id"
+                      name="user_id"
+                      value={formik.values.user_id}
+                      onChange={handleEmployeeSelectChange} // Use new handler
+                      onBlur={formik.handleBlur}
+                      className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                      disabled={isSubmittingForm || isLoadingUsers}
+                    >
+                      <option value="">Select an employee</option>
+                      {usersForDropdown.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.full_name}
+                        </option>
+                      ))}
+                    </select>
+                    {formik.touched.user_id && formik.errors.user_id && (
+                      <span className="text-sm text-red-500">{formik.errors.user_id}</span>
+                    )}
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="ctc" className="mb-1 block text-sm font-medium text-gray-700">CTC</label>
+                  <input
+                    type="number"
+                    id="ctc"
+                    name="ctc"
+                    placeholder="Enter CTC"
+                    value={formik.values.ctc}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.ctc && formik.errors.ctc && (
+                    <span className="text-sm text-red-500">{formik.errors.ctc}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="salary_per_month" className="mb-1 block text-sm font-medium text-gray-700">Salary Per Month</label>
+                  <input
+                    type="number"
+                    id="salary_per_month"
+                    name="salary_per_month"
+                    placeholder="Enter salary per month"
+                    value={formik.values.salary_per_month}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.salary_per_month && formik.errors.salary_per_month && (
+                    <span className="text-sm text-red-500">{formik.errors.salary_per_month}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="deduction" className="mb-1 block text-sm font-medium text-gray-700">Deduction</label>
+                  <input
+                    type="number"
+                    id="deduction"
+                    name="deduction"
+                    placeholder="Enter deduction"
+                    value={formik.values.deduction}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.deduction && formik.errors.deduction && (
+                    <span className="text-sm text-red-500">{formik.errors.deduction}</span>
+                  )}
+                </div>
+                {isUpdate && ( // Only show status for updates
+                  <div>
+                    <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">Status</label>
+                    <select
+                      id="status"
+                      name="status"
+                      value={formik.values.status}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                      disabled={isSubmittingForm}
+                    >
+                      {payrollStatusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                    {formik.touched.status && formik.errors.status && (
+                      <span className="text-sm text-red-500">{formik.errors.status}</span>
+                    )}
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 mt-4 ml-280">
+                  <Button
+                    label="Cancel"
+                    type="button"
+                    onClick={() => {
+                      setFormOpen(false);
+                      setIsUpdate(false);
+                      setSelectedPayrollId('');
+                      formik.resetForm();
+                      setSelectedEmployeeName(''); // Clear on cancel
+                    }}
+                    variant="secondary"
+                    disabled={isSubmittingForm}
+                  />
+                  <Button
+                    label={isUpdate ? 'Update' : 'Create'}
+                    type="submit"
+                    variant="primary"
+                    disabled={isSubmittingForm}
+                  />
+                </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      }
+
+        {/* View Payroll Details Modal */}
+        if(viewingPayrollId){ 
+          return(
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
+              {isLoadingViewingPayroll ? (
+                <div className="flex h-32 items-center justify-center">
+                  <Loader />
+                </div>
+              ) : isErrorViewingPayroll ? (
+                <div className="text-center text-red-500">Failed to load payroll details.</div>
+              ) : viewingPayrollDetails ? (
+                <>
+                  <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">Payroll Details</h3><br></br>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                   <div><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>Employee Name:</span><p  className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'> {viewingPayrollDetails.employee_name}</p></div>
+                    <div className=''><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>CTC:</span> <p  className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'> {viewingPayrollDetails.ctc}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Salary Per Month:</span> {viewingPayrollDetails.salary_per_month}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Deduction:</span> {viewingPayrollDetails.deduction}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Status:</span> {viewingPayrollDetails.status}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Created At:</strong> {new Date(viewingPayrollDetails.created_at).toLocaleString()}</p>
+                    </div>
+                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Updated At:</strong> {new Date(viewingPayrollDetails.updated_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+             <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleCloseView}
+                className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 transition"
+              >
+                close
+              </button>
+               </div>
+            </div>
+          </div>
+        );
+      }
+ 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
@@ -483,183 +668,6 @@ export default function PayrollsPage() {
             )}
           </div>
         </div>
-
-        {/* Payroll Form Modal */}
-        {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
-              )}
-              <h3 className="mb-4 text-xl font-semibold">
-                {isUpdate ? 'Update Payroll' : 'Create Payroll'}
-              </h3>
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-                {!isUpdate && ( // Only show user selection for new payrolls
-                  <div>
-                    <label htmlFor="user_id" className="mb-1 block text-sm font-medium text-gray-700">Employee</label>
-                    <select
-                      id="user_id"
-                      name="user_id"
-                      value={formik.values.user_id}
-                      onChange={handleEmployeeSelectChange} // Use new handler
-                      onBlur={formik.handleBlur}
-                      className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6"
-                      disabled={isSubmittingForm || isLoadingUsers}
-                    >
-                      <option value="">Select an employee</option>
-                      {usersForDropdown.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.full_name}
-                        </option>
-                      ))}
-                    </select>
-                    {formik.touched.user_id && formik.errors.user_id && (
-                      <span className="text-sm text-red-500">{formik.errors.user_id}</span>
-                    )}
-                  </div>
-                )}
-                <div>
-                  <label htmlFor="ctc" className="mb-1 block text-sm font-medium text-gray-700">CTC</label>
-                  <input
-                    type="number"
-                    id="ctc"
-                    name="ctc"
-                    placeholder="Enter CTC"
-                    value={formik.values.ctc}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.ctc && formik.errors.ctc && (
-                    <span className="text-sm text-red-500">{formik.errors.ctc}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="salary_per_month" className="mb-1 block text-sm font-medium text-gray-700">Salary Per Month</label>
-                  <input
-                    type="number"
-                    id="salary_per_month"
-                    name="salary_per_month"
-                    placeholder="Enter salary per month"
-                    value={formik.values.salary_per_month}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.salary_per_month && formik.errors.salary_per_month && (
-                    <span className="text-sm text-red-500">{formik.errors.salary_per_month}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="deduction" className="mb-1 block text-sm font-medium text-gray-700">Deduction</label>
-                  <input
-                    type="number"
-                    id="deduction"
-                    name="deduction"
-                    placeholder="Enter deduction"
-                    value={formik.values.deduction}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.deduction && formik.errors.deduction && (
-                    <span className="text-sm text-red-500">{formik.errors.deduction}</span>
-                  )}
-                </div>
-                {isUpdate && ( // Only show status for updates
-                  <div>
-                    <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">Status</label>
-                    <select
-                      id="status"
-                      name="status"
-                      value={formik.values.status}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="w-full rounded border px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6"
-                      disabled={isSubmittingForm}
-                    >
-                      {payrollStatusOptions.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                    {formik.touched.status && formik.errors.status && (
-                      <span className="text-sm text-red-500">{formik.errors.status}</span>
-                    )}
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedPayrollId('');
-                      formik.resetForm();
-                      setSelectedEmployeeName(''); // Clear on cancel
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                  />
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* View Payroll Details Modal */}
-        {viewingPayrollId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 backdrop-blur-sm transition-opacity">
-            <div className="relative w-full max-w-8xl h-150 rounded-2xl bg-white backdrop-blur-md shadow-2xl border border-gray-200 p-8 animate-fadeIn scale-95 transform transition-all duration-300 ease-out">
-              <button
-                onClick={handleCloseView}
-                className="absolute right-4 top-4 rounded-full p-2 text-gray-900 hover:text-white hover:bg-red-500 transition"
-              >
-                ✖
-              </button>
-              {isLoadingViewingPayroll ? (
-                <div className="flex h-32 items-center justify-center">
-                  <Loader />
-                </div>
-              ) : isErrorViewingPayroll ? (
-                <div className="text-center text-red-500">Failed to load payroll details.</div>
-              ) : viewingPayrollDetails ? (
-                <>
-                  <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">Payroll Details</h3><br></br>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>Employee Name:</span> {viewingPayrollDetails.employee_name}</p></div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '> <p  className='text-gray-900 font-medium'><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>CTC:</span> {viewingPayrollDetails.ctc}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Salary Per Month:</span> {viewingPayrollDetails.salary_per_month}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Deduction:</span> {viewingPayrollDetails.deduction}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Status:</span> {viewingPayrollDetails.status}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Created At:</strong> {new Date(viewingPayrollDetails.created_at).toLocaleString()}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Updated At:</strong> {new Date(viewingPayrollDetails.updated_at).toLocaleString()}</p>
-                    </div>
-                  </div>
-                </>
-              ) : null}
-            </div>
-          </div>
-        )}
 
         {/* Payrolls Table */}
         <div>

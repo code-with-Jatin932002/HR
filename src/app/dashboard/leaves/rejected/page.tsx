@@ -291,21 +291,18 @@ export default function RejectedLeavesPage() {
     },
   ];
 
-  return (
-    <div className="min-h-screen p-6 bg-gray-100">
-      <Toaster position="top-center" reverseOrder={false} />
-
       {/* View Leave Modal */}
-      {showViewForm && viewedLeave && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
-          <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg overflow-y-auto h-140">
+      if(showViewForm && viewedLeave){
+        return(
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
             {isSubmittingStatus && (
               <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                 <Loader />
               </div>
             )}
             <h3 className="mb-4 text-xl font-semibold text-gray-700">Leave Details</h3>
-           <div className="grid grid-cols-2 gap-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
                 <p className="mb-1 font-semibold text-gray-600">Employee Name:</p>
@@ -369,7 +366,7 @@ export default function RejectedLeavesPage() {
               )}
 
               {canUpdateStatus && (
-                <div className="ml-275 flex gap-2 mt-4">
+                <div className="ml-215 flex gap-2 mt-4">
                   <Button
                     type="button"
                     label="Accept"
@@ -400,7 +397,11 @@ export default function RejectedLeavesPage() {
           </div>
           
         </div>
-      )}
+      );
+    }
+  return (
+    <div className="min-h-screen p-6 bg-gray-100">
+      <Toaster position="top-center" reverseOrder={false} />
 
       {/* Leave Table */}
       <div>

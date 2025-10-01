@@ -305,19 +305,17 @@ export default function AcceptedLeavesPage() {
         },
     ];
 
-    return (
-        <div className="min-h-screen p-6 bg-gray-100 overflow-hidden ">
-            {/* Toaster component to display toasts in the center */}
-            <Toaster position="top-center" reverseOrder={false} />
+    
 
             {/* <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-3xl font-bold">Accepted Leave Records</h2>
             </div> */}
 
             {/* View Leave Modal */}
-            {showViewForm && viewedLeave && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
-                    <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg overflow-y-auto h-140">
+            if(showViewForm && viewedLeave){
+                 return(
+                <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
                         {isSubmittingStatus && (
                             <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                                 <Loader />
@@ -419,8 +417,12 @@ export default function AcceptedLeavesPage() {
                         </div>
                     </div>
                 </div>
-            )}
-
+            );
+        }
+  return (
+        <div className="min-h-screen p-6 bg-gray-100 overflow-hidden ">
+            {/* Toaster component to display toasts in the center */}
+            <Toaster position="top-center" reverseOrder={false} />
             {/* Leave Table */}
             <div>
                 <h3 className="mb-4 text-2xl font-semibold text-gray-800">Accepted Leave Table</h3>

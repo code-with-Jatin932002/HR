@@ -614,7 +614,7 @@ export default function UserForm({ isUpdate, initialValues, onCancel, onSubmit, 
         </div>
       </div>
 
-      <div className="flex justify-between pt-4">
+      <div className="flex gap-2 pt-4 justify-end">
         <Button label="Cancel" type="button" onClick={onCancel} variant="secondary" disabled={isSubmitting} />
         <Button type="submit" label={isUpdate ? 'Update User' : 'Create User'} variant="primary" disabled={isSubmitting} />
       </div>

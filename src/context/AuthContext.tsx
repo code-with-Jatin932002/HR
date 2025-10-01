@@ -9,6 +9,8 @@ export interface UserData {
     role_type: string | null;
     organization_id?: string | null;
     user_id?: string | null;
+     first_name?: string | null;
+    last_name?: string | null;
 }
 
 interface AuthContextType {
@@ -20,7 +22,9 @@ interface AuthContextType {
         email: string,
         role_type: string,
         user_id?: string,
-        organization_id?: string
+        organization_id?: string,
+        first_name?: string,
+        last_name?: string
     ) => void;
     logout: () => void;
 }
@@ -28,7 +32,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<UserData>({ email: null, role_type: null, organization_id: null, user_id: null });
+    const [user, setUser] = useState<UserData>({ email: null, role_type: null, organization_id: null, user_id: null , first_name: null,last_name: null, });
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
     const router = useRouter();
@@ -40,7 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const storedRoleType = sessionStorage.getItem('role_type');
             const storedOrganizationId = sessionStorage.getItem('organization_id');
             const storedUserId = sessionStorage.getItem('user_id');
-
+            const storedFirstName = sessionStorage.getItem('first_name');
+            const storedLastName = sessionStorage.getItem('last_name');
             if (storedToken && storedEmail && storedRoleType) {
                 setIsAuthenticated(true);
                 setUser({
@@ -48,17 +53,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     role_type: storedRoleType,
                     organization_id: storedOrganizationId || null,
                     user_id: storedUserId || null,
+                    first_name: storedFirstName || null,
+                    last_name: storedLastName || null,
                 });
             } else {
                 sessionStorage.clear();
                 setIsAuthenticated(false);
-                setUser({ email: null, role_type: null, organization_id: null, user_id: null });
+                setUser({ email: null, role_type: null, organization_id: null, user_id: null, first_name: null, last_name: null });
             }
         } catch (error) {
             console.error('Failed to retrieve data from sessionStorage:', error);
             sessionStorage.clear();
             setIsAuthenticated(false);
-            setUser({ email: null, role_type: null, organization_id: null, user_id: null });
+            setUser({ email: null, role_type: null, organization_id: null, user_id: null, first_name: null,last_name: null });
         } finally {
             setLoading(false);
         }
@@ -66,7 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = useCallback(() => {
         sessionStorage.clear();
-        setUser({ email: null, role_type: null, organization_id: null, user_id: null });
+        setUser({ email: null, role_type: null, organization_id: null, user_id: null ,  first_name: null,last_name: null,
+ });
         setIsAuthenticated(false);
         router.push('/');
     }, [router]);
@@ -78,6 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const role_type = sessionStorage.getItem('role_type');
             const organization_id = sessionStorage.getItem('organization_id');
             const user_id = sessionStorage.getItem('user_id');
+            const first_name = sessionStorage.getItem('first_name');
+            const last_name = sessionStorage.getItem('last_name');
 
             if (!token && isAuthenticated) {
                 logout();
@@ -85,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 logout();
             } else if (token && email && role_type && !isAuthenticated) {
                 setIsAuthenticated(true);
-                setUser({ email, role_type, organization_id: organization_id || null, user_id: user_id || null });
+                setUser({ email, role_type, organization_id: organization_id || null, user_id: user_id || null, first_name: first_name || null,last_name: last_name || null });
             }
         };
 
@@ -95,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, [isAuthenticated, logout]);
 
-    const login = (token: string, email: string, role_type: string, user_id?: string, organization_id?: string) => {
+    const login = (token: string, email: string, role_type: string, user_id?: string, organization_id?: string, first_name?: string, last_name?: string) => {
         sessionStorage.setItem('token', token);
         sessionStorage.setItem('email', email);
         sessionStorage.setItem('role_type', role_type);
@@ -111,8 +121,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
             sessionStorage.removeItem('organization_id');
         }
+        if (first_name) {
+            sessionStorage.setItem('first_name', first_name);
+        } else {
+            sessionStorage.removeItem('first_name');
+        }
 
-        setUser({ email, role_type, user_id: user_id || null, organization_id: organization_id || null });
+        if (last_name) {
+            sessionStorage.setItem('last_name', last_name);
+        } else {
+            sessionStorage.removeItem('last_name');
+        }
+
+        setUser({ email, role_type, user_id: user_id || null, organization_id: organization_id || null, first_name: first_name || null,last_name: last_name || null });
         setIsAuthenticated(true);
     };
 

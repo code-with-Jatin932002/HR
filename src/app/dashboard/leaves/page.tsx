@@ -340,28 +340,12 @@ export default function LeavesPage() {
 
     // Determine if the current user role can update leave statuses
     const canUpdateStatus = userRole === 'Hr' || userRole === 'Manager';
-
-    return (
-        <div className="min-h-screen p-6 bg-gray-100">
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-3xl font-bold">Leave Records</h1>
-                <Button
-                    label="Create Leave"
-                    onClick={() => {
-                        setShowForm(true);
-                        setEditId(null);
-                        formik.resetForm();
-                    }}
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                />
-            </div>
-
             {/* Form Modal for Create/Update Leave */}
-            {showForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+            if(showForm ){
+                 return(
+                <div className="w-full px-4 sm:px-6 lg:px-8">
                     {/* Added overflow-y-auto and max-h-[90vh] for scrolling */}
-                    <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg overflow-y-auto max-h-[90vh]">
+                    <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
                         {isSubmittingForm && (
                             <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                                 <Loader />
@@ -454,10 +438,11 @@ export default function LeavesPage() {
                         </form>
                     </div>
                 </div>
-            )}
-
+            );
+        }
             {/* View Leave Modal (Updated) */}
-            {showViewForm && viewedLeave && (
+            if(showViewForm && viewedLeave){
+                 return(
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
                     {/* Added overflow-y-auto and max-h-[90vh] for scrolling */}
                     <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg h-140">
@@ -553,8 +538,23 @@ export default function LeavesPage() {
                         </div>
                     </div>
                 </div>
-            )}
-
+            );
+        }
+    return (
+        <div className="min-h-screen p-6 bg-gray-100">
+            <div className="mb-6 flex items-center justify-between">
+                <h1 className="text-3xl font-bold">Leave Records</h1>
+                <Button
+                    label="Create Leave"
+                    onClick={() => {
+                        setShowForm(true);
+                        setEditId(null);
+                        formik.resetForm();
+                    }}
+                    variant="primary"
+                    disabled={isSubmittingForm}
+                />
+            </div>
             {/* Leave Table */}
             <div>
                 <h3 className="mb-4 text-xl font-semibold">Leave Table</h3>

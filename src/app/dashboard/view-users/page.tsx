@@ -332,8 +332,8 @@ export default function ViewUsersPage() {
   if (updateUser) {
     return (
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <h2 className="mb-6 text-2xl font-bold">Update User</h2>
+        <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
+          <h2 className="mb-6 text-2xl font-bold text-gray-700">Update User</h2>
           <div className="relative">
             {isBlockingOperations && (
               <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
@@ -373,7 +373,96 @@ export default function ViewUsersPage() {
     );
   }
 
-  return (
+    if (viewUser) {
+      return (
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
+              <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">👤 User Details</h3>
+              <div className="relative">
+            {isBlockingOperations && (
+              <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+                <Loader />
+              </div>
+            )}
+              <div className="max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar  ">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Name:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{`${viewUser.first_name} ${viewUser.last_name}`}</p>
+                  </div>
+                  <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Email:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.email}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Role:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.role_type}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Department:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.department_name || 'N/A'}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">DOB:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.date_of_birth ? new Date(viewUser.date_of_birth).toLocaleDateString() : 'N/A'}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Gender:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.gender || 'N/A'}</p>
+                  </div>
+                  <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Mobile No:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.mobile_number || 'N/A'}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Marital Status:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.marital_status || 'N/A'}</p>
+                  </div>
+                  <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Address:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.address || 'N/A'}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Employee Type:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4' >{viewUser.employee_type || 'N/A'}</p>
+                  </div>
+                  <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Joining Date:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.joining_date ? new Date(viewUser.joining_date).toLocaleDateString() : 'N/A'}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Working Days:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.working_days || 'N/A'}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Official Email:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.official_email || 'N/A'}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Slack ID:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.slack_id || 'N/A'}</p>
+                  </div>
+                   <div >
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">GitHub ID:</span>
+                    <p className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'>{viewUser.github_id || 'N/A'}</p>
+                  </div>
+                  </div>
+                   <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setViewUser(null)}
+                className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 transition"
+                disabled={isBlockingOperations}
+              >
+                Close
+              </button>
+            </div>
+                </div>
+              </div>
+            </div>
+          </div>
+            );
+          }
+    return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 w-290 overflow-x-auto rounded bg-white p-6 shadow">
         <h2 className="mb-6 text-3xl text-gray-600 font-bold">All Users</h2>
@@ -435,87 +524,6 @@ export default function ViewUsersPage() {
             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
           </div>
         </div>
-
-        {/* View User Modal */}
-        {showViewModal && viewUser && (
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="w-full px-4 sm:px-6 lg:px-8">
-           <button
-             onClick={() => setShowViewModal(false)}
-             className="absolute right-4 top-4 rounded-full p-2 text-gray-900 hover:text-white hover:bg-red-500 transition"
-             disabled={isBlockingOperations}
-           >
-            ✖
-            </button>
-              <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">👤 User Details</h3>
-              <div className="max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar  ">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Name:</span>
-                    <p className='text-gray-900 font-medium'>{`${viewUser.first_name} ${viewUser.last_name}`}</p>
-                  </div>
-                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Email:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.email}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Role:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.role_type}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Department:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.department_name || 'N/A'}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">DOB:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.date_of_birth ? new Date(viewUser.date_of_birth).toLocaleDateString() : 'N/A'}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Gender:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.gender || 'N/A'}</p>
-                  </div>
-                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Mobile No:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.mobile_number || 'N/A'}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Marital Status:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.marital_status || 'N/A'}</p>
-                  </div>
-                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Address:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.address || 'N/A'}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Employee Type:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.employee_type || 'N/A'}</p>
-                  </div>
-                  <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Joining Date:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.joining_date ? new Date(viewUser.joining_date).toLocaleDateString() : 'N/A'}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Working Days:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.working_days || 'N/A'}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Official Email:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.official_email || 'N/A'}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Slack ID:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.slack_id || 'N/A'}</p>
-                  </div>
-                   <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '>
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">GitHub ID:</span>
-                    <p className='text-gray-900 font-medium'>{viewUser.github_id || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        )}
       </div>
     </div>
   );

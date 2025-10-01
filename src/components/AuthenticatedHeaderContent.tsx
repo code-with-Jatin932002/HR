@@ -17,13 +17,12 @@ export default function AuthenticatedHeaderContent({ user, onProfileClick, onLog
 
     const getDisplayName = () => {
         const typedUser = user as (UserData & { first_name?: string; last_name?: string }) | null;
-
+       console.log(typedUser,"user data ")
         if (typedUser?.first_name && typedUser?.last_name) {
             return `${typedUser.first_name} ${typedUser.last_name}`;
         }
         return typedUser?.email || 'User';
     };
-
     return (
         // Adjusted gap-x for tighter horizontal spacing overall.
         // Used px-2 for consistent horizontal padding.
@@ -44,7 +43,11 @@ export default function AuthenticatedHeaderContent({ user, onProfileClick, onLog
                 />
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div> */}
-
+            <div className="flex items-center space-x-2 md:space-x-3 flex-shrink">
+                <div className="flex items-center space-x-2 md:space-x-3 cursor-pointer">
+                    <h1 className="text-sm md:text-xl font-bold text-gray-800 whitespace-nowrap"> hello {getDisplayName()} 👋</h1>
+                </div>
+            </div>
             <div className="flex items-center gap-1">
                 <button className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-100 text-gray-600 hover:bg-purple-200 transition focus:outline-none focus:ring-2 focus:ring-purple-500">
                     <FaBell className="text-xl" />

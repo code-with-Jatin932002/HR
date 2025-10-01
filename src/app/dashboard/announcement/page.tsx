@@ -253,56 +253,10 @@ export default function AnnouncementPage() {
       </div>
     );
   }
-  
-
-  return (
-    <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-9xl rounded bg-white p-6 shadow">
-        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-3xl font-bold text-gray-700 sm:text-left">Announcement Board</h2>
-          {hasActionPermissions && (
-            <Button
-              label="Add Announcement"
-              onClick={() => {
-                setFormOpen(true);
-                setIsUpdate(false);
-                setSelectedAnnouncementId('');
-                formik.resetForm();
-              }}
-              variant="primary"
-              disabled={isSubmittingForm}
-              className="w-full sm:w-auto px-4 py-2"
-            />
-          )}
-        </div>
-
-        {/* Search Box for Announcements */}
-        <div className="w-full px-4 py-3">
-          <div className="relative w-full">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-              <FiSearch />
-            </span>
-            <input
-              type="text"
-              placeholder="Search by title or message..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
-            />
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
-              >
-                <FiX />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
-            <div className="relative w-250 rounded-lg bg-white p-6 shadow-lg h-140">
+    if(formOpen){
+         return (
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
               {isSubmittingForm && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                   <Loader />
@@ -346,7 +300,7 @@ export default function AnnouncementPage() {
                     <span className="text-sm text-red-500">{formik.errors.message}</span>
                   )}
                 </div>
-                <div className="mr-35 flex justify-end gap-2 mt-9">
+                <div className="mr-73 flex justify-end gap-2 mt-9 ">
                   <Button
                     label="Cancel"
                     type="button"
@@ -369,8 +323,52 @@ export default function AnnouncementPage() {
               </form>
             </div>
           </div>
-        )}
+        );
+      }
+   return (
+    <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto mt-10 max-w-9xl rounded bg-white p-6 shadow">
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <h2 className="text-3xl font-bold text-gray-700 sm:text-left">Announcement Board</h2>
+          {hasActionPermissions && (
+            <Button
+              label="Add Announcement"
+              onClick={() => {
+                setFormOpen(true);
+                setIsUpdate(false);
+                setSelectedAnnouncementId('');
+                formik.resetForm();
+              }}
+              variant="primary"
+              disabled={isSubmittingForm}
+              className="w-full sm:w-auto px-4 py-2"
+            />
+          )}
+        </div>
 
+        {/* Search Box for Announcements */}
+        <div className="w-full px-4 py-3">
+          <div className="relative w-full">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+              <FiSearch />
+            </span>
+            <input
+              type="text"
+              placeholder="Search by title or message..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+        </div>
         <div>
           <Table
             columns={columns}

@@ -268,56 +268,10 @@ export default function CandidatePage() {
       </div>
     );
   }
-
-  return (
-    <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
-        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-gray-700 sm:text-left">Candidate Management</h2>
-          {canAddCandidate && (
-            <Button
-              label="Add Candidate"
-              onClick={() => {
-                setFormOpen(true);
-                setIsUpdate(false);
-                setSelectedCandidateId('');
-                formik.resetForm();
-                formik.setFieldValue('status', statusOptions[0]);
-              }}
-              variant="primary"
-              disabled={isSubmittingForm}
-              className="w-full sm:w-auto px-4 py-2"
-            />
-          )}
-        </div>
-
-        {/* Search Box for Candidates */}
-        <div className="w-full px-4 py-3">
-          <div className="relative w-full">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-              <FiSearch />
-            </span>
-            <input
-              type="text"
-              placeholder="Search by name, email, or mobile..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
-            />
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
-              >
-                <FiX />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 p-4">
-            <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg h-140 ">
+        if(formOpen){ 
+          return(
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow ">
               {isSubmittingForm && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                   <Loader />
@@ -454,7 +408,53 @@ export default function CandidatePage() {
               </form>
             </div>
           </div>
-        )}
+       );
+      }
+   return (
+    <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <h2 className="text-2xl font-bold text-gray-700 sm:text-left">Candidate Management</h2>
+          {canAddCandidate && (
+            <Button
+              label="Add Candidate"
+              onClick={() => {
+                setFormOpen(true);
+                setIsUpdate(false);
+                setSelectedCandidateId('');
+                formik.resetForm();
+                formik.setFieldValue('status', statusOptions[0]);
+              }}
+              variant="primary"
+              disabled={isSubmittingForm}
+              className="w-full sm:w-auto px-4 py-2"
+            />
+          )}
+        </div>
+
+        {/* Search Box for Candidates */}
+        <div className="w-full px-4 py-3">
+          <div className="relative w-full">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+              <FiSearch />
+            </span>
+            <input
+              type="text"
+              placeholder="Search by name, email, or mobile..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+        </div>
 
         <div>
           <Table

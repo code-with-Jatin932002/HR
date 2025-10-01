@@ -108,9 +108,23 @@ export default function DepartmentsPage() {
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [deletingDeptId, setDeletingDeptId] = useState<string | null>(null);
 
-  const validationSchema = useMemo(() => {
+  // const validationSchema = useMemo(() => {
+  //   return Yup.object({
+  //     department_name: Yup.string().required('Department name is required'),
+  //   });
+  // }, []);
+
+   const validationSchema = useMemo(() => {
     return Yup.object({
-      department_name: Yup.string().required('Department name is required'),
+      department_name: Yup.string()
+        .trim('Department name cannot include leading or trailing spaces')
+        .required('Department name is required')
+        .test(
+          'not-only-whitespace',
+          'Department name cannot be only spaces',
+          // This explicit check solves the TypeScript error and validates for non-space content
+          (value) => typeof value === 'string' && value.trim().length > 0
+        ),
     });
   }, []);
 
@@ -126,8 +140,15 @@ export default function DepartmentsPage() {
       const url = isUpdate ? `${normalizedBaseUrl}department/${selectedDeptId}` : `${normalizedBaseUrl}department`;
       const method = isUpdate ? 'put' : 'post';
 
+
+          //  FIX: Trim the value before sending to the API.
+      const payload = {
+        department_name: values.department_name.trim(),
+      };
+
+
       try {
-        await callApi(method, url, values, {
+        await callApi(method, url, payload, {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         });
@@ -215,7 +236,61 @@ export default function DepartmentsPage() {
 
   // Determine if the current user is a super_admin
   const isSuperAdmin = userRole === 'super_admin';
-
+        if(formOpen){
+          return(
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
+              {isSubmittingForm && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+                  <Loader />
+                </div>
+              )}
+              <h3 className="mb-4 text-xl font-semibold text-gray-700">
+                {isUpdate ? 'Update Department' : 'Create Department'}
+              </h3>
+              <form onSubmit={formik.handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="department_name" className="mb-1 block text-gray-700">Department Name</label>
+                  <input
+                    type="text"
+                    id="department_name"
+                    name="department_name"
+                    value={formik.values.department_name}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="rounded-xl border px-50 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.department_name && formik.errors.department_name && (
+                    <span className="text-sm text-red-500">{formik.errors.department_name}</span>
+                  )}
+                </div>
+                <div className="flex justify-start gap-4">
+                  <Button
+                    label="Cancel"
+                    type="button"
+                    onClick={() => {
+                      setFormOpen(false);
+                      setIsUpdate(false);
+                      setSelectedDeptId('');
+                      formik.resetForm();
+                    }}
+                    variant="secondary"
+                    disabled={isSubmittingForm}
+                  />
+                  <Button
+                    label={isUpdate ? 'Update' : 'Create'}
+                    type="submit"
+                    variant="primary"
+                    disabled={isSubmittingForm}
+                  />
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      }
+    
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-290 rounded bg-white p-6 shadow">
@@ -260,60 +335,6 @@ export default function DepartmentsPage() {
             )}
           </div>
         </div>
-
-        {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
-              )}
-              <h3 className="mb-4 text-xl font-semibold">
-                {isUpdate ? 'Update Department' : 'Create Department'}
-              </h3>
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="department_name" className="mb-1 block">Department Name</label>
-                  <input
-                    type="text"
-                    id="department_name"
-                    name="department_name"
-                    value={formik.values.department_name}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.department_name && formik.errors.department_name && (
-                    <span className="text-sm text-red-500">{formik.errors.department_name}</span>
-                  )}
-                </div>
-                <div className="flex justify-between">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedDeptId('');
-                      formik.resetForm();
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                  />
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
         <div>
           {/* <h3 className="mb-4 text-xl font-semibold">All Departments</h3> */}
           <Table
