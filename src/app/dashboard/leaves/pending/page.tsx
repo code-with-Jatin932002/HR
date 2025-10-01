@@ -326,44 +326,27 @@ export default function PendingLeavesPage() {
             },
         },
     ];
-
-    return (
-        <div className="min-h-screen p-4 bg-gray-100">
-            <div className="mb-6 flex items-center justify-end">
-                {!isManager && (
-                    <Button
-                        label="Create Leave"
-                        onClick={() => {
-                            setShowForm(true);
-                            setEditId(null);
-                            setEditLeaveData(null);
-                        }}
-                        variant="primary"
-                        disabled={false}
-                    />
-                )}
-            </div>
-
-            {/* Use the new component */}
-            <CreateLeaveModal
-                showForm={showForm}
-                setShowForm={setShowForm}
-                editId={editId}
-                setEditId={setEditId}
-                initialLeaveData={editLeaveData}
-                onSuccess={refetchLeaves}
-            />
-
             {/* View Leave Modal (Updated) */}
-            {showViewForm && viewedLeave && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
-                    <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg overflow-y-auto h-140">
+            if(showViewForm && viewedLeave){
+                 return (
+                <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
                         {isSubmittingStatus && (
                             <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                                 <Loader />
                             </div>
                         )}
                         <h3 className="mb-4 text-xl font-semibold text-gray-700">Leave Details</h3>
+                           <Button
+                                    type="button"
+                                    className='justify-end ml-270 -mt-10 bg-color-red'
+                                    label="X"
+                                    onClick={() => {
+                                        setShowViewForm(false);
+                                        setViewedLeave(null);
+                                    }}
+                                    variant="secondary"
+                                />
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
                                 <p className="mb-1 font-semibold text-gray-600">Employee Name:</p>
@@ -423,7 +406,17 @@ export default function PendingLeavesPage() {
                                     )}
                                 </div>
                             )}
-
+                            {/* <div className='flex justify-end gap-2 ml-50 mb-50'>
+                        <Button
+                                    type="button"
+                                    label="Close"
+                                    onClick={() => {
+                                        setShowViewForm(false);
+                                        setViewedLeave(null);
+                                    }}
+                                    variant="secondary"
+                                />
+                              </div> */}
                             {canUpdateStatus && (
                                 <div className="flex justify-end gap-2 mt-9">
                                    
@@ -441,61 +434,93 @@ export default function PendingLeavesPage() {
                                         variant="danger"
                                         disabled={isSubmittingStatus || viewedLeave.status === 'REJECTED'}
                                     />
-                                    <Button
-                                    type="button"
-                                    label="Close"
-                                    onClick={() => {
-                                        setShowViewForm(false);
-                                        setViewedLeave(null);
-                                    }}
-                                    variant="secondary"
-                                />
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
-            )}
+            );
+        }
+ return (
+  <div className="min-h-screen p-4 bg-gray-100">
+    {/* Header / Action Button */}
+    {!showForm && (
+      <div className="mb-6 flex items-center justify-end">
+        {!isManager && (
+          <Button
+            label="Create Leave"
+            onClick={() => {
+              setShowForm(true);
+              setEditId(null);
+              setEditLeaveData(null);
+            }}
+            variant="primary"
+            disabled={false}
+          />
+        )}
+      </div>
+    )}
 
-            {/* Leave Table */}
-            <div>
-                <h3 className="mb-4 text-2xl font-semibold text-gray-700">Pending Leave Table</h3>
-                <Table
-                    columns={columns}
-                    data={leaves}
-                    currentPage={currentPage}
-                    itemsPerPage={itemsPerPage}
-                    actions={(leave) => {
-                        return (
-                            <div className="relative">
-                                <ActionButtons
-                                    showView={true}
-                                    onView={() => handleView(leave)}
-                                    showUpdate={true}
-                                    onUpdate={() => handleEdit(leave)}
-                                    showDelete={true}
-                                    onDelete={() => leave.id && deleteMutation.mutate(leave.id)}
-                                    isDeleting={deletingLeaveId === leave.id}
-                                    showStatusUpdate={canUpdateStatus}
-                                />
-                            </div>
-                        );
-                    }}
-                />
-
-                <div className="mt-4 flex items-center justify-between">
-                    <p className="text-sm text-gray-700">
-                        Showing <span className="font-medium">{totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
-                        <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{' '}
-                        <span className="font-medium">{totalItems}</span> results
-                    </p>
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={handlePageChange}
-                    />
-                </div>
+    {/* Conditional Rendering */}
+    {showForm ? (
+      <CreateLeaveModal
+        showForm={showForm}
+        setShowForm={setShowForm}
+        editId={editId}
+        setEditId={setEditId}
+        initialLeaveData={editLeaveData}
+        onSuccess={() => {
+          setShowForm(false); // close form after success
+          refetchLeaves();    // refresh table
+        }}
+      />
+    ) : (
+      // Leave Table
+      <div>
+        <h3 className="mb-4 text-2xl font-semibold text-gray-700">Pending Leave Table</h3>
+        <Table
+          columns={columns}
+          data={leaves}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          actions={(leave) => (
+            <div className="relative">
+              <ActionButtons
+                showView={true}
+                onView={() => handleView(leave)}
+                showUpdate={true}
+                onUpdate={() => {
+                  setShowForm(true);
+                  setEditId(leave.id);
+                  setEditLeaveData(leave); // prefill modal for editing
+                }}
+                showDelete={true}
+                onDelete={() => leave.id && deleteMutation.mutate(leave.id)}
+                isDeleting={deletingLeaveId === leave.id}
+                showStatusUpdate={canUpdateStatus}
+              />
             </div>
+          )}
+        />
+
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-gray-700">
+            Showing{' '}
+            <span className="font-medium">
+              {totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
+            </span>{' '}
+            to{' '}
+            <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{' '}
+            <span className="font-medium">{totalItems}</span> results
+          </p>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
-    );
+      </div>
+    )}
+  </div>
+);
 }

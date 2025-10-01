@@ -361,7 +361,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
           </h2>
           {loadingRegistration && (
             <div className="absolute inset-0 flex justify-center items-center bg-white\/70 backdrop-blur-sm z-10">
-              <Loader />
+              {/* <Loader /> */}
             </div>
           )}
           {!showOtpVerification ? (
@@ -431,7 +431,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                     getOptionLabel={(option) => option.label}
                     getOptionValue={(option) => option.value}
                     formatOptionLabel={option => (
-                      <div className="flex items-center">
+                      <div className="flex items-center text-gray-700 ">
                         <span className={`fi fi-${option.value.toLowerCase()} mr-2`}></span>
                         <span>{option.label}</span>
                       </div>
@@ -481,6 +481,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                   <div className="flex items-center absolute left-0 z-10 w-24 h-full pr-2">
                     <Select
                       name="country_code"
+                      className='text-gray-700 ml-3'
                       options={countryCodes}
                       onChange={handleCountryCodeChange}
                       onBlur={() => formik.setTouched({ ...formik.touched, country_code: true })}
@@ -518,8 +519,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                       }}
                     />
                   </div>
-                  <FaPhone className="absolute left-24 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <div className="absolute left-20 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300"></div>
+                  {/* <FaPhone className="absolute left-24 top-1/2 -translate-y-1/2 text-gray-500" /> */}
                   <input
                     type="text"
                     name="phone_number"
@@ -532,7 +532,7 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                       e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
                       formik.setFieldValue('phone_number', e.target.value);
                     }}
-                    className="w-full h-12 rounded-lg py-3 px-4 pl-[8.5rem] text-black outline-none border-none"
+                    className="ml-15 h-12 rounded-lg py-3 px-1  text-gray-700 outline-none border-none"
                   />
                 </div>
                 {formik.touched.phone_number && formik.errors.phone_number && (
@@ -629,14 +629,14 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
               {inputField('website', 'text', 'Website URL', FaGlobe)}
               {inputField('gst_number', 'text', 'GST Number', FaFileInvoice)}
               {inputField('description', 'text', 'Description (Max 100 characters)', FaInfoCircle, true)}
-              <div className="flex-grow"></div>
+              <div className="flex gap-4">
               <Button
                 type="submit"
-                label="Register Organization"
+                label="Register"
                 fullWidth
                 variant="primary"
                 disabled={loadingRegistration}
-                className="rounded-xl h-10 border-green-300 text-gray-600 bg-green-700 hover:bg-green-700 py-3 font-medium transition"
+                className="rounded-xl h-10 border-green-300 text-gray-600 bg-green-700 hover:bg-green-700 py-3 font-medium transition px-40"
               />
               <Button
                 type="button"
@@ -644,9 +644,10 @@ export default function RegisterModal({ onClose, onRegisterSuccessAndRedirectToS
                 label="Cancel"
                 fullWidth
                 variant="secondary"
-                className=" rounded-xl h-10 border-gray-300 text-white-600 bg-gray-500 hover:bg-gray-700 py-3 font-medium transition"
+                className=" rounded-xl h-10 border-gray-300 text-white-600 bg-gray-500 hover:bg-gray-700 py-3 font-medium transition px-40"
                 disabled={loadingRegistration}
               />
+              </div>
             </form>
           ) : (
             <OtpVerificationForm

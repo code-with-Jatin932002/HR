@@ -118,8 +118,8 @@ export default function CreateLeaveModal({
     if (!showForm) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
-            <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg overflow-y-auto h-140">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
                 {leaveMutation.isPending && (
                     <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                         <Loader />
@@ -138,7 +138,7 @@ export default function CreateLeaveModal({
                             value={formik.values.leave_type}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            className="rounded-xl border px-50 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                            className="rounded-xl border px-40 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                             disabled={leaveMutation.isPending}
                         />
                         {formik.touched.leave_type && formik.errors.leave_type && (
@@ -154,7 +154,7 @@ export default function CreateLeaveModal({
                                 value={formik.values.start_date}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className="rounded-xl border px-23 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                                className="rounded-xl border px-15 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                                 disabled={leaveMutation.isPending}
                             />
                             {formik.touched.start_date && formik.errors.start_date && (
@@ -169,7 +169,7 @@ export default function CreateLeaveModal({
                                 value={formik.values.end_date}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className="rounded-xl border px-23 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                                className="rounded-xl border px-15 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                                 disabled={leaveMutation.isPending}
                             />
                             {formik.touched.end_date && formik.errors.end_date && (
@@ -184,7 +184,7 @@ export default function CreateLeaveModal({
                             value={formik.values.description}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            className="rounded-xl border px-53 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                            className="rounded-xl border px-43 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
                             disabled={leaveMutation.isPending}
                         />
                         {formik.touched.description && formik.errors.description && (

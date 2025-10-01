@@ -249,8 +249,95 @@ export default function HolidayPage() {
     );
   }
 
-
-  return (
+        if(formOpen){
+           return(
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
+              {isSubmittingForm && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+                  <Loader />
+                </div>
+              )}
+              <h3 className="ml-10 mb-4 text-xl font-semibold text-gray-700">
+                {isUpdate ? 'Update Holiday' : 'Create Holiday'}
+              </h3>
+              <form onSubmit={formik.handleSubmit} className="space-y-4">
+               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label htmlFor="holiday_name" className="mb-1 block text-gray-700 ml-10">Holiday Name</label>
+                  <input
+                    type="text"
+                    id="holiday_name"
+                    name="holiday_name"
+                    value={formik.values.holiday_name}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="ml-10 rounded-xl border px-40 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.holiday_name && formik.errors.holiday_name && (
+                    <span className="ml-10 text-sm text-red-500">{formik.errors.holiday_name}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="date" className="ml-10 mb-1 block text-gray-700">Date</label>
+                  <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    value={formik.values.date}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="ml-10 rounded-xl border px-40 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    disabled={isSubmittingForm}
+                  /><br></br>
+                  {formik.touched.date && formik.errors.date && (
+                    <span className="ml-10 text-sm text-red-500">{formik.errors.date}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="day" className="ml-10 mb-1 block text-gray-700">Day</label>
+                  <input
+                    type="text"
+                    id="day"
+                    name="day"
+                    value={formik.values.day}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="ml-10 rounded-xl border px-40 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    disabled={isSubmittingForm}
+                  /><br></br>
+                  {formik.touched.day && formik.errors.day && (
+                    <span className="ml-10 text-sm text-red-500">{formik.errors.day}</span>
+                  )}
+                </div><br></br>
+                <div className="flex justify-end gap-4 p-4 -mr-120">
+                  <Button
+                    label="Cancel"
+                    type="button"
+                    onClick={() => {
+                      setFormOpen(false);
+                      setIsUpdate(false);
+                      setSelectedHolidayId('');
+                      formik.resetForm();
+                    }}
+                    variant="secondary"
+                    disabled={isSubmittingForm}
+                  />
+                  <Button
+                    label={isUpdate ? 'Update' : 'Create'}
+                    type="submit"
+                    variant="primary"
+                    disabled={isSubmittingForm}
+                  />
+                </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      }
+   return (
     <div className="min-h-screen p-4 bg-gray-100">
       <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -294,91 +381,6 @@ export default function HolidayPage() {
             )}
           </div>
         </div>
-
-        {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
-              )}
-              <h3 className="mb-4 text-xl font-semibold">
-                {isUpdate ? 'Update Holiday' : 'Create Holiday'}
-              </h3>
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="holiday_name" className="mb-1 block">Holiday Name</label>
-                  <input
-                    type="text"
-                    id="holiday_name"
-                    name="holiday_name"
-                    value={formik.values.holiday_name}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.holiday_name && formik.errors.holiday_name && (
-                    <span className="text-sm text-red-500">{formik.errors.holiday_name}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="date" className="mb-1 block">Date</label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={formik.values.date}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.date && formik.errors.date && (
-                    <span className="text-sm text-red-500">{formik.errors.date}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="day" className="mb-1 block">Day</label>
-                  <input
-                    type="text"
-                    id="day"
-                    name="day"
-                    value={formik.values.day}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.day && formik.errors.day && (
-                    <span className="text-sm text-red-500">{formik.errors.day}</span>
-                  )}
-                </div>
-                <div className="flex justify-between">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedHolidayId('');
-                      formik.resetForm();
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                  />
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         <div>
           <Table

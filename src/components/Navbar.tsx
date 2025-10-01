@@ -98,7 +98,7 @@ export default function Navbar() {
                   setShowLogin(true);
                   setShowRegister(false);
                 }}
-                className="flex items-center gap-2 px-5 py-1 rounded-full font-medium text-white bg-purple-600 hover:bg-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="flex items-center gap-2 px-5 py-1 rounded-full font-medium text-white bg-purple-600 hover:bg-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform "
               >
                 <FaSignInAlt className="text-lg" />
                 Sign In
@@ -109,7 +109,7 @@ export default function Navbar() {
                   setShowRegister(true);
                   setShowLogin(false);
                 }}
-                className="flex items-center gap-2 px-5 py-1 rounded-full font-medium text-purple-600 border-2 border-purple-600 hover:bg-purple-600 hover:text-white transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                className="flex items-center gap-2 px-5 py-1 rounded-full font-medium text-purple-600 border-2 border-purple-600 hover:bg-purple-600 hover:text-white transition-all duration-300 shadow-md hover:shadow-lg transform"
               >
                 <FaUserPlus className="text-lg" />
                 Register

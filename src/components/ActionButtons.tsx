@@ -44,7 +44,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
                     title="View"
                 >
                     <FaEye />
-                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden  bg-blue text-white text-xs rounded px-2 py-1 z-10 whitespace-nowrap">
+                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden  bg-black text-white text-xs rounded px-2 py-1 z-10 whitespace-nowrap">
                         View
                     </span>
                 </button>

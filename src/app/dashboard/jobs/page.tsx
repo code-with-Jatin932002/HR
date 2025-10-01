@@ -315,55 +315,10 @@ export default function JobsPage() {
   // Determine if the current user is an admin, HR, or super_admin
   const canManageJobs = userRole === 'super_admin' || userRole === 'admin' || userRole === 'hr';
 
-  return (
-    <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-7xl rounded bg-white p-6 shadow">
-        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-gray-700 sm:text-left">Job Management</h2>
-          {canManageJobs && (
-            <Button
-              label="Add New Job"
-              onClick={() => {
-                setFormOpen(true);
-                setIsUpdate(false);
-                setSelectedJobId('');
-                formik.resetForm();
-                formik.setFieldValue('status', 'active'); // Default status for new jobs
-              }}
-              variant="primary"
-              disabled={isSubmittingForm}
-              className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
-            />
-          )}
-        </div>
-
-        {/* Search Bar - Full Width */}
-        <div className="w-full mb-6">
-          <div className="relative w-full"> {/* Removed max-w-lg and mx-auto */}
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-              <FiSearch />
-            </span>
-            <input
-              type="text"
-              placeholder="Search by job title..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
-            />
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
-              >
-                <FiX />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 p-4">
-            <div className="relative w-350 rounded-lg bg-white p-6 shadow-lg overflow-y-auto h-140">
+        if(formOpen){
+           return(
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
               {isSubmittingForm && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
                   <Loader />
@@ -476,7 +431,7 @@ export default function JobsPage() {
                       value={formik.values.status}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-167 rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                      className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
                       disabled={isSubmittingForm}
                     >
                       {jobStatusOptions.map(option => (
@@ -516,7 +471,53 @@ export default function JobsPage() {
               </form>
             </div>
           </div>
-        )}
+        );
+      }
+ return (
+    <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto mt-10 max-w-7xl rounded bg-white p-6 shadow">
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <h2 className="text-2xl font-bold text-gray-700 sm:text-left">Job Management</h2>
+          {canManageJobs && (
+            <Button
+              label="Add New Job"
+              onClick={() => {
+                setFormOpen(true);
+                setIsUpdate(false);
+                setSelectedJobId('');
+                formik.resetForm();
+                formik.setFieldValue('status', 'active'); // Default status for new jobs
+              }}
+              variant="primary"
+              disabled={isSubmittingForm}
+              className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+            />
+          )}
+        </div>
+
+        {/* Search Bar - Full Width */}
+        <div className="w-full mb-6">
+          <div className="relative w-full"> {/* Removed max-w-lg and mx-auto */}
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+              <FiSearch />
+            </span>
+            <input
+              type="text"
+              placeholder="Search by job title..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Job Listings by Status */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">

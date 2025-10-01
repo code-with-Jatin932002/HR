@@ -3,7 +3,7 @@
 
 import { useRouter } from 'next/navigation';
 import callApi from '@/utils/callApi';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import AuthSvg from './AuthSvg';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import RegisterModal from './RegisterModal';
+import { log } from 'console';
 
 interface Props {
   onClose: () => void;
@@ -81,18 +82,22 @@ export default function AuthModal({ onClose }: Props) {
         if (data.access_token && data.role_type) {
           toast.success('Login successful! Redirecting...', {
             position: 'top-center',
-            duration : 3000,
+            duration : 1000,
           });
 
           // Extract IDs based on API response structure
           const organizationId = data.user?.organization_id || data.organization?.id;
           const userId = data.user?.id;
-
-          // Call the login function with the extracted IDs
-          login(data.access_token, values.email, data.role_type, userId, organizationId);
+         const first_name = data.user?.first_name || null;
+        const last_name = data.user?.last_name || null;
+          console.log(first_name,"firstname");
           
-          router.replace('/dashboard');
-          onClose();
+          // Call the login function with the extracted IDs
+          login(data.access_token, values.email, data.role_type, userId, organizationId,first_name,last_name);
+               router.replace('/dashboard');
+                onClose();
+       
+         
         } else {
           const errorMsg = 'Login failed: Missing authentication data.';
           formik.setErrors({ password: errorMsg });

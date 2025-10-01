@@ -265,8 +265,102 @@ export default function FeedbackPage() {
       </div>
     );
   }
-
-  return (
+        if(formOpen){
+         return(
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mt-10 w-250 rounded bg-white p-6 shadow  ">
+              {isSubmittingForm && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+                  <Loader />
+                </div>
+              )}
+              <h3 className=" mt-10 ml-42 mb-4 text-3xl font-semibold text-gray-700">
+                {isUpdate ? 'Update Feedback' : 'Create Feedback'}
+              </h3>
+              <form onSubmit={formik.handleSubmit} className="ml-18 space-y-4">
+                <div className='ml-25' >
+                  <label htmlFor="category" className="mb-1 block text-gray-700">Category</label>
+                  <select
+                    id="category"
+                    name="category"
+                    value={formik.values.category}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="rounded-xl border px-64 py-3 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                    disabled={isSubmittingForm}
+                  >
+                    <option value="suggestion">Suggestion</option>
+                    <option value="complaint">Complaint</option>
+                    <option value="idea">Idea</option>
+                  </select>
+                  {formik.touched.category && formik.errors.category && (
+                    <span className="text-sm text-red-500">{formik.errors.category}</span>
+                  )}
+                </div>
+                <div className='ml-25'>
+                  <label htmlFor="message" className="mb-1 block text-gray-700">Message</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    placeholder="e.g., The office is too cold."
+                    value={formik.values.message}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="rounded-xl border px-55 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                    rows={4}
+                    disabled={isSubmittingForm}
+                  />
+                  {formik.touched.message && formik.errors.message && (
+                    <span className="text-sm text-red-500"><br></br>{formik.errors.message}</span>
+                  )}
+                </div>
+                {isAdmin && isUpdate && (
+                  <div>
+                    <label htmlFor="status" className="mb-1 block">Status</label>
+                    <select
+                      id="status"
+                      name="status"
+                      value={formik.values.status}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full rounded border px-3 py-2"
+                      disabled={isSubmittingForm}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="in_review">In Review</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                    {formik.touched.status && formik.errors.status && (
+                      <span className="text-sm text-red-500">{formik.errors.status}</span>
+                    )}
+                  </div>
+                )}
+                <div className="mr-40 flex justify-end gap-2 mt-9 mr-42">
+                  <Button
+                    label="Cancel"
+                    type="button"
+                    onClick={() => {
+                      setFormOpen(false);
+                      setIsUpdate(false);
+                      setSelectedFeedbackId('');
+                      formik.resetForm();
+                    }}
+                    variant="secondary"
+                    disabled={isSubmittingForm}
+                  />
+                  <Button
+                    label={isUpdate ? 'Update' : 'Create'}
+                    type="submit"
+                    variant="primary"
+                    disabled={isSubmittingForm}
+                  />
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      }
+return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-9xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -309,100 +403,6 @@ export default function FeedbackPage() {
             )}
           </div>
         </div>
-
-        {formOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
-            <div className="relative w-250  rounded-lg bg-white p-6 shadow-lg h-140">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
-              )}
-              <h3 className=" mt-10 ml-45 mb-4 text-3xl font-semibold text-gray-700">
-                {isUpdate ? 'Update Feedback' : 'Create Feedback'}
-              </h3>
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-                <div className='ml-45' >
-                  <label htmlFor="category" className="mb-1 block text-gray-700">Category</label>
-                  <select
-                    id="category"
-                    name="category"
-                    value={formik.values.category}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="rounded-xl border px-64 py-3 border-gray-200 bg-purple-50 p-4 text-gray-600"
-                    disabled={isSubmittingForm}
-                  >
-                    <option value="suggestion">Suggestion</option>
-                    <option value="complaint">Complaint</option>
-                    <option value="idea">Idea</option>
-                  </select>
-                  {formik.touched.category && formik.errors.category && (
-                    <span className="text-sm text-red-500">{formik.errors.category}</span>
-                  )}
-                </div>
-                <div className='ml-45'>
-                  <label htmlFor="message" className="mb-1 block text-gray-700">Message</label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    placeholder="e.g., The office is too cold."
-                    value={formik.values.message}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="rounded-xl border px-55 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
-                    rows={4}
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.message && formik.errors.message && (
-                    <span className="text-sm text-red-500">{formik.errors.message}</span>
-                  )}
-                </div>
-                {isAdmin && isUpdate && (
-                  <div>
-                    <label htmlFor="status" className="mb-1 block">Status</label>
-                    <select
-                      id="status"
-                      name="status"
-                      value={formik.values.status}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="w-full rounded border px-3 py-2"
-                      disabled={isSubmittingForm}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="in_review">In Review</option>
-                      <option value="resolved">Resolved</option>
-                    </select>
-                    {formik.touched.status && formik.errors.status && (
-                      <span className="text-sm text-red-500">{formik.errors.status}</span>
-                    )}
-                  </div>
-                )}
-                <div className="mr-40 flex justify-end gap-2 mt-9">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedFeedbackId('');
-                      formik.resetForm();
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                  />
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         <div>
           <Table
