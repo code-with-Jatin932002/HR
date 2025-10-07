@@ -4,7 +4,10 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { FiSearch, FiX, FiEye } from 'react-icons/fi';
+// Importing FiChevronDown for the Employee dropdown
+import { FiSearch, FiX, FiEye, FiChevronDown } from 'react-icons/fi';
+// Importing icons for input fields (example: money icons)
+import { FaUser, FaDollarSign, FaMinusCircle } from 'react-icons/fa';
 
 import callApi from '@/utils/callApi';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
@@ -437,31 +440,48 @@ export default function PayrollsPage() {
   const allowedRolesForAddPayroll = ['super_admin', 'admin', 'hr', 'manager'];
   const canAddPayroll = userRole ? allowedRolesForAddPayroll.includes(userRole) : false;
 
-        {/* Payroll Form Modal */}
-        if(formOpen){ 
-          return(
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
-              )}
-              <h3 className="mb-4 text-xl font-semibold text-gray-700">
-                {isUpdate ? 'Update Payroll' : 'Create Payroll'}
-              </h3>
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                {!isUpdate && ( // Only show user selection for new payrolls
-                  <div>
-                    <label htmlFor="user_id" className="mb-1 block text-sm font-medium text-gray-700">Employee</label>
+  // ----------------------------------------------------------------------
+  // Payroll Form Block (Updated for width, spacing, and icons)
+  // ----------------------------------------------------------------------
+  if(formOpen){ 
+    return(
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        {/* Changed width to max-w-6xl for wider view and removed redundant w-full */}
+        <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow relative"> 
+          {isSubmittingForm && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+              <Loader />
+            </div>
+          )}
+          <h3 className="mb-6 text-2xl font-semibold text-gray-700">
+            {isUpdate ? 'Update Payroll' : 'Create Payroll'}
+          </h3>
+          {/* Reduced vertical spacing to space-y-3 */}
+          <form onSubmit={formik.handleSubmit} className="space-y-3">
+            
+            {/* Single-column layout, reduced gap to gap-3 */}
+            <div className='grid grid-cols-1 gap-3'> 
+              
+              {/* Employee Dropdown (Select) - Fixed icon overlap with increased left padding (pl-12) */}
+              {!isUpdate && ( // Only show user selection for new payrolls
+                <div className="mb-2"> 
+                  <label htmlFor="user_id" className="mb-2.5 block text-sm font-medium text-black">
+                    Employee
+                  </label>
+                  <div className="relative">
                     <select
                       id="user_id"
                       name="user_id"
                       value={formik.values.user_id}
                       onChange={handleEmployeeSelectChange} // Use new handler
                       onBlur={formik.handleBlur}
-                      className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                      className={`
+                        w-full rounded-lg border py-4 pl-12 pr-12 text-black outline-none transition duration-300 appearance-none
+                        ${
+                          formik.touched.user_id && formik.errors.user_id ? 'border-red-500' : 'border-gray-300'
+                        }
+                        focus:border-purple-600
+                      `}
                       disabled={isSubmittingForm || isLoadingUsers}
                     >
                       <option value="">Select an employee</option>
@@ -471,13 +491,23 @@ export default function PayrollsPage() {
                         </option>
                       ))}
                     </select>
-                    {formik.touched.user_id && formik.errors.user_id && (
-                      <span className="text-sm text-red-500">{formik.errors.user_id}</span>
-                    )}
+                    {/* Employee Icon - Positioned in the padding area */}
+                    <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    {/* Dropdown Chevron */}
+                    <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   </div>
-                )}
-                <div>
-                  <label htmlFor="ctc" className="mb-1 block text-sm font-medium text-gray-700">CTC</label>
+                  {formik.touched.user_id && formik.errors.user_id && (
+                    <span className="mt-1 block text-sm text-red-500">{formik.errors.user_id}</span>
+                  )}
+                </div>
+              )}
+
+              {/* CTC Input Field - Replaced $ with Rupee (₹) */}
+              <div className="mb-2"> 
+                <label htmlFor="ctc" className="mb-2.5 block text-sm font-medium text-black">CTC</label>
+                <div className="relative">
+                    {/* Rupee Sign Prefix */}
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 font-semibold text-lg pointer-events-none">₹</span>
                   <input
                     type="number"
                     id="ctc"
@@ -486,15 +516,28 @@ export default function PayrollsPage() {
                     value={formik.values.ctc}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                    // Increased left padding to pl-10 to accommodate the ₹ symbol
+                    className={`
+                      w-full rounded-lg border py-4 pl-10 pr-6 text-black outline-none transition duration-300
+                      ${
+                        formik.touched.ctc && formik.errors.ctc ? 'border-red-500' : 'border-gray-300'
+                      }
+                      focus:border-purple-600
+                    `}
                     disabled={isSubmittingForm}
                   />
-                  {formik.touched.ctc && formik.errors.ctc && (
-                    <span className="text-sm text-red-500">{formik.errors.ctc}</span>
-                  )}
                 </div>
-                <div>
-                  <label htmlFor="salary_per_month" className="mb-1 block text-sm font-medium text-gray-700">Salary Per Month</label>
+                {formik.touched.ctc && formik.errors.ctc && (
+                  <span className="mt-1 block text-sm text-red-500">{formik.errors.ctc}</span>
+                )}
+              </div>
+              
+              {/* Salary Per Month Input Field - Replaced $ with Rupee (₹) */}
+              <div className="mb-2"> 
+                <label htmlFor="salary_per_month" className="mb-2.5 block text-sm font-medium text-black">Salary Per Month</label>
+                <div className="relative">
+                    {/* Rupee Sign Prefix */}
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 font-semibold text-lg pointer-events-none">₹</span>
                   <input
                     type="number"
                     id="salary_per_month"
@@ -503,15 +546,26 @@ export default function PayrollsPage() {
                     value={formik.values.salary_per_month}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                     // Increased left padding to pl-10 to accommodate the ₹ symbol
+                    className={`
+                      w-full rounded-lg border py-4 pl-10 pr-6 text-black outline-none transition duration-300
+                      ${
+                        formik.touched.salary_per_month && formik.errors.salary_per_month ? 'border-red-500' : 'border-gray-300'
+                      }
+                      focus:border-purple-600
+                    `}
                     disabled={isSubmittingForm}
                   />
-                  {formik.touched.salary_per_month && formik.errors.salary_per_month && (
-                    <span className="text-sm text-red-500">{formik.errors.salary_per_month}</span>
-                  )}
                 </div>
-                <div>
-                  <label htmlFor="deduction" className="mb-1 block text-sm font-medium text-gray-700">Deduction</label>
+                {formik.touched.salary_per_month && formik.errors.salary_per_month && (
+                  <span className="mt-1 block text-sm text-red-500">{formik.errors.salary_per_month}</span>
+                )}
+              </div>
+              
+              {/* Deduction Input Field (Icon kept) */}
+              <div className="mb-2"> 
+                <label htmlFor="deduction" className="mb-2.5 block text-sm font-medium text-black">Deduction</label>
+                <div className="relative">
                   <input
                     type="number"
                     id="deduction"
@@ -520,23 +574,40 @@ export default function PayrollsPage() {
                     value={formik.values.deduction}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                    className={`
+                      w-full rounded-lg border py-4 pl-12 pr-6 text-black outline-none transition duration-300
+                      ${
+                        formik.touched.deduction && formik.errors.deduction ? 'border-red-500' : 'border-gray-300'
+                      }
+                      focus:border-purple-600
+                    `}
                     disabled={isSubmittingForm}
                   />
-                  {formik.touched.deduction && formik.errors.deduction && (
-                    <span className="text-sm text-red-500">{formik.errors.deduction}</span>
-                  )}
+                  <FaMinusCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
-                {isUpdate && ( // Only show status for updates
-                  <div>
-                    <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">Status</label>
+                {formik.touched.deduction && formik.errors.deduction && (
+                  <span className="mt-1 block text-sm text-red-500">{formik.errors.deduction}</span>
+                )}
+              </div>
+              
+              {/* Status Dropdown (Update Only) */}
+              {isUpdate && ( 
+                <div className="mb-2"> 
+                  <label htmlFor="status" className="mb-2.5 block text-sm font-medium text-black">Status</label>
+                  <div className="relative">
                     <select
                       id="status"
                       name="status"
                       value={formik.values.status}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                      className={`
+                        w-full rounded-lg border py-4 pl-6 pr-12 text-black outline-none transition duration-300 appearance-none
+                        ${
+                          formik.touched.status && formik.errors.status ? 'border-red-500' : 'border-gray-300'
+                        }
+                        focus:border-purple-600
+                      `}
                       disabled={isSubmittingForm}
                     >
                       {payrollStatusOptions.map((status) => (
@@ -545,88 +616,96 @@ export default function PayrollsPage() {
                         </option>
                       ))}
                     </select>
-                    {formik.touched.status && formik.errors.status && (
-                      <span className="text-sm text-red-500">{formik.errors.status}</span>
-                    )}
+                    {/* Dropdown Chevron */}
+                    <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   </div>
-                )}
-                <div className="flex justify-end gap-2 mt-4 ml-280">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedPayrollId('');
-                      formik.resetForm();
-                      setSelectedEmployeeName(''); // Clear on cancel
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                  />
+                  {formik.touched.status && formik.errors.status && (
+                    <span className="mt-1 block text-sm text-red-500">{formik.errors.status}</span>
+                  )}
                 </div>
-                </div>
-              </form>
+              )}
             </div>
-          </div>
-        );
-      }
-
-        {/* View Payroll Details Modal */}
-        if(viewingPayrollId){ 
-          return(
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
-              {isLoadingViewingPayroll ? (
-                <div className="flex h-32 items-center justify-center">
-                  <Loader />
-                </div>
-              ) : isErrorViewingPayroll ? (
-                <div className="text-center text-red-500">Failed to load payroll details.</div>
-              ) : viewingPayrollDetails ? (
-                <>
-                  <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">Payroll Details</h3><br></br>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                   <div><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>Employee Name:</span><p  className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'> {viewingPayrollDetails.employee_name}</p></div>
-                    <div className=''><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>CTC:</span> <p  className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'> {viewingPayrollDetails.ctc}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Salary Per Month:</span> {viewingPayrollDetails.salary_per_month}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Deduction:</span> {viewingPayrollDetails.deduction}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Status:</span> {viewingPayrollDetails.status}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Created At:</strong> {new Date(viewingPayrollDetails.created_at).toLocaleString()}</p>
-                    </div>
-                    <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Updated At:</strong> {new Date(viewingPayrollDetails.updated_at).toLocaleString()}</p>
-                    </div>
-                  </div>
-                </>
-              ) : null}
-             <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleCloseView}
-                className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 transition"
-              >
-                close
-              </button>
-               </div>
+            
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-4 pt-4">
+              <Button
+                label="Cancel"
+                type="button"
+                onClick={() => {
+                  setFormOpen(false);
+                  setIsUpdate(false);
+                  setSelectedPayrollId('');
+                  formik.resetForm();
+                  setSelectedEmployeeName(''); // Clear on cancel
+                }}
+                variant="secondary"
+                disabled={isSubmittingForm}
+              />
+              <Button
+                label={isUpdate ? 'Update' : 'Create'}
+                type="submit"
+                variant="primary"
+                disabled={isSubmittingForm}
+              />
             </div>
-          </div>
-        );
-      }
- 
+          </form>
+        </div>
+      </div>
+    );
+  }
+  // ----------------------------------------------------------------------
+  // View Payroll Details Modal Block (width adjusted here too for consistency)
+  // ----------------------------------------------------------------------
+  if(viewingPayrollId){ 
+    return(
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
+          {isLoadingViewingPayroll ? (
+            <div className="flex h-32 items-center justify-center">
+              <Loader />
+            </div>
+          ) : isErrorViewingPayroll ? (
+            <div className="text-center text-red-500">Failed to load payroll details.</div>
+          ) : viewingPayrollDetails ? (
+            <>
+              <h3 className="mb-6 text-2xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">Payroll Details</h3><br></br>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+               <div><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>Employee Name:</span><p  className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'> {viewingPayrollDetails.employee_name}</p></div>
+                <div className=''><span className='block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1'>CTC:</span> <p  className='text-gray-900 font-medium rounded-xl border border-gray-100 bg-purple-50 p-4'> {viewingPayrollDetails.ctc}</p>
+                </div>
+                <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Salary Per Month:</span> {viewingPayrollDetails.salary_per_month}</p>
+                </div>
+                <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Deduction:</span> {viewingPayrollDetails.deduction}</p>
+                </div>
+                <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p  className='text-gray-900 font-medium'><span>Status:</span> {viewingPayrollDetails.status}</p>
+                </div>
+                <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Created At:</strong> {new Date(viewingPayrollDetails.created_at).toLocaleString()}</p>
+                </div>
+                <div className='rounded-xl border border-gray-100 bg-purple-50 p-4 '><p className="text-sm text-gray-500"><strong>Updated At:</strong> {new Date(viewingPayrollDetails.updated_at).toLocaleString()}</p>
+                </div>
+              </div>
+            </>
+          ) : null}
+         <div className="mt-6 flex justify-end">
+          <button
+            onClick={handleCloseView}
+            className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 transition"
+          >
+            close
+          </button>
+            </div>
+        </div>
+      </div>
+    );
+  }
+  // ----------------------------------------------------------------------
+  // Main Table View
+  // ----------------------------------------------------------------------
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <h2 className="text-gray-700 text-2xl  font-bold sm:text-left">Payroll Management</h2>
+          <h2 className="text-gray-700 text-2xl  font-bold sm:text-left">Payroll Management</h2>
           {canAddPayroll && (
             <Button
               label="Add Payroll"
@@ -716,3 +795,4 @@ export default function PayrollsPage() {
     </div>
   );
 }
+

@@ -35,7 +35,7 @@ export default function Home() {
   const [showRegister, setShowRegister] = useState(false);
   const router =  useRouter()
   return (
-    <div className="min-h-screen bg-[#FAF7FF]    font-sans overflow-x-hidden -mb-15">
+    <div className="min-h-screen bg-[#FAF7FF]    font-sans overflow-x-hidden ">
       {showRegister && <RegisterModal onRegisterSuccessAndRedirectToSignIn={() => {
       setShowRegister(false);
       router.push("/signin"); // ✅ redirect

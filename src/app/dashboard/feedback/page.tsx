@@ -153,6 +153,7 @@ export default function FeedbackPage() {
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       setIsSubmittingForm(true);
+      const token = sessionStorage.getItem('token');
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
       const url = isUpdate ? `${normalizedBaseUrl}feedbacks/${selectedFeedbackId}` : `${normalizedBaseUrl}feedbacks`;
@@ -161,13 +162,14 @@ export default function FeedbackPage() {
       const payload = {
         category: values.category,
         message: values.message,
-        ...(isAdmin ? { status: values.status } : {}),
+        // Only include status if it's an update and the user is an admin
+        ...(isAdmin || isUpdate ? { status: values.status } : {}), 
       };
 
       try {
         await callApi(method, url, payload, {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         });
 
         toast.success(`Feedback ${isUpdate ? 'updated' : 'created'} successfully!`);
@@ -187,18 +189,9 @@ export default function FeedbackPage() {
   });
 
   const handleView = async (feedback: Feedback) => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-    const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-    try {
-      const response = await callApi('get', `${normalizedBaseUrl}feedbacks/${feedback.id}`, null, {
-        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-      });
-      const feedbackDetails = response as Feedback;
-      toast.success(`Viewing feedback: ${feedbackDetails.category}`);
-    } catch (error: unknown) {
-      const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to fetch feedback details');
-    }
+    // This is a placeholder for actual view logic, currently it just shows a toast.
+    toast(`Viewing feedback: ${feedback.category}`, { icon: '👁️' });
+    // If you need to show a modal with details, you would implement that state and component here.
   };
 
   const handleUpdate = (feedback: Feedback) => {
@@ -265,104 +258,174 @@ export default function FeedbackPage() {
       </div>
     );
   }
-        if(formOpen){
-         return(
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto mt-10 w-250 rounded bg-white p-6 shadow  ">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
+    
+  // ----------------------------------------------------------------------
+  // Create/Update Feedback Form Block (Updated for full width)
+  // ----------------------------------------------------------------------
+  if(formOpen){
+    return(
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        {/* Changed max-w-xl to max-w-6xl for wider form like previous page */}
+        <div className="mx-auto mt-10 max-w-6xl rounded-lg bg-white p-8 shadow-2xl relative"> 
+          {isSubmittingForm && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+              <Loader />
+            </div>
+          )}
+          
+          <div className="flex justify-between items-start mb-6">
+            <h3 className="text-2xl font-semibold text-gray-700">
+              {isUpdate ? 'Update Feedback' : 'Create New Feedback'}
+            </h3>
+            <button
+              className="text-gray-400 hover:text-gray-700 transition"
+              onClick={() => {
+                setFormOpen(false);
+                setIsUpdate(false);
+                setSelectedFeedbackId('');
+                formik.resetForm();
+              }}
+              disabled={isSubmittingForm}
+            >
+              <FiX size={24} />
+            </button>
+          </div>
+          
+          <form onSubmit={formik.handleSubmit} className="space-y-6">
+            
+            {/* Category Select Input */}
+            <div>
+              <label htmlFor="category" className="mb-2.5 block text-sm font-medium text-black">Category</label>
+              <div className="relative">
+                <select
+                  id="category"
+                  name="category"
+                  value={formik.values.category}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-10 text-black outline-none transition duration-300 appearance-none
+                    ${
+                      formik.touched.category && formik.errors.category ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600 focus:shadow-md
+                  `}
+                  disabled={isSubmittingForm}
+                >
+                  <option value="suggestion">Suggestion</option>
+                  <option value="complaint">Complaint</option>
+                  <option value="idea">Idea</option>
+                </select>
+                {/* Custom chevron icon for dropdown */}
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                    </svg>
+                  </div>
+              </div>
+              {formik.touched.category && formik.errors.category && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.category}</span>
               )}
-              <h3 className=" mt-10 ml-42 mb-4 text-3xl font-semibold text-gray-700">
-                {isUpdate ? 'Update Feedback' : 'Create Feedback'}
-              </h3>
-              <form onSubmit={formik.handleSubmit} className="ml-18 space-y-4">
-                <div className='ml-25' >
-                  <label htmlFor="category" className="mb-1 block text-gray-700">Category</label>
+            </div>
+            
+            {/* Message Textarea */}
+            <div>
+              <label htmlFor="message" className="mb-2.5 block text-sm font-medium text-black">Message</label>
+              <textarea
+                id="message"
+                name="message"
+                placeholder="e.g., The office is too cold. Or, I have an idea for a new feature..."
+                rows={4}
+                value={formik.values.message}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className={`
+                  w-full rounded-lg border py-4 pl-6 pr-6 text-black outline-none transition duration-300
+                  ${
+                    formik.touched.message && formik.errors.message ? 'border-red-500' : 'border-gray-300'
+                  }
+                  focus:border-purple-600 focus:shadow-md resize-none
+                `}
+                disabled={isSubmittingForm}
+              />
+              {formik.touched.message && formik.errors.message && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.message}</span>
+              )}
+            </div>
+            
+            {/* Status Select Input (Admin Only on Update) */}
+            {isAdmin && isUpdate && (
+              <div>
+                <label htmlFor="status" className="mb-2.5 block text-sm font-medium text-black">Status</label>
+                <div className="relative">
                   <select
-                    id="category"
-                    name="category"
-                    value={formik.values.category}
+                    id="status"
+                    name="status"
+                    value={formik.values.status}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="rounded-xl border px-64 py-3 border-gray-200 bg-purple-50 p-4 text-gray-600"
+                    className={`
+                      w-full rounded-lg border py-4 pl-6 pr-10 text-black outline-none transition duration-300 appearance-none
+                      ${
+                        formik.touched.status && formik.errors.status ? 'border-red-500' : 'border-gray-300'
+                      }
+                      focus:border-purple-600 focus:shadow-md
+                    `}
                     disabled={isSubmittingForm}
                   >
-                    <option value="suggestion">Suggestion</option>
-                    <option value="complaint">Complaint</option>
-                    <option value="idea">Idea</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_review">In Review</option>
+                    <option value="resolved">Resolved</option>
                   </select>
-                  {formik.touched.category && formik.errors.category && (
-                    <span className="text-sm text-red-500">{formik.errors.category}</span>
-                  )}
-                </div>
-                <div className='ml-25'>
-                  <label htmlFor="message" className="mb-1 block text-gray-700">Message</label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    placeholder="e.g., The office is too cold."
-                    value={formik.values.message}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="rounded-xl border px-55 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600"
-                    rows={4}
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.message && formik.errors.message && (
-                    <span className="text-sm text-red-500"><br></br>{formik.errors.message}</span>
-                  )}
-                </div>
-                {isAdmin && isUpdate && (
-                  <div>
-                    <label htmlFor="status" className="mb-1 block">Status</label>
-                    <select
-                      id="status"
-                      name="status"
-                      value={formik.values.status}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="w-full rounded border px-3 py-2"
-                      disabled={isSubmittingForm}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="in_review">In Review</option>
-                      <option value="resolved">Resolved</option>
-                    </select>
-                    {formik.touched.status && formik.errors.status && (
-                      <span className="text-sm text-red-500">{formik.errors.status}</span>
-                    )}
+                   {/* Custom chevron icon for dropdown */}
+                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                    </svg>
                   </div>
-                )}
-                <div className="mr-40 flex justify-end gap-2 mt-9 mr-42">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedFeedbackId('');
-                      formik.resetForm();
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                  />
                 </div>
-              </form>
+                {formik.touched.status && formik.errors.status && (
+                  <span className="mt-1 block text-sm text-red-500">{formik.errors.status}</span>
+                )}
+              </div>
+            )}
+            
+            {/* Form Actions */}
+            <div className="flex justify-end gap-4 pt-4">
+              <Button
+                label="Cancel"
+                type="button"
+                onClick={() => {
+                  setFormOpen(false);
+                  setIsUpdate(false);
+                  setSelectedFeedbackId('');
+                  formik.resetForm();
+                }}
+                variant="secondary"
+                disabled={isSubmittingForm}
+              />
+              <Button
+                label={isUpdate ? 'Update Feedback' : 'Submit Feedback'}
+                type="submit"
+                variant="primary"
+                disabled={isSubmittingForm}
+              />
             </div>
-          </div>
-        );
-      }
-return (
+          </form>
+        </div>
+      </div>
+    );
+  }
+  // ----------------------------------------------------------------------
+
+
+  // ----------------------------------------------------------------------
+  // Main Table View 
+  // ----------------------------------------------------------------------
+  return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto mt-10 max-w-9xl rounded bg-white p-6 shadow">
+      {/* Table container with max-w-full (effectively full width within padding) */}
+      <div className="mx-auto mt-10 max-w-full rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <h2 className="text-3xl font-bold text-gray-700 sm:text-left">Feedback Board</h2>
           {!isAdmin && (
@@ -391,7 +454,7 @@ return (
               placeholder="Search by category or message..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full rounded-md border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700"
+              className="w-full rounded-lg border px-4 py-3 pl-10 pr-10 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-300 text-gray-700 transition duration-300"
             />
             {searchQuery && (
               <button

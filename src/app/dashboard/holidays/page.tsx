@@ -4,7 +4,10 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { FiSearch, FiX } from 'react-icons/fi';
+import { FiSearch, FiX, FiChevronDown } from 'react-icons/fi'; // Added FiChevronDown for dropdown
+
+// Importing icons for input fields
+import { FaCalendarAlt, FaTag } from 'react-icons/fa'; // FaSun is replaced by FiChevronDown
 
 import callApi from '@/utils/callApi';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
@@ -45,6 +48,18 @@ const columns = [
   { label: 'Day', key: 'day' },
   // No explicit column for actions here, ActionButtons will be rendered directly
 ];
+
+// Array for the Day dropdown options
+const daysOfTheWeek = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+
 
 // fetchHolidays will now explicitly take page, limit, and search query
 const fetchHolidays: QueryFunction<
@@ -139,9 +154,8 @@ export default function HolidayPage() {
       const method = isUpdate ? 'put' : 'post';
 
       try {
-        const payload = isUpdate
-          ? { ...values, holiday_date: values.date }
-          : values;
+        // The API payload uses 'date', 'day', and 'holiday_name', so we just pass values
+        const payload = values;
 
         await callApi(method, url, payload, {
           'Content-Type': 'application/json',
@@ -186,7 +200,8 @@ export default function HolidayPage() {
     setIsUpdate(true);
     formik.setValues({
       holiday_name: holiday.holiday_name,
-      date: holiday.date,
+      // Date value must be in 'YYYY-MM-DD' format for input type="date"
+      date: holiday.date, 
       day: holiday.day,
     });
     setFormOpen(true);
@@ -249,95 +264,157 @@ export default function HolidayPage() {
     );
   }
 
-        if(formOpen){
-           return(
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
-              )}
-              <h3 className="ml-10 mb-4 text-xl font-semibold text-gray-700">
-                {isUpdate ? 'Update Holiday' : 'Create Holiday'}
-              </h3>
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label htmlFor="holiday_name" className="mb-1 block text-gray-700 ml-10">Holiday Name</label>
+  if(formOpen){
+    return(
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        {/* Changed max-w-4xl to max-w-6xl for wider view, matching the main table */}
+        <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow relative"> 
+          {isSubmittingForm && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+              <Loader />
+            </div>
+          )}
+          <h3 className="mb-6 text-2xl font-semibold text-gray-700">
+            {isUpdate ? 'Update Holiday' : 'Create Holiday'}
+          </h3>
+          {/* Reduced space-y-6 to space-y-4 for less gap between form elements */}
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            
+            <div className="grid grid-cols-1 gap-4"> 
+              
+              {/* Holiday Name Input Field */}
+              <div className="mb-2"> {/* Reduced mb-4 to mb-2 for less gap */}
+                <label htmlFor="holiday_name" className="mb-2.5 block text-sm font-medium text-black">
+                  Holiday Name
+                </label>
+                <div className="relative">
                   <input
                     type="text"
                     id="holiday_name"
                     name="holiday_name"
+                    placeholder="Enter holiday name"
                     value={formik.values.holiday_name}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="ml-10 rounded-xl border px-40 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    className={`
+                      w-full rounded-lg border py-4 pl-6 pr-12 text-black outline-none transition duration-300
+                      ${
+                        formik.touched.holiday_name && formik.errors.holiday_name ? 'border-red-500' : 'border-gray-300'
+                      }
+                      focus:border-purple-600
+                    `}
                     disabled={isSubmittingForm}
                   />
-                  {formik.touched.holiday_name && formik.errors.holiday_name && (
-                    <span className="ml-10 text-sm text-red-500">{formik.errors.holiday_name}</span>
-                  )}
+                  <FaTag className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
-                <div>
-                  <label htmlFor="date" className="ml-10 mb-1 block text-gray-700">Date</label>
+                {formik.touched.holiday_name && formik.errors.holiday_name && (
+                  <span className="mt-1 block text-sm text-red-500">
+                    {formik.errors.holiday_name}
+                  </span>
+                )}
+              </div>
+
+              {/* Date Input Field */}
+              <div className="mb-2"> {/* Reduced mb-4 to mb-2 for less gap */}
+                <label htmlFor="date" className="mb-2.5 block text-sm font-medium text-black">
+                  Date
+                </label>
+                <div className="relative">
                   <input
-                    type="date"
+                    // Use type="date" to get the native date picker
+                    type="date" 
                     id="date"
                     name="date"
                     value={formik.values.date}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="ml-10 rounded-xl border px-40 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    className={`
+                      w-full rounded-lg border py-4 pl-6 pr-12 text-black outline-none transition duration-300
+                      ${
+                        formik.touched.date && formik.errors.date ? 'border-red-500' : 'border-gray-300'
+                      }
+                      focus:border-purple-600
+                      // Ensure text is aligned left
+                      text-left
+                    `}
                     disabled={isSubmittingForm}
-                  /><br></br>
-                  {formik.touched.date && formik.errors.date && (
-                    <span className="ml-10 text-sm text-red-500">{formik.errors.date}</span>
-                  )}
+                  />
+                  <FaCalendarAlt className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
-                <div>
-                  <label htmlFor="day" className="ml-10 mb-1 block text-gray-700">Day</label>
-                  <input
-                    type="text"
+                {formik.touched.date && formik.errors.date && (
+                  <span className="mt-1 block text-sm text-red-500">
+                    {formik.errors.date}
+                  </span>
+                )}
+              </div>
+
+              {/* Day Dropdown (Select Field) */}
+              <div className="mb-2"> {/* Reduced mb-4 to mb-2 for less gap */}
+                <label htmlFor="day" className="mb-2.5 block text-sm font-medium text-black">
+                  Day
+                </label>
+                <div className="relative">
+                  <select
                     id="day"
                     name="day"
                     value={formik.values.day}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="ml-10 rounded-xl border px-40 py-2 border-gray-200 bg-purple-50 p-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    className={`
+                      w-full rounded-lg border py-4 pl-6 pr-12 text-black outline-none transition duration-300 appearance-none
+                      ${
+                        formik.touched.day && formik.errors.day ? 'border-red-500' : 'border-gray-300'
+                      }
+                      focus:border-purple-600
+                    `}
                     disabled={isSubmittingForm}
-                  /><br></br>
-                  {formik.touched.day && formik.errors.day && (
-                    <span className="ml-10 text-sm text-red-500">{formik.errors.day}</span>
-                  )}
-                </div><br></br>
-                <div className="flex justify-end gap-4 p-4 -mr-120">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedHolidayId('');
-                      formik.resetForm();
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                  />
+                  >
+                    <option value="" disabled>Select the day</option>
+                    {daysOfTheWeek.map(day => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                  {/* Custom dropdown sign (Chevron Down) */}
+                  <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                    <FiChevronDown className="h-5 w-5" />
+                  </span>
                 </div>
-                </div>
-              </form>
+                {formik.touched.day && formik.errors.day && (
+                  <span className="mt-1 block text-sm text-red-500">
+                    {formik.errors.day}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      }
-   return (
+            
+            {/* Action Buttons: Set to justify-end (right side) */}
+            <div className="flex justify-end gap-4 pt-4">
+              <Button
+                label="Cancel"
+                type="button"
+                onClick={() => {
+                  setFormOpen(false);
+                  setIsUpdate(false);
+                  setSelectedHolidayId('');
+                  formik.resetForm();
+                }}
+                variant="secondary"
+                disabled={isSubmittingForm}
+              />
+              <Button
+                label={isUpdate ? 'Update' : 'Create'}
+                type="submit"
+                variant="primary"
+                disabled={isSubmittingForm}
+              />
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+    
+  return (
     <div className="min-h-screen p-4 bg-gray-100">
       <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
