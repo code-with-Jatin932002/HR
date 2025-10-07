@@ -4,7 +4,8 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { FiSearch, FiX, FiMapPin, FiDollarSign } from 'react-icons/fi';
+// Import FiChevronDown for the standard dropdown arrow
+import { FiSearch, FiX, FiMapPin, FiDollarSign, FiChevronDown } from 'react-icons/fi';
 import { FaRupeeSign } from "react-icons/fa";
 
 import callApi from '@/utils/callApi';
@@ -315,165 +316,239 @@ export default function JobsPage() {
   // Determine if the current user is an admin, HR, or super_admin
   const canManageJobs = userRole === 'super_admin' || userRole === 'admin' || userRole === 'hr';
 
-        if(formOpen){
-           return(
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
+  // ----------------------------------------------------------------------
+  // Job Form Block (Updated to restore max-w-6xl for wider form width)
+  // ----------------------------------------------------------------------
+  if(formOpen){
+    return(
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        {/* Restored max-w-6xl for wider form content */}
+        <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow relative"> 
+          {isSubmittingForm && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+              <Loader />
+            </div>
+          )}
+        
+          <h3 className="mb-6 text-2xl font-semibold text-gray-700">
+            {isUpdate ? 'Update Job' : 'Create New Job'}
+          </h3>
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            {/* All fields are now full width and stack vertically */}
+
+            {/* Job Title */}
+            <div>
+              <label htmlFor="job_title" className="mb-2.5 block text-sm font-medium text-black">Job Title</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="job_title"
+                  name="job_title"
+                  value={formik.values.job_title}
+                  placeholder='Enter Job Title'
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-6 text-black outline-none transition duration-300
+                    ${
+                      formik.touched.job_title && formik.errors.job_title ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                />
+              </div>
+              {formik.touched.job_title && formik.errors.job_title && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.job_title}</span>
               )}
+            </div>
+
+            {/* Department Dropdown */}
+            <div>
+              <label htmlFor="department" className="mb-2.5 block text-sm font-medium text-black">Department</label>
+              <div className="relative">
+                <select
+                  id="department"
+                  name="department"
+                  value={formik.values.department}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-12 text-black outline-none transition duration-300 appearance-none
+                    ${
+                      formik.touched.department && formik.errors.department ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                >
+                  <option value="">Select Department</option>
+                  {departmentsList.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+                {/* Dropdown Icon */}
+                <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+              {formik.touched.department && formik.errors.department && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.department}</span>
+              )}
+            </div>
+
+            {/* Location Input with Icon */}
+            <div>
+              <label htmlFor="location" className="mb-2.5 block text-sm font-medium text-black">Location</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  placeholder='Enter Location'
+                  value={formik.values.location}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-12 pr-6 text-black outline-none transition duration-300
+                    ${
+                      formik.touched.location && formik.errors.location ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                />
+                <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+              {formik.touched.location && formik.errors.location && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.location}</span>
+              )}
+            </div>
+
+            {/* Amount Input with Rupee Icon */}
+            <div>
+              <label htmlFor="amount" className="mb-2.5 block text-sm font-medium text-black">Amount (per month)</label>
+              <div className="relative">
+                {/* Rupee Sign Prefix */}
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 font-semibold text-lg pointer-events-none">₹</span>
+                <input
+                  type="number"
+                  id="amount"
+                  name="amount"
+                  placeholder='Enter Amount'
+                  value={formik.values.amount}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-10 pr-6 text-black outline-none transition duration-300
+                    ${
+                      formik.touched.amount && formik.errors.amount ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                />
+              </div>
+              {formik.touched.amount && formik.errors.amount && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.amount}</span>
+              )}
+            </div>
+            
+            {/* Job Type Dropdown */}
+            <div>
+              <label htmlFor="job_type" className="mb-2.5 block text-sm font-medium text-black">Job Type</label>
+              <div className="relative">
+                <select
+                  id="job_type"
+                  name="job_type"
+                  value={formik.values.job_type}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-12 text-black outline-none transition duration-300 appearance-none
+                    ${
+                      formik.touched.job_type && formik.errors.job_type ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                >
+                  {jobTypeOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {/* Dropdown Icon */}
+                <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+              {formik.touched.job_type && formik.errors.job_type && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.job_type}</span>
+              )}
+            </div>
           
-              <h3 className="mb-4 text-xl font-semibold text-gray-700">
-                {isUpdate ? 'Update Job' : 'Create New Job'}
-              </h3>
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                <div>
-                  <label htmlFor="job_title" className="mb-1 block text-sm font-medium text-gray-700">Job Title</label>
-                  <input
-                    type="text"
-                    id="job_title"
-                    name="job_title"
-                    value={formik.values.job_title}
-                    placeholder='Enter Job Title'
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.job_title && formik.errors.job_title && (
-                    <span className="text-sm text-red-500">{formik.errors.job_title}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="department" className="mb-1 block text-sm font-medium text-gray-700">Department</label>
+            {/* Status Dropdown (Only for Update) */}
+            {isUpdate && (
+              <div>
+                <label htmlFor="status" className="mb-2.5 block text-sm font-medium text-black">Status</label>
+                <div className="relative">
                   <select
-                    id="department"
-                    name="department"
-                    value={formik.values.department}
+                    id="status"
+                    name="status"
+                    value={formik.values.status}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+                    className={`
+                      w-full rounded-lg border py-4 pl-6 pr-12 text-black outline-none transition duration-300 appearance-none
+                      ${
+                        formik.touched.status && formik.errors.status ? 'border-red-500' : 'border-gray-300'
+                      }
+                      focus:border-purple-600
+                    `}
                     disabled={isSubmittingForm}
                   >
-                    <option value="">Select Department</option>
-                    {departmentsList.map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                  {formik.touched.department && formik.errors.department && (
-                    <span className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300">{formik.errors.department}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="location" className="mb-1 block text-sm font-medium text-gray-700">Location</label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    placeholder='Enter Location'
-                    value={formik.values.location}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.location && formik.errors.location && (
-                    <span className="text-sm text-red-500">{formik.errors.location}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="amount" className="mb-1 block text-sm font-medium text-gray-700">Amount</label>
-                  <input
-                    type="number"
-                    id="amount"
-                    name="amount"
-                    value={formik.values.amount}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.amount && formik.errors.amount && (
-                    <span className="text-sm text-red-500">{formik.errors.amount}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="job_type" className="mb-1 block text-sm font-medium text-gray-700">Job Type</label>
-                  <select
-                    id="job_type"
-                    name="job_type"
-                    value={formik.values.job_type}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  >
-                    {jobTypeOptions.map(option => (
+                    {jobStatusOptions.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
                     ))}
                   </select>
-                  {formik.touched.job_type && formik.errors.job_type && (
-                    <span className="text-sm text-red-500">{formik.errors.job_type}</span>
-                  )}
+                  {/* Dropdown Icon */}
+                  <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
-              
-                {isUpdate && (
-                  <div>
-                    <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">Status</label>
-                    <select
-                      id="status"
-                      name="status"
-                      value={formik.values.status}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                      disabled={isSubmittingForm}
-                    >
-                      {jobStatusOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    {formik.touched.status && formik.errors.status && (
-                      <span className="text-sm text-red-500">{formik.errors.status}</span>
-                    )}
-                  </div>
-                 
+                {formik.touched.status && formik.errors.status && (
+                  <span className="mt-1 block text-sm text-red-500">{formik.errors.status}</span>
                 )}
-                 </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedJobId('');
-                      formik.resetForm();
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  />
-                </div>
-              </form>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-4 pt-4">
+              <Button
+                label="Cancel"
+                type="button"
+                onClick={() => {
+                  setFormOpen(false);
+                  setIsUpdate(false);
+                  setSelectedJobId('');
+                  formik.resetForm();
+                }}
+                variant="secondary"
+                disabled={isSubmittingForm}
+              />
+              <Button
+                label={isUpdate ? 'Update' : 'Create'}
+                type="submit"
+                variant="primary"
+                disabled={isSubmittingForm}
+              />
             </div>
-          </div>
-        );
-      }
- return (
+          </form>
+        </div>
+      </div>
+    );
+  }
+  // ----------------------------------------------------------------------
+  // Main Table View (No changes here, keeping for completeness)
+  // ----------------------------------------------------------------------
+  return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-7xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -497,7 +572,7 @@ export default function JobsPage() {
 
         {/* Search Bar - Full Width */}
         <div className="w-full mb-6">
-          <div className="relative w-full"> {/* Removed max-w-lg and mx-auto */}
+          <div className="relative w-full">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
               <FiSearch />
             </span>

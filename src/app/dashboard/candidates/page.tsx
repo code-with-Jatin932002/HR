@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { FiSearch, FiX } from 'react-icons/fi';
+import { FiSearch, FiX, FiChevronDown } from 'react-icons/fi'; // Added FiChevronDown for the dropdown
 
 import callApi from '@/utils/callApi';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
@@ -146,7 +146,7 @@ export default function CandidatePage() {
       applied_date: '',
       email: '',
       mobile_number: '',
-      status: statusOptions[0], // Default to the first status option
+      status: statusOptions[0] as Candidate['status'], // Ensure status is correctly typed
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -181,18 +181,8 @@ export default function CandidatePage() {
   });
 
   const handleView = async (candidate: Candidate) => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-    const normalizedBaseUrl = baseUrl?.endsWith('/') ? baseUrl : `${baseUrl}/`;
-    try {
-      const response = await callApi('get', `${normalizedBaseUrl}candidates/${candidate.id}`, null, {
-        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-      });
-      const candidateDetails = response as Candidate;
-      toast.success(`Viewing: ${candidateDetails.candidate_name}, Applied for: ${candidateDetails.applied_for}`);
-    } catch (error: unknown) {
-      const apiError = error as ApiResponseError;
-      toast.error(apiError?.response?.data?.detail || 'Failed to fetch candidate details');
-    }
+    // You can implement a modal or navigation here to show details.
+    toast.success(`Viewing: ${candidate.candidate_name}, Applied for: ${candidate.applied_for}`);
   };
 
   const handleUpdate = (candidate: Candidate) => {
@@ -247,10 +237,10 @@ export default function CandidatePage() {
   };
 
   // Determine if the current user can add candidates (HR, Manager)
-  const canAddCandidate = userRole === 'hr' || userRole === 'manager';
+  const canAddCandidate = userRole === 'hr' || userRole === 'manager' || userRole === 'admin' || userRole === 'super_admin';
 
   // Determine if the current user can see actions (HR, Manager)
-  const canSeeActions = userRole === 'hr' || userRole === 'manager';
+  const canSeeActions = userRole === 'hr' || userRole === 'manager' || userRole === 'admin' || userRole === 'super_admin';
 
   if (isLoading || userRole === null) {
     return (
@@ -268,149 +258,221 @@ export default function CandidatePage() {
       </div>
     );
   }
-        if(formOpen){ 
-          return(
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto mt-10 w-full rounded bg-white p-6 shadow ">
-              {isSubmittingForm && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
-                  <Loader />
-                </div>
-              )}
-              <h3 className="mb-4 text-xl font-semibold text-gray-700">
-                {isUpdate ? 'Update Candidate' : 'Create Candidate'}
-              </h3>
-              <br></br>
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-               <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                <div>
-                  <label htmlFor="candidate_name" className="mb-1 block text-sm font-medium text-gray-700">Candidate Name</label>
-                  <input
-                    type="text"
-                    id="candidate_name"
-                    name="candidate_name"
-                    value={formik.values.candidate_name}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.candidate_name && formik.errors.candidate_name && (
-                    <span className="text-sm text-red-500">{formik.errors.candidate_name}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="applied_for" className="mb-1 block text-sm font-medium text-gray-700">Applied For</label>
-                  <input
-                    type="text"
-                    id="applied_for"
-                    name="applied_for"
-                    value={formik.values.applied_for}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300-full rounded border px-3 py-2"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.applied_for && formik.errors.applied_for && (
-                    <span className="text-sm text-red-500">{formik.errors.applied_for}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="applied_date" className="mb-1 block text-sm font-medium text-gray-700">Applied Date</label>
-                  <input
-                    type="date"
-                    id="applied_date"
-                    name="applied_date"
-                    value={formik.values.applied_date}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.applied_date && formik.errors.applied_date && (
-                    <span className="text-sm text-red-500">{formik.errors.applied_date}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formik.values.email}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.email && formik.errors.email && (
-                    <span className="text-sm text-red-500">{formik.errors.email}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="mobile_number" className="mb-1 block text-sm font-medium text-gray-700">Mobile Number</label>
-                  <input
-                    type="text"
-                    id="mobile_number"
-                    name="mobile_number"
-                     maxLength={10}
-                     pattern="\d*"
-                    value={formik.values.mobile_number}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  />
-                  {formik.touched.mobile_number && formik.errors.mobile_number && (
-                    <span className="text-sm text-red-500">{formik.errors.mobile_number}</span>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">Status</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formik.values.status}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="w-full rounded-xl border border-gray-300 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
-                    disabled={isSubmittingForm}
-                  >
-                    {statusOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                  {formik.touched.status && formik.errors.status && (
-                    <span className="text-sm text-red-500">{formik.errors.status}</span>
-                  )}
-                </div>
-              </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    label="Cancel"
-                    type="button"
-                    onClick={() => {
-                      setFormOpen(false);
-                      setIsUpdate(false);
-                      setSelectedCandidateId('');
-                      formik.resetForm();
-                    }}
-                    variant="secondary"
-                    disabled={isSubmittingForm}
-                  />
-                  <Button
-                    label={isUpdate ? 'Update' : 'Create'}
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmittingForm}
-                  />
-                </div>
-              </form>
+  
+  // ----------------------------------------------------------------------
+  // Create/Update Candidate Form Block (Updated with new styling)
+  // ----------------------------------------------------------------------
+  if(formOpen){ 
+    return(
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        {/* Restored max-w-6xl for wider form content */}
+        <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow relative">
+          {isSubmittingForm && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white bg-opacity-80">
+              <Loader />
             </div>
-          </div>
-       );
-      }
-   return (
+          )}
+          <h3 className="mb-6 text-2xl font-semibold text-gray-700">
+            {isUpdate ? 'Update Candidate' : 'Create New Candidate'}
+          </h3>
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            
+            {/* Candidate Name Input */}
+            <div>
+              <label htmlFor="candidate_name" className="mb-2.5 block text-sm font-medium text-black">Candidate Name</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="candidate_name"
+                  name="candidate_name"
+                  placeholder='Enter Candidate Name'
+                  value={formik.values.candidate_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-6 text-black outline-none transition duration-300
+                    ${
+                      formik.touched.candidate_name && formik.errors.candidate_name ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                />
+              </div>
+              {formik.touched.candidate_name && formik.errors.candidate_name && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.candidate_name}</span>
+              )}
+            </div>
+            
+            {/* Applied For Input */}
+            <div>
+              <label htmlFor="applied_for" className="mb-2.5 block text-sm font-medium text-black">Applied For</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="applied_for"
+                  name="applied_for"
+                  placeholder='Enter Position Applied For (e.g., Software Engineer)'
+                  value={formik.values.applied_for}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-6 text-black outline-none transition duration-300
+                    ${
+                      formik.touched.applied_for && formik.errors.applied_for ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                />
+              </div>
+              {formik.touched.applied_for && formik.errors.applied_for && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.applied_for}</span>
+              )}
+            </div>
+
+            {/* Applied Date Input */}
+            <div>
+              <label htmlFor="applied_date" className="mb-2.5 block text-sm font-medium text-black">Applied Date</label>
+              <div className="relative">
+                <input
+                  type="date"
+                  id="applied_date"
+                  name="applied_date"
+                  value={formik.values.applied_date}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-6 text-black outline-none transition duration-300
+                    ${
+                      formik.touched.applied_date && formik.errors.applied_date ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                />
+              </div>
+              {formik.touched.applied_date && formik.errors.applied_date && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.applied_date}</span>
+              )}
+            </div>
+
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="mb-2.5 block text-sm font-medium text-black">Email</label>
+              <div className="relative">
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder='Enter Email Address'
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-6 text-black outline-none transition duration-300
+                    ${
+                      formik.touched.email && formik.errors.email ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                />
+              </div>
+              {formik.touched.email && formik.errors.email && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.email}</span>
+              )}
+            </div>
+
+            {/* Mobile Number Input */}
+            <div>
+              <label htmlFor="mobile_number" className="mb-2.5 block text-sm font-medium text-black">Mobile Number</label>
+              <div className="relative">
+                <input
+                  type="tel" // Use tel for mobile numbers
+                  id="mobile_number"
+                  name="mobile_number"
+                  placeholder='Enter 10-digit Mobile Number'
+                  maxLength={10}
+                  pattern="\d*"
+                  value={formik.values.mobile_number}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-6 text-black outline-none transition duration-300
+                    ${
+                      formik.touched.mobile_number && formik.errors.mobile_number ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                />
+              </div>
+              {formik.touched.mobile_number && formik.errors.mobile_number && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.mobile_number}</span>
+              )}
+            </div>
+
+            {/* Status Dropdown */}
+            <div>
+              <label htmlFor="status" className="mb-2.5 block text-sm font-medium text-black">Status</label>
+              <div className="relative">
+                <select
+                  id="status"
+                  name="status"
+                  value={formik.values.status}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`
+                    w-full rounded-lg border py-4 pl-6 pr-12 text-black outline-none transition duration-300 appearance-none
+                    ${
+                      formik.touched.status && formik.errors.status ? 'border-red-500' : 'border-gray-300'
+                    }
+                    focus:border-purple-600
+                  `}
+                  disabled={isSubmittingForm}
+                >
+                  {statusOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+                {/* Dropdown Icon */}
+                <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+              {formik.touched.status && formik.errors.status && (
+                <span className="mt-1 block text-sm text-red-500">{formik.errors.status}</span>
+              )}
+            </div>
+            
+            <div className="flex justify-end gap-4 pt-4">
+              <Button
+                label="Cancel"
+                type="button"
+                onClick={() => {
+                  setFormOpen(false);
+                  setIsUpdate(false);
+                  setSelectedCandidateId('');
+                  formik.resetForm();
+                }}
+                variant="secondary"
+                disabled={isSubmittingForm}
+              />
+              <Button
+                label={isUpdate ? 'Update' : 'Create'}
+                type="submit"
+                variant="primary"
+                disabled={isSubmittingForm}
+              />
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+  // ----------------------------------------------------------------------
+  // Main Table View 
+  // ----------------------------------------------------------------------
+  return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="mx-auto mt-10 max-w-6xl rounded bg-white p-6 shadow">
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">

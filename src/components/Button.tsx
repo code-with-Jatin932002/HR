@@ -12,6 +12,9 @@ interface ButtonProps {
   fullWidth?: boolean;
   variant?: 'primary' | 'secondary' | 'danger' | 'white' | 'success' | 'text' | 'dropdown';
   loading?: boolean;
+  
+  // 🛑 FIX: Added children prop to allow content between tags 🛑
+  children?: React.ReactNode; 
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -24,10 +27,12 @@ const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   variant = 'primary',
   loading = false,
+  
+  // 🛑 Destructure children 🛑
+  children,
 }) => {
-  // const baseClasses = 'px-4 py-2 rounded transition flex items-center justify-center gap-2 cursor-pointer';
   const baseClasses =
-  'px-4 py-2 rounded-md shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2 cursor-pointer';
+    'px-4 py-2 rounded-md shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2 cursor-pointer';
 
   const variantClasses = {
     primary: 'bg-purple-500 text-white hover:bg-purple-700 focus:ring-purple-500',
@@ -36,15 +41,22 @@ const Button: React.FC<ButtonProps> = ({
     white: 'bg-white text-purple-600 hover:bg-purple-100 focus:ring-purple-500',
     text: 'bg-transparent text-purple-600 hover:text-purple-800',
     success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
-      dropdown: 'w-full text-left text-gray-800 hover:bg-gray-100 px-4 py-2 flex items-center gap-2 focus:outline-none',
-
+    dropdown: 'w-full text-left text-gray-800 hover:bg-gray-100 px-4 py-2 flex items-center gap-2 focus:outline-none',
   };
-
 
   const combinedClasses = `${baseClasses} ${
     variantClasses[variant]
   } ${fullWidth ? 'w-full' : 'w-auto'} ${className}`;
 
+  // Determine content: Use children if provided (e.g., for download button), 
+  // otherwise use the legacy icon/label props for backward compatibility.
+  const content = children || (
+    <>
+      {!loading && icon}
+      {label}
+    </>
+  );
+  
   return (
     <button
       type={type}
@@ -53,11 +65,12 @@ const Button: React.FC<ButtonProps> = ({
       disabled={disabled || loading}
     >
       {loading && <FaSpinner className="animate-spin" />}
-      {!loading && icon}
-      {label}
+      
+      {/* 🛑 Render the resolved content (children or icon/label) 🛑 */}
+      {!loading && content} 
+      
     </button>
   );
 };
 
 export default Button;
-

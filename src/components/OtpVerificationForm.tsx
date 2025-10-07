@@ -91,7 +91,7 @@ export default function OtpVerificationForm({
       <p className="text-center text-gray-700 mb-4">
         An OTP has been sent to **{email}**. Please enter it below to verify your account.
       </p>
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <label htmlFor="otp" className="block text-sm font-medium mb-1">Enter OTP</label>
         <div className="relative">
           <input
@@ -101,12 +101,35 @@ export default function OtpVerificationForm({
             placeholder="Enter OTP"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-blue-500"
+            className="w-full border rounded-lg py-3 px-4 pl-10 text-black outline-none focus:border-purple-500"
             maxLength={6}
           />
           <FaShieldAlt className="absolute left-3 top-4 text-gray-500" />
         </div>
-      </div>
+      </div> */}
+      <div className="mb-4">
+    {/* Updated Label Style */}
+    <label htmlFor="otp" className="mb-2.5 block text-sm font-medium text-black">Enter OTP</label>
+    <div className="relative">
+      <input
+        id="otp"
+        type="text"
+        name="otp"
+        placeholder="Enter OTP"
+        value={otp}
+        onChange={(e) => setOtp(e.target.value)}
+        maxLength={6}
+        // Input Field Class matching the email field's style (default border and purple focus)
+        className={`
+          w-full rounded-lg border border-gray-300 py-4 pl-6 pr-10 text-black outline-none transition duration-300
+          focus:border-purple-600 
+        `}
+      />
+      {/* Icon repositioned to the right and styled to match the email field */}
+      <FaShieldAlt className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+    </div>
+    {/* Removed error message block as requested */}
+</div>
 
       <Button
         type="button"

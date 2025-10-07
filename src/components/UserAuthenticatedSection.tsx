@@ -42,7 +42,7 @@ export default function UserAuthenticatedSection({
                 aria-expanded={showDropdown}
                 aria-haspopup="true"
             >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden flex-shrink-0">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden flex-shrink-0 cursor-pointer">
                     <Image
                         src={userImageSrc}
                         alt="User Avatar"
@@ -51,11 +51,11 @@ export default function UserAuthenticatedSection({
                         className="object-cover w-full h-full"
                     />
                 </div>
-                <FaChevronDown className="text-gray-700 dark:text-gray-300 transition-transform duration-300 ease-in-out" />
+                <FaChevronDown className="text-gray-700 dark:text-gray-300 transition-transform duration-300 ease-in-out cursor-pointer" />
             </button>
 
             {showDropdown && (
-                <div className="absolute right-0 top-[calc(100%+25px)] w-56 flex-col rounded-md border border-gray-200 bg-white shadow-lg py-2 z-50">
+                <div className="absolute cursor-pointer right-0 top-[calc(100%+25px)] w-56 flex-col rounded-md border border-gray-200 bg-white shadow-lg py-2 z-50">
                     <ul className="flex flex-col border-b border-gray-200 px-4 py-3 space-y-2">
                         <li>
                             <Link 
@@ -74,7 +74,7 @@ export default function UserAuthenticatedSection({
                                 setShowDropdown(false);
                                 onLogout();
                             }}
-                            className="flex items-center gap-3.5 w-full text-left text-sm font-medium text-gray-700 hover:text-purple-500 transition-colors duration-200 ease-in-out focus:outline-none"
+                            className="flex items-center gap-3.5 w-full text-left text-sm font-medium text-gray-700 hover:text-purple-500 transition-colors duration-200 ease-in-out focus:outline-none cursor-pointer"
                         >
                             <FaSignOutAlt className="text-lg" />
                             Log Out

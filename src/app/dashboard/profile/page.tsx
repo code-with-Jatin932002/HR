@@ -44,6 +44,23 @@ interface UserData {
     github_id: string | null;
 }
 
+// Define the new consistent input class
+const INPUT_STYLE = `
+  w-full rounded-lg border border-gray-300 py-4 pl-6 pr-10 text-black outline-none transition duration-300
+  focus:border-purple-600
+`;
+
+// Define the read-only input class based on the new style
+const READONLY_INPUT_STYLE = `
+  ${INPUT_STYLE} bg-gray-100 cursor-not-allowed text-gray-500
+`;
+
+// Define the label class based on the new style
+const LABEL_STYLE = 'mb-2.5 block text-sm font-medium text-black';
+
+// Define a type for elements that have name and value (for the TypeScript fix)
+type InputChangeTarget = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
 export default function MyProfileFormPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
@@ -127,8 +144,12 @@ export default function MyProfileFormPage() {
         fetchProfileData();
     }, [user, isSuperAdmin, router, authLoading]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
+    // FIX: Apply type assertion to resolve the 'name' and 'value' destructuring error
+    const handleChange = (e: React.ChangeEvent<InputChangeTarget>) => {
+        // Explicitly assert the type of e.target to ensure 'name' and 'value' exist
+        const target = e.target as InputChangeTarget;
+        const { name, value } = target;
+        
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -189,116 +210,121 @@ export default function MyProfileFormPage() {
         if (isSuperAdmin) {
             const orgData = formData as OrgData;
             return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Organization Fields (Super Admin) - All inputs use the new style */}
                     <div className="form-group">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="email" name="email" value={orgData.email} readOnly className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed" />
+                        <label htmlFor="email" className={LABEL_STYLE}>Email</label>
+                        <input type="email" id="email" name="email" value={orgData.email} readOnly className={READONLY_INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="org_name" className="block text-sm font-medium text-gray-700">Organization Name</label>
-                        <input type="text" id="org_name" name="org_name" value={orgData.org_name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="org_name" className={LABEL_STYLE}>Organization Name</label>
+                        <input type="text" id="org_name" name="org_name" value={orgData.org_name} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="organization_type" className="block text-sm font-medium text-gray-700">Organization Type</label>
-                        <input type="text" id="organization_type" name="organization_type" value={orgData.organization_type} readOnly className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed text-gray-500" />
+                        <label htmlFor="organization_type" className={LABEL_STYLE}>Organization Type</label>
+                        <input type="text" id="organization_type" name="organization_type" value={orgData.organization_type} readOnly className={READONLY_INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
-                        <input type="text" id="address" name="address" value={orgData.address} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="address" className={LABEL_STYLE}>Address</label>
+                        <input type="text" id="address" name="address" value={orgData.address} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input type="text" id="phone_number" name="phone_number" value={orgData.phone_number} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="phone_number" className={LABEL_STYLE}>Phone Number</label>
+                        <input type="text" id="phone_number" name="phone_number" value={orgData.phone_number} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="website" className="block text-sm font-medium text-gray-700">Website</label>
-                        <input type="url" id="website" name="website" value={orgData.website} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="website" className={LABEL_STYLE}>Website</label>
+                        <input type="url" id="website" name="website" value={orgData.website} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="gst_number" className="block text-sm font-medium text-gray-700">GST Number</label>
-                        <input type="text" id="gst_number" name="gst_number" value={orgData.gst_number} readOnly className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed text-gray-500" />
+                        <label htmlFor="gst_number" className={LABEL_STYLE}>GST Number</label>
+                        <input type="text" id="gst_number" name="gst_number" value={orgData.gst_number} readOnly className={READONLY_INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="country" className="block text-sm font-medium text-gray-700">Country</label>
-                        <input type="text" id="country" name="country" value={orgData.country} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="country" className={LABEL_STYLE}>Country</label>
+                        <input type="text" id="country" name="country" value={orgData.country} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="country_code" className="block text-sm font-medium text-gray-700">Country Code</label>
-                        <input type="text" id="country_code" name="country_code" value={orgData.country_code} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="country_code" className={LABEL_STYLE}>Country Code</label>
+                        <input type="text" id="country_code" name="country_code" value={orgData.country_code} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label>
-                        <input type="text" id="state" name="state" value={orgData.state} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="state" className={LABEL_STYLE}>State</label>
+                        <input type="text" id="state" name="state" value={orgData.state} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group md:col-span-2">
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea id="description" name="description" rows={3} value={orgData.description} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500"></textarea>
+                        <label htmlFor="description" className={LABEL_STYLE}>Description</label>
+                        <textarea id="description" name="description" rows={3} value={orgData.description} onChange={handleChange} className={`${INPUT_STYLE} min-h-[100px]`}></textarea>
                     </div>
                 </div>
             );
         } else {
             const userData = formData as UserData;
             return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* User Fields (Employee) - Styles applied, and requested fields set to readOnly */}
                     <div className="form-group">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="email" name="email" value={userData.email || ''} readOnly className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed text-gray-500" />
+                        <label htmlFor="email" className={LABEL_STYLE}>Email</label>
+                        <input type="email" id="email" name="email" value={userData.email || ''} readOnly className={READONLY_INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="official_email" className="block text-sm font-medium text-gray-700">Official Email</label>
-                        <input type="email" id="official_email" name="official_email" value={userData.official_email || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="official_email" className={LABEL_STYLE}>Official Email</label>
+                        <input type="email" id="official_email" name="official_email" value={userData.official_email || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">First Name</label>
-                        <input type="text" id="first_name" name="first_name" value={userData.first_name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="first_name" className={LABEL_STYLE}>First Name</label>
+                        <input type="text" id="first_name" name="first_name" value={userData.first_name} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">Last Name</label>
-                        <input type="text" id="last_name" name="last_name" value={userData.last_name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="last_name" className={LABEL_STYLE}>Last Name</label>
+                        <input type="text" id="last_name" name="last_name" value={userData.last_name} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="department_name" className="block text-sm font-medium text-gray-700">Department</label>
-                        <input type="text" id="department_name" name="department_name" value={userData.department_name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="department_name" className={LABEL_STYLE}>Department</label>
+                        {/* READ-ONLY as requested */}
+                        <input type="text" id="department_name" name="department_name" value={userData.department_name} readOnly className={READONLY_INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="mobile_number" className="block text-sm font-medium text-gray-700">Mobile Number</label>
-                        <input type="text" id="mobile_number" name="mobile_number" value={userData.mobile_number || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="mobile_number" className={LABEL_STYLE}>Mobile Number</label>
+                        <input type="text" id="mobile_number" name="mobile_number" value={userData.mobile_number || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700">Date of Birth</label>
-                        <input type="date" id="date_of_birth" name="date_of_birth" value={userData.date_of_birth || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="date_of_birth" className={LABEL_STYLE}>Date of Birth</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth" value={userData.date_of_birth || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
-                        <input type="text" id="address" name="address" value={userData.address || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="address" className={LABEL_STYLE}>Address</label>
+                        <input type="text" id="address" name="address" value={userData.address || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Gender</label>
-                        <input type="text" id="gender" name="gender" value={userData.gender || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="gender" className={LABEL_STYLE}>Gender</label>
+                        <input type="text" id="gender" name="gender" value={userData.gender || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="marital_status" className="block text-sm font-medium text-gray-700">Marital Status</label>
-                        <input type="text" id="marital_status" name="marital_status" value={userData.marital_status || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="marital_status" className={LABEL_STYLE}>Marital Status</label>
+                        <input type="text" id="marital_status" name="marital_status" value={userData.marital_status || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="employee_type" className="block text-sm font-medium text-gray-700">Employee Type</label>
-                        <input type="text" id="employee_type" name="employee_type" value={userData.employee_type || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="employee_type" className={LABEL_STYLE}>Employee Type</label>
+                        <input type="text" id="employee_type" name="employee_type" value={userData.employee_type || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="joining_date" className="block text-sm font-medium text-gray-700">Joining Date</label>
-                        <input type="date" id="joining_date" name="joining_date" value={userData.joining_date || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="joining_date" className={LABEL_STYLE}>Joining Date</label>
+                        {/* READ-ONLY as requested */}
+                        <input type="date" id="joining_date" name="joining_date" value={userData.joining_date || ''} readOnly className={READONLY_INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="working_days" className="block text-sm font-medium text-gray-700">Working Days</label>
-                        <input type="text" id="working_days" name="working_days" value={userData.working_days || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="working_days" className={LABEL_STYLE}>Working Days</label>
+                        <input type="text" id="working_days" name="working_days" value={userData.working_days || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="slack_id" className="block text-sm font-medium text-gray-700">Slack ID</label>
-                        <input type="text" id="slack_id" name="slack_id" value={userData.slack_id || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="slack_id" className={LABEL_STYLE}>Slack ID</label>
+                        {/* READ-ONLY as requested */}
+                        <input type="text" id="slack_id" name="slack_id" value={userData.slack_id || ''} readOnly className={READONLY_INPUT_STYLE} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="github_id" className="block text-sm font-medium text-gray-700">GitHub ID</label>
-                        <input type="text" id="github_id" name="github_id" value={userData.github_id || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500" />
+                        <label htmlFor="github_id" className={LABEL_STYLE}>GitHub ID</label>
+                        <input type="text" id="github_id" name="github_id" value={userData.github_id || ''} onChange={handleChange} className={INPUT_STYLE} />
                     </div>
                 </div>
             );
@@ -324,19 +350,28 @@ export default function MyProfileFormPage() {
 
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg">
                 {renderForm()}
-                <div className="mt-6 flex justify-end gap-4">
+                
+                {/* Updated Button Group Styling: One line, aligned right */}
+                <div className="mt-8 flex justify-end gap-4"> 
+                    
+                    {/* Cancel Button (Secondary/Gray) */}
                     <button
                         type="button"
                         onClick={handleCancel}
-                        className="flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-red-50 border-red-500"
+                        disabled={isSubmitting}
+                        // Horizontal style applied: px-6 py-3, no w-full
+                        className="cursor-pointer rounded-lg border border-gray-400 bg-gray-500 px-6 py-3 text-white font-semibold transition hover:bg-gray-600 hover:border-gray-600 disabled:bg-gray-400 disabled:border-gray-400 flex items-center justify-center min-w-[120px]" 
                     >
-                        <FaTimesCircle className="h-5 w-5 mr-2 text-red-500 " />
+                        <FaTimesCircle className="h-5 w-5 mr-2 text-white" />
                         Cancel
                     </button>
+
+                    {/* Save Changes Button (Primary/Purple) */}
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-gray-400"
+                        // Horizontal style applied: px-6 py-3, no w-full
+                        className="cursor-pointer rounded-lg border border-purple-600 bg-purple-600 px-6 py-3 text-white font-semibold transition hover:bg-purple-700 hover:border-purple-700 disabled:bg-gray-400 disabled:border-gray-400 flex items-center justify-center min-w-[150px]"
                     >
                         {isSubmitting ? (
                             <>
@@ -350,6 +385,7 @@ export default function MyProfileFormPage() {
                             </>
                         )}
                     </button>
+                    
                 </div>
             </form>
         </div>

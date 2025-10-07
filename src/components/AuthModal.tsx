@@ -88,16 +88,16 @@ export default function AuthModal({ onClose }: Props) {
           // Extract IDs based on API response structure
           const organizationId = data.user?.organization_id || data.organization?.id;
           const userId = data.user?.id;
-         const first_name = data.user?.first_name || null;
-        const last_name = data.user?.last_name || null;
+          const first_name = data.user?.first_name || null;
+          const last_name = data.user?.last_name || null;
           console.log(first_name,"firstname");
           
           // Call the login function with the extracted IDs
           login(data.access_token, values.email, data.role_type, userId, organizationId,first_name,last_name);
-               router.replace('/dashboard');
-                onClose();
-       
-         
+          router.replace('/dashboard');
+          onClose();
+        
+          
         } else {
           const errorMsg = 'Login failed: Missing authentication data.';
           formik.setErrors({ password: errorMsg });
@@ -179,23 +179,31 @@ export default function AuthModal({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50">
-      <div className="relative w-full max-w-9xl rounded-xl bg-white shadow-2xl md:flex overflow-hidden animate-scale-fade">
-        <div className="hidden md:flex md:w-1/2 flex-col justify-center items-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-10 relative  h-200">
-         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm rounded-2xl h-10"></div>
+    // Outer container: takes full viewport and centers content
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-50 p-4">
+      {/* Main Modal Box: Added h-full and min-h-[80vh] to help it stretch vertically */}
+      <div className="relative w-full max-w-9xl rounded-xl bg-white shadow-2xl md:flex overflow-hidden animate-scale-fade h-full min-h-[80vh]">
+        
+        {/* Left Side (Image/SVG) */}
+        <div className="hidden md:flex md:w-1/2 flex-col justify-center items-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-10 relative h-200">
             <div className="relative z-10 text-center mt-20 h-90 ">
-             <h1 className="text-4xl font-extrabold tracking-tight -mt-30">HR Management</h1>
+              <h1 className="text-4xl font-extrabold tracking-tight -mt-30">HR Management</h1>
                 <p className="mt-4 text-lg opacity-90">Simplify HR tasks and keep your team productive.
-                 All-in-one platform to manage employees, payroll, and performance.</p>
+                  All-in-one platform to manage employees, payroll, and performance.</p>
                 <p></p>
                 <AuthSvg />
               </div>
         </div>
-          <div className="w-full md:w-1/2 p-8 md:p-12 max-h-[90vh] overflow-y-auto flex flex-col justify-center">
-            <h2 className="text-4xl font-bold text-gray-700 mb-4 text-center flex-shrink-0">Sign In</h2>
+          
+          {/* Right Side (Form): Adjusted vertical alignment for better flow on small screens */}
+          <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center min-h-full">
+            {/* Reduced mb-8 to mt-4 to prevent clipping on small screens, ensuring the title has top space */}
+            <h2 className="text-4xl font-bold text-gray-700 mt-4 mb-6 text-center flex-shrink-0">Sign In</h2> 
+            {/* Form wrapper: Removed flex-grow to rely on standard flow, ensuring content isn't overly stretched */}
             <form onSubmit={formik.handleSubmit}>
               <div className="mb-4">
-                <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700">Email</label>
+                {/* Updated Label Style */}
+                <label htmlFor="email" className="mb-2.5 block text-sm font-medium text-black">Email Address</label> 
                 <div className="relative">
                   <input
                     type="email"
@@ -205,16 +213,25 @@ export default function AuthModal({ onClose }: Props) {
                     value={formik.values.email}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2"
+                    // Input Field Class with purple focus border
+                    className={`
+                      w-full rounded-lg border py-4 pl-6 pr-10 text-black outline-none transition duration-300
+                      ${
+                        formik.touched.email && formik.errors.email ? 'border-red-500' : 'border-gray-300'
+                      } 
+                      focus:border-purple-600 
+                    `} 
                   />
-                  <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                  {/* Icon repositioned and recolored for new style */}
+                  <FaEnvelope className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
                 {formik.touched.email && formik.errors.email && (
                   <span className="mt-1 block text-sm text-red-500">{formik.errors.email}</span>
                 )}
               </div>
               <div className="mb-6">
-                <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">Password</label>
+                {/* Updated Label Style */}
+                <label htmlFor="password" className="mb-2.5 block text-sm font-medium text-black">Password</label> 
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -224,9 +241,18 @@ export default function AuthModal({ onClose }: Props) {
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full rounded-2xl border border-gray-300 px-11 py-3 text-gray-700 placeholder-gray-400 outline-none shadow-sm transition duration-300  focus:ring-2"
+                    // Input Field Class with purple focus border
+                    className={`
+                      w-full rounded-lg border py-4 pl-6 pr-10 text-black outline-none transition duration-300
+                      ${
+                        formik.touched.password && formik.errors.password ? 'border-red-500' : 'border-gray-300'
+                      } 
+                      focus:border-purple-600
+                    `} 
                   />
-                  <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                  {/* Lock icon repositioned and recolored for new style */}
+                  <FaLock className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400" />
+                  {/* Toggle button adjusted to prevent conflict with Lock icon */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -247,7 +273,7 @@ export default function AuthModal({ onClose }: Props) {
                   </div>
                 )}
               </div>
-              <div className="text-right mb-4">
+              <div className="text-right mb-6"> {/* Increased bottom margin for separation */}
                   <span className="text-sm text-gray-600 mr-1"> You Don't remember it</span>
 
                 <button
@@ -258,28 +284,34 @@ export default function AuthModal({ onClose }: Props) {
                   Forgot Password?
                 </button>
               </div>
-              <div className="flex gap-4">
-                <Button
-                  label="Cancel"
-                  onClick={onClose}
-                  fullWidth
-                  variant="secondary"
-                  disabled={loading}
-                   className="rounded-xl h-10 border-gray-300 text-white-600 bg-gray-500 hover:bg-gray-700 py-3 font-medium transition"
-                />
+              
+              {/* BUTTONS: Stacked vertically and made full width like inputs */}
+              <div className="flex flex-col gap-4"> 
+                 {/* Login Button (Primary/Purple) */}
                 <Button
                   label={loading ? 'Logging...' : 'Login'}
                   type="submit"
                   fullWidth
                   variant="primary"
                   loading={loading}
-                   className="rounded-xl h-10 border-purple-300 text-white-600 bg-purple-600 hover:bg-purple-700 py-3 font-medium transition"
+                  // Styling to match the requested full width, purple color, and padding (similar to input)
+                  className="w-full cursor-pointer rounded-lg border border-purple-600 bg-purple-600 py-4 text-white font-semibold transition hover:bg-purple-700 hover:border-purple-700" 
+                />
+                
+                {/* Cancel Button (Secondary/Gray) */}
+                <Button
+                  label="Cancel"
+                  onClick={onClose}
+                  fullWidth
+                  variant="secondary"
+                  disabled={loading}
+                  // Styling to match the requested full width, gray color, and padding (similar to input)
+                  className="w-full cursor-pointer rounded-lg border border-gray-400 bg-gray-500 py-4 text-white font-semibold transition hover:bg-gray-600 hover:border-gray-600"
                 />
               </div>
             </form>
           </div>
         </div>
       </div>
-
   );
 }
